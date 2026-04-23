@@ -1,0 +1,212 @@
+<!--pages/challenge-detail/challenge-detail.wxml-->
+<wxs module="utils" src="./challenge-detail.wxs"></wxs>
+<view class="container page-container">
+  <view wx:if="{{loading}}" class="loading-container">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <view wx:else class="content">
+    <!-- 挑战头部 -->
+    <view class="challenge-header">
+      <text class="challenge-icon">{{challenge.icon}}</text>
+      <text class="challenge-name">{{challenge.name}}</text>
+      <text class="challenge-desc">{{challenge.description}}</text>
+
+      <!-- 元信息 -->
+      <view class="meta-row">
+        <view class="meta-chip" wx:if="{{challenge.difficulty}}">
+          <text class="meta-label">难度</text>
+          <text class="meta-value">{{challenge.difficulty}}</text>
+        </view>
+        <view class="meta-chip" wx:if="{{challenge.estimatedDailyMinutes !== null && challenge.estimatedDailyMinutes !== undefined}}">
+          <text class="meta-label">每日</text>
+          <text class="meta-value">{{challenge.estimatedDailyMinutes}}分钟</text>
+        </view>
+        <view class="meta-chip">
+          <text class="meta-label">周期</text>
+          <text class="meta-value">{{challenge.duration}}天</text>
+        </view>
+      </view>
+
+      <!-- 标签 -->
+      <view class="tag-row" wx:if="{{challenge.tags && challenge.tags.length > 0}}">
+        <view class="tag" wx:for="{{challenge.tags}}" wx:key="*this">{{item}}</view>
+      </view>
+    </view>
+
+    <!-- 挑战亮点 -->
+    <view class="card" wx:if="{{challenge.highlights && challenge.highlights.length > 0}}">
+      <text class="section-title">挑战亮点</text>
+      <view class="bullet-list">
+        <view class="bullet-item" wx:for="{{challenge.highlights}}" wx:key="index">
+          <text class="bullet-dot">•</text>
+          <text class="bullet-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 适合谁 -->
+    <view class="card" wx:if="{{challenge.suitableFor && challenge.suitableFor.length > 0}}">
+      <text class="section-title">适合人群</text>
+      <view class="pill-row">
+        <view class="pill" wx:for="{{challenge.suitableFor}}" wx:key="*this">{{item}}</view>
+      </view>
+    </view>
+
+    <!-- 进度展示 -->
+    <view wx:if="{{myProgress && myProgress.status === 'active'}}" class="progress-section">
+      <view class="progress-header">
+        <text class="progress-title">挑战进度</text>
+        <text class="progress-days">{{myProgress.current_days}} / {{challenge.duration}} 天</text>
+      </view>
+      <view class="progress-bar-wrapper">
+        <view class="progress-bar">
+          <view 
+            class="progress-fill" 
+            style="width: {{myProgress.progress}}%"
+          ></view>
+        </view>
+        <text class="progress-percent">{{myProgress.progress.toFixed(1)}}%</text>
+      </view>
+      <view class="progress-dates">
+        <text class="date-item">开始：{{utils.formatDate(myProgress.start_date)}}</text>
+        <text class="date-item">结束：{{utils.formatDate(myProgress.end_date)}}</text>
+      </view>
+    </view>
+
+    <!-- 完成状态 -->
+    <view wx:if="{{myProgress && myProgress.status === 'completed'}}" class="completed-section">
+      <text class="completed-icon">🎉</text>
+      <text class="completed-text">挑战已完成</text>
+      <text class="completed-date">完成时间：{{utils.formatDate(myProgress.completed_date)}}</text>
+    </view>
+
+    <!-- 规则说明 -->
+    <view class="card" wx:if="{{challenge.rules && challenge.rules.length > 0}}">
+      <text class="section-title">规则说明</text>
+      <view class="bullet-list">
+        <view class="bullet-item" wx:for="{{challenge.rules}}" wx:key="index">
+          <text class="bullet-index">{{index + 1}}</text>
+          <text class="bullet-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 挑战要求 -->
+    <view class="requirements-section">
+      <text class="section-title">挑战要求</text>
+      <view class="requirements-list">
+        <view 
+          class="requirement-item"
+          wx:for="{{challenge.requirements}}" 
+          wx:key="index"
+        >
+          <text class="requirement-icon">✓</text>
+          <text class="requirement-text">{{utils.getRequirementText(item)}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 每日建议 -->
+    <view class="card" wx:if="{{challenge.tips && challenge.tips.length > 0}}">
+      <text class="section-title">每日建议</text>
+      <view class="tips-list">
+        <view class="tip-item" wx:for="{{challenge.tips}}" wx:key="index">
+          <view class="tip-head">
+            <text class="tip-title">{{item.title}}</text>
+          </view>
+          <text class="tip-content">{{item.content}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 示例计划 -->
+    <view class="card" wx:if="{{challenge.samplePlan && challenge.samplePlan.length > 0}}">
+      <text class="section-title">示例计划</text>
+      <view class="plan-list">
+        <view class="plan-item" wx:for="{{challenge.samplePlan}}" wx:key="index">
+          <view class="plan-left">
+            <text class="plan-day" wx:if="{{item.day}}">Day {{item.day}}</text>
+            <text class="plan-day" wx:else>示例</text>
+          </view>
+          <view class="plan-right">
+            <text class="plan-title">{{item.title}}</text>
+            <text class="plan-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 每日记录 -->
+    <view wx:if="{{myProgress && myProgress.daily_records && myProgress.daily_records.length > 0}}" class="daily-records-section">
+      <text class="section-title">每日记录</text>
+      <view class="daily-records-list">
+        <view 
+          class="daily-record-item {{item.completed ? 'completed' : 'pending'}}"
+          wx:for="{{myProgress.daily_records}}" 
+          wx:key="date"
+        >
+          <view class="record-date">
+            <text class="date-text">{{utils.formatDate(item.date)}}</text>
+            <text wx:if="{{item.completed}}" class="status-icon">✓</text>
+            <text wx:else class="status-icon pending">○</text>
+          </view>
+          <view wx:if="{{item.calories}}" class="record-data">
+            <text class="data-label">卡路里：</text>
+            <text class="data-value">{{item.calories}}kcal</text>
+          </view>
+          <view wx:if="{{item.protein}}" class="record-data">
+            <text class="data-label">蛋白质：</text>
+            <text class="data-value">{{item.protein}}g</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 奖励展示 -->
+    <view class="reward-section">
+      <text class="section-title">完成奖励</text>
+      <view class="reward-content">
+        <view class="reward-item">
+          <text class="reward-icon">⭐</text>
+          <text class="reward-text">+{{challenge.reward.points}}积分</text>
+        </view>
+        <view class="reward-item">
+          <text class="reward-icon">{{challenge.reward.badgeIcon}}</text>
+          <text class="reward-text">{{challenge.reward.badge}}徽章</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 常见问题 -->
+    <view class="card" wx:if="{{challenge.faq && challenge.faq.length > 0}}">
+      <text class="section-title">常见问题</text>
+      <view class="faq-list">
+        <view class="faq-item" wx:for="{{challenge.faq}}" wx:key="index">
+          <view class="faq-q">
+            <text class="faq-q-prefix">Q</text>
+            <text class="faq-q-text">{{item.q}}</text>
+          </view>
+          <view class="faq-a">
+            <text class="faq-a-prefix">A</text>
+            <text class="faq-a-text">{{item.a}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <view wx:if="{{!myProgress}}" class="btn-primary" bindtap="joinChallenge">
+        立即加入挑战
+      </view>
+      <view wx:if="{{myProgress && myProgress.status === 'active'}}" class="btn-group">
+        <view class="btn-secondary" bindtap="checkProgress">检查进度</view>
+        <view class="btn-danger" bindtap="abandonChallenge">退出挑战</view>
+      </view>
+      <view wx:if="{{myProgress && myProgress.status === 'completed'}}" class="btn-completed">
+        挑战已完成
+      </view>
+    </view>
+  </view>
+</view>

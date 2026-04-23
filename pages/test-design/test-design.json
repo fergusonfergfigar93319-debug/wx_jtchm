@@ -1,0 +1,10 @@
+{
+  "usingComponents": {},
+  "navigationBarTitleText": "设计系统测试",
+  "navigationBarBackgroundColor": "#34D399",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#FAFBFC",
+  "backgroundTextStyle": "light",
+  "enablePullDownRefresh": false,
+  "onReachBottomDistance": 50
+}

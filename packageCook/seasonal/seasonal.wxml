@@ -1,0 +1,267 @@
+<view class="page-seasonal page-container">
+  <!-- 顶部氛围：与全站 Neo 一致 + 应季特色 -->
+  <view class="seasonal-hero">
+    <view class="seasonal-hero-glow"></view>
+    <view class="seasonal-hero-inner">
+      <view class="seasonal-hero-badge-row">
+        <text class="seasonal-hero-badge">特色功能 · 应季鲜选</text>
+        <view class="ops-entry" bindtap="openOps">
+          <text class="ops-entry-text">运营数据</text>
+        </view>
+      </view>
+      <text class="seasonal-hero-title">本月应季食材</text>
+      <view class="seasonal-hero-meta-row">
+        <text class="seasonal-hero-meta">{{currentMonth}}月</text>
+        <text class="seasonal-hero-meta-dot" wx:if="{{userRegionName}}">·</text>
+        <text class="seasonal-hero-meta" wx:if="{{userRegionName}}">{{userRegionName}}</text>
+        <text class="seasonal-hero-meta-dot" wx:if="{{currentSeason}}">·</text>
+        <text class="seasonal-hero-meta" wx:if="{{currentSeason}}">{{currentSeason}}</text>
+      </view>
+      <text class="seasonal-hero-tip" wx:if="{{currentSeasonTip}}">{{currentSeasonTip}}</text>
+    </view>
+  </view>
+
+  <scroll-view class="seasonal-scroll" scroll-y="true">
+    <view wx:if="{{seasonalItems.length > 0}}" class="seasonal-body">
+      <!-- 本期主推：多卡轮播封面 + 当前项详情与操作 -->
+      <view wx:if="{{featuredItems.length}}" class="seasonal-section">
+        <view class="seasonal-section-label">
+          <text class="seasonal-section-dot"></text>
+          <text class="seasonal-section-title">本期主推</text>
+          <text class="seasonal-section-sub">共 {{featuredItems.length}} 种{{featuredItems.length > 1 ? ' · 左右滑动切换' : ''}}</text>
+        </view>
+
+        <view class="seasonal-featured tone-{{featuredItems[featuredIndex].cardTone}}">
+          <swiper
+            class="seasonal-featured-swiper"
+            autoplay="{{featuredItems.length > 1}}"
+            interval="4500"
+            duration="480"
+            circular="{{featuredItems.length > 1}}"
+            current="{{featuredIndex}}"
+            bindchange="onFeaturedSwiperChange"
+          >
+            <swiper-item wx:for="{{featuredItems}}" wx:key="name">
+              <view
+                class="seasonal-featured-cover"
+                style="background: linear-gradient(145deg, {{item.coverBg}} 0%, rgba(255,255,255,0.92) 100%);"
+                bindtap="openDetail"
+                data-item="{{item}}"
+              >
+                <image
+                  wx:if="{{item.image}}"
+                  class="seasonal-featured-img"
+                  src="{{item.image}}"
+                  mode="aspectFill"
+                  lazy-load="{{index < 2}}"
+                />
+                <view wx:else class="seasonal-featured-emoji-wrap">
+                  <text class="seasonal-featured-emoji">{{item.coverEmojiLarge || item.coverEmoji}}</text>
+                </view>
+                <view class="seasonal-featured-scrim"></view>
+                <view class="seasonal-featured-floating">
+                  <text class="seasonal-featured-name">{{item.name}}</text>
+                  <text wx:if="{{item.added}}" class="status-badge primary">已在冰箱 {{item.amount_in_fridge || 1}} 份</text>
+                  <text wx:else class="status-badge light">推荐少量购买</text>
+                </view>
+              </view>
+            </swiper-item>
+          </swiper>
+
+          <view class="seasonal-featured-dots" wx:if="{{featuredItems.length > 1}}">
+            <view
+              wx:for="{{featuredItems}}"
+              wx:key="name"
+              class="seasonal-featured-dot {{index === featuredIndex ? 'is-active' : ''}}"
+            ></view>
+          </view>
+
+          <view class="seasonal-featured-body">
+            <text class="seasonal-featured-desc" wx:if="{{featuredItems[featuredIndex].explain}}">{{featuredItems[featuredIndex].explain}}</text>
+
+            <view class="seasonal-rich-card" wx:if="{{featuredItems[featuredIndex].nutritionBullets && featuredItems[featuredIndex].nutritionBullets.length}}">
+              <view class="seasonal-rich-hd">
+                <text class="seasonal-rich-title">营养价值</text>
+              </view>
+              <view class="seasonal-bullet-list">
+                <view class="seasonal-bullet" wx:for="{{featuredItems[featuredIndex].nutritionBullets}}" wx:key="*this">
+                  <text class="seasonal-bullet-mark">·</text>
+                  <text class="seasonal-bullet-text">{{item}}</text>
+                </view>
+              </view>
+            </view>
+
+            <view class="seasonal-rich-card" wx:if="{{featuredItems[featuredIndex].seasonWhyText}}">
+              <view class="seasonal-rich-hd">
+                <text class="seasonal-rich-title">为什么当季</text>
+              </view>
+              <text class="seasonal-rich-p">{{featuredItems[featuredIndex].seasonWhyText}}</text>
+            </view>
+
+            <view class="seasonal-recipe-block" wx:if="{{featuredItems[featuredIndex].recipeIdeas && featuredItems[featuredIndex].recipeIdeas.length}}">
+              <view class="seasonal-rich-hd">
+                <text class="seasonal-rich-title">推荐做法</text>
+                <text class="seasonal-recipe-tip">点标签跳转菜谱</text>
+              </view>
+              <view class="seasonal-recipe-chips">
+                <view
+                  class="recipe-chip"
+                  wx:for="{{featuredItems[featuredIndex].recipeIdeas}}"
+                  wx:key="*this"
+                  catchtap="cookWith"
+                  data-item="{{featuredItems[featuredIndex]}}"
+                  data-dish-hint="{{item}}"
+                >
+                  <text class="recipe-chip-text">{{item}}</text>
+                </view>
+              </view>
+            </view>
+
+            <view class="seasonal-benefits" wx:if="{{featuredItems[featuredIndex].benefitHighlights && featuredItems[featuredIndex].benefitHighlights.length}}">
+              <view class="benefit-pill" wx:for="{{featuredItems[featuredIndex].benefitHighlights}}" wx:key="*this">
+                <text class="benefit-dot">●</text>
+                <text class="benefit-text">{{item}}</text>
+              </view>
+            </view>
+            <view class="seasonal-item-tags" wx:if="{{featuredItems[featuredIndex].tags && featuredItems[featuredIndex].tags.length}}">
+              <text class="tag" wx:for="{{featuredItems[featuredIndex].tags}}" wx:key="*this">{{item}}</text>
+            </view>
+
+            <view class="seasonal-action-hint">
+              <text class="seasonal-action-hint-text">加到冰箱可同步库存；用它做菜将按当前食材优先推荐菜谱。</text>
+            </view>
+
+            <view class="seasonal-featured-actions">
+              <button class="btn primary wide" size="mini" catchtap="addToFridge" data-item="{{featuredItems[featuredIndex]}}">
+                {{featuredItems[featuredIndex].added ? '补货 1 份' : '加到冰箱'}}
+              </button>
+              <button class="btn secondary wide" size="mini" catchtap="cookWith" data-item="{{featuredItems[featuredIndex]}}">用它做菜</button>
+              <button class="btn ghost wide" size="mini" catchtap="dislike" data-item="{{featuredItems[featuredIndex]}}">不感兴趣</button>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 更多应季：紧凑列表 -->
+      <view wx:if="{{restItems.length > 0}}" class="seasonal-section">
+        <view class="seasonal-section-label">
+          <text class="seasonal-section-dot subtle"></text>
+          <text class="seasonal-section-title">更多应季好物</text>
+          <text class="seasonal-section-sub">共 {{restItems.length}} 种</text>
+        </view>
+
+        <view
+          class="seasonal-list-item tone-{{item.cardTone}}"
+          wx:for="{{restItems}}"
+          wx:key="name"
+        >
+          <view class="seasonal-item-main" bindtap="openDetail" data-item="{{item}}">
+            <view class="seasonal-cover" style="background: {{item.coverBg}};">
+              <image
+                wx:if="{{item.image}}"
+                class="seasonal-cover-img"
+                src="{{item.image}}"
+                mode="aspectFill"
+                lazy-load="true"
+              />
+              <text wx:else class="seasonal-cover-emoji" style="color: {{item.coverFg}};">{{item.coverEmoji}}</text>
+            </view>
+            <view class="seasonal-item-info">
+              <view class="seasonal-item-title-row">
+                <text class="seasonal-item-name">{{item.name}}</text>
+                <text wx:if="{{item.added}}" class="status-badge primary">已在冰箱 {{item.amount_in_fridge || 1}} 份</text>
+                <text wx:else class="status-badge subtle">推荐少量购买</text>
+              </view>
+              <text class="seasonal-item-desc" wx:if="{{item.explain}}">{{item.explain}}</text>
+              <view class="seasonal-list-mini" wx:if="{{item.nutritionText}}">
+                <text class="seasonal-list-mini-label">营养</text>
+                <text class="seasonal-list-mini-text">{{item.nutritionText}}</text>
+              </view>
+              <view class="seasonal-list-mini" wx:if="{{item.seasonWhyText}}">
+                <text class="seasonal-list-mini-label">当季</text>
+                <text class="seasonal-list-mini-text">{{item.seasonWhyText}}</text>
+              </view>
+              <view class="seasonal-recipe-chips seasonal-recipe-chips--compact" wx:if="{{item.recipeIdeas && item.recipeIdeas.length}}">
+                <view
+                  class="recipe-chip recipe-chip--sm"
+                  wx:for="{{item.recipeIdeas}}"
+                  wx:for-item="dish"
+                  wx:key="*this"
+                  catchtap="cookWith"
+                  data-item="{{item}}"
+                  data-dish-hint="{{dish}}"
+                >
+                  <text class="recipe-chip-text">{{dish}}</text>
+                </view>
+              </view>
+              <view class="seasonal-benefits" wx:if="{{item.benefitHighlights && item.benefitHighlights.length}}">
+                <view class="benefit-pill" wx:for="{{item.benefitHighlights}}" wx:key="*this">
+                  <text class="benefit-dot">●</text>
+                  <text class="benefit-text">{{item}}</text>
+                </view>
+              </view>
+              <view class="seasonal-item-tags" wx:if="{{item.tags && item.tags.length}}">
+                <text class="tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="seasonal-item-actions">
+            <button class="btn primary" size="mini" catchtap="addToFridge" data-item="{{item}}">{{item.added ? '补货 1 份' : '加到冰箱'}}</button>
+            <button class="btn secondary" size="mini" catchtap="cookWith" data-item="{{item}}">用它做菜</button>
+            <button class="btn ghost" size="mini" catchtap="dislike" data-item="{{item}}">不感兴趣</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <text class="empty-icon">🌱</text>
+      <text class="empty-text">暂时没有应季数据</text>
+      <text class="empty-hint">下拉刷新，或稍后再来看本月有哪些当季好物</text>
+    </view>
+
+    <view class="seasonal-scroll-pad"></view>
+  </scroll-view>
+
+  <!-- 运营数据弹层 -->
+  <view wx:if="{{opsVisible}}" class="ops-mask" catchtap="closeOps">
+    <view class="ops-card" catchtap="noop">
+      <view class="ops-head">
+        <text class="ops-title">本月运营数据（本地统计）</text>
+        <view class="ops-close" bindtap="closeOps"><text class="ops-close-text">关闭</text></view>
+      </view>
+      <view class="ops-body" wx:if="{{opsSummary}}">
+        <view class="ops-row">
+          <text class="ops-k">页面访问 PV</text>
+          <text class="ops-v">{{opsSummary.pv}}</text>
+        </view>
+        <view class="ops-row">
+          <text class="ops-k">列表曝光</text>
+          <text class="ops-v">{{opsSummary.imp}}</text>
+        </view>
+        <view class="ops-row">
+          <text class="ops-k">详情打开</text>
+          <text class="ops-v">{{opsSummary.detail}}（{{opsSummary.detailRatePct}}%）</text>
+        </view>
+        <view class="ops-row">
+          <text class="ops-k">加到冰箱成功</text>
+          <text class="ops-v">{{opsSummary.addSuccess}}（{{opsSummary.addRatePct}}%）</text>
+        </view>
+        <view class="ops-row">
+          <text class="ops-k">用它做菜点击</text>
+          <text class="ops-v">{{opsSummary.cookClick}}（{{opsSummary.cookRatePct}}%）</text>
+        </view>
+        <view class="ops-row">
+          <text class="ops-k">不感兴趣</text>
+          <text class="ops-v">{{opsSummary.dislike}}</text>
+        </view>
+        <view class="ops-note">
+          <text class="ops-note-text">口径说明：曝光仅在每月首次加载统计一次；“转化率”以“详情打开”为分母。后续接后端可替换为真实埋点。</text>
+        </view>
+      </view>
+      <view class="ops-body" wx:else>
+        <text class="ops-empty">暂无数据，先浏览/点击几次再来看。</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,308 @@
+<!--pages/remedy/remedy.wxml-->
+<view class="container">
+  <!-- 标题卡片（急救包主题） -->
+  <view class="header">
+    <view class="header-tag">
+      <view class="header-tag-icon">🩹</view>
+      <view class="header-texts">
+        <view class="header-title">朋克养生急救包</view>
+        <view class="header-desc">针对你的「作死」行为，提供暖心补救方案</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 症状选择 -->
+  <view class="symptom-section">
+    <view class="section-title">
+      <text>选择症状</text>
+      <view class="header-actions">
+        <view class="triage-entry-btn" bindtap="goToTriage" hover-class="triage-entry-btn-hover" hover-stay-time="80">
+          <text class="triage-entry-ico">💊</text>
+          <text class="triage-entry-txt">对症下药</text>
+        </view>
+        <view class="history-btn" bindtap="toggleHistory" hover-class="history-btn-hover" hover-stay-time="80">
+          <text class="history-icon">📜</text>
+          <text class="history-text">历史</text>
+          <text class="history-count" wx:if="{{usageHistory.length > 0}}">{{usageHistory.length}}次</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="symptom-meta" wx:if="{{filteredSymptoms.length > 0}}">
+      <text class="symptom-meta-text">共 {{filteredSymptoms.length}} 个症状可选</text>
+      <text class="symptom-meta-hint">点选进入分析与食谱</text>
+    </view>
+    
+    <!-- 分类标签（横向滑动，右侧渐变提示可滑动） -->
+    <view class="category-strip">
+      <scroll-view class="category-tabs" scroll-x="true" show-scrollbar="false">
+        <view class="category-tabs-inner">
+          <block wx:for="{{categoryTabs}}" wx:key="id">
+            <view
+              class="category-tab {{activeCategory === item.id ? 'active' : ''}}"
+              data-id="{{item.id}}"
+              bindtap="onCategoryTabTap"
+              hover-class="category-tab-hover"
+              hover-stay-time="80"
+            >
+              <text class="category-tab-text">{{item.label}}</text>
+            </view>
+          </block>
+        </view>
+      </scroll-view>
+      <view class="category-strip-fade"></view>
+    </view>
+    
+    <!-- 搜索框 -->
+    <view class="search-box">
+      <text class="search-icon-prefix">🔍</text>
+      <input 
+        class="search-input" 
+        placeholder="搜索症状..." 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+      />
+      <view wx:if="{{searchKeyword}}" class="search-clear" bindtap="clearSearch">✕</view>
+    </view>
+    
+    <view class="symptom-list" wx:if="{{filteredSymptoms.length > 0}}">
+      <view 
+        wx:for="{{filteredSymptoms}}" 
+        wx:key="id"
+        class="symptom-item {{selectedSymptom && selectedSymptom.id === item.id ? 'active' : ''}}"
+        style="border-color: {{item.color}};"
+        data-symptom="{{item}}"
+        bindtap="selectSymptom"
+        hover-class="symptom-press"
+        hover-stay-time="80"
+      >
+        <view class="symptom-icon">{{item.icon}}</view>
+        <view class="symptom-name">{{item.name}}</view>
+        <view class="symptom-desc">{{item.desc}}</view>
+      </view>
+    </view>
+    <view wx:else class="empty-search">
+      <text class="empty-search-icon">🔍</text>
+      <text class="empty-search-text">{{searchKeyword ? '未找到「' + searchKeyword + '」相关症状' : '该分类下暂无症状'}}</text>
+      <text class="empty-search-hint">{{searchKeyword ? '试试其他关键词或切换分类' : '切换上方分类或选择「全部」'}}</text>
+      <view class="empty-search-clear" wx:if="{{searchKeyword}}" bindtap="clearSearch">清空搜索</view>
+    </view>
+  </view>
+
+  <!-- 历史记录弹窗 -->
+  <view wx:if="{{showHistory}}" class="modal show" catchtap="toggleHistory">
+    <view class="modal-content history-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <view class="modal-title">使用历史</view>
+        <text class="modal-close" bindtap="toggleHistory">✕</text>
+      </view>
+      <scroll-view class="modal-body" scroll-y>
+        <view wx:if="{{usageHistory.length === 0}}" class="empty-history">
+          <text class="empty-text">暂无使用记录</text>
+        </view>
+        <view wx:else class="history-list">
+          <view 
+            wx:for="{{usageHistory}}" 
+            wx:key="id"
+            class="history-item"
+            data-item="{{item}}"
+            bindtap="selectFromHistory"
+          >
+            <view class="history-item-header">
+              <text class="history-remedy-name">{{item.remedyName}}</text>
+              <text class="history-date">{{item.displayTime || item.timestamp}}</text>
+            </view>
+            <text class="history-symptom">症状：{{item.symptom}}</text>
+          </view>
+        </view>
+      </scroll-view>
+      <view class="modal-footer">
+        <button class="btn-primary" bindtap="toggleHistory">关闭</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 补救方案 -->
+  <view wx:if="{{selectedSymptom}}" class="remedy-section">
+    <view class="section-title">
+      <text>💡 推荐补救方案</text>
+      <text class="section-subtitle">{{selectedSymptom.name}}后建议</text>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading-state">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">正在为你寻找最佳方案...</text>
+    </view>
+
+    <view wx:else class="remedy-list">
+      <view 
+        wx:for="{{remedies}}" 
+        wx:key="id"
+        class="remedy-card card"
+        data-remedy="{{item}}"
+      >
+        <view class="remedy-header">
+          <view class="remedy-icon">{{item.icon}}</view>
+          <view class="remedy-info">
+            <view class="remedy-name">{{item.name}}</view>
+            <view class="remedy-desc">{{item.desc}}</view>
+          </view>
+          <view class="remedy-actions">
+            <view class="remedy-calories">{{item.calories}}kcal</view>
+            <view 
+              class="favorite-btn {{item.isFavorited ? 'favorited' : ''}}"
+              bindtap="toggleFavorite"
+              data-remedy="{{item}}"
+            >
+              {{item.isFavorited ? '❤️' : '🤍'}}
+            </view>
+          </view>
+        </view>
+
+        <view class="remedy-recipe">
+          <view class="recipe-row">
+            <text class="recipe-label">做法：</text>
+            <view class="copy-recipe-btn" bindtap="copyRecipe" data-remedy="{{item}}">📋 复制做法</view>
+          </view>
+          <text class="recipe-text">{{item.recipe || '详见详情中的步骤说明'}}</text>
+        </view>
+
+        <view class="remedy-tags">
+          <view 
+            wx:for="{{item.tags}}" 
+            wx:for-item="tag"
+            wx:key="*this"
+            class="tag tag-active"
+          >
+            {{tag}}
+          </view>
+        </view>
+
+        <view class="remedy-buttons">
+          <button class="btn-secondary detail-btn" bindtap="viewDetail" data-remedy="{{item}}">
+            查看详情
+          </button>
+          <button class="btn-primary add-btn" bindtap="addToPlan" data-remedy="{{item}}">
+            添加到计划
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态提示 -->
+  <view wx:if="{{!selectedSymptom}}" class="empty-state">
+    <view class="empty-icon">💊</view>
+    <view class="empty-text">选择上面的症状，获取专属补救方案</view>
+    <view class="empty-hint">针对熬夜、暴食、宿醉等场景，提供健康饮食建议</view>
+  </view>
+
+  <!-- 详情弹窗 -->
+  <view wx:if="{{showDetail && selectedRemedy}}" class="modal {{showDetail ? 'show' : ''}}" catchtap="closeDetail">
+    <view class="modal-content remedy-detail-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <view class="modal-title">{{selectedRemedy.name}}</view>
+        <text class="modal-close" bindtap="closeDetail">✕</text>
+      </view>
+
+      <scroll-view class="modal-body" scroll-y>
+        <view class="detail-section">
+          <view class="detail-icon">{{selectedRemedy.icon}}</view>
+          <view class="detail-desc">{{selectedRemedy.desc}}</view>
+        </view>
+
+        <view class="detail-section">
+          <view class="section-label">📝 详细做法</view>
+          <view class="detail-steps">
+            <view 
+              wx:for="{{selectedRemedy.detailedSteps}}" 
+              wx:for-item="step"
+              wx:key="*this"
+              class="step-item"
+            >
+              {{step}}
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-section" wx:if="{{selectedRemedy.nutrition}}">
+          <view class="section-label">🥗 营养成分（每份）</view>
+          <view class="nutrition-grid">
+            <view class="nutrition-item">
+              <text class="nutrition-label">热量</text>
+              <text class="nutrition-value">{{selectedRemedy.calories}}kcal</text>
+            </view>
+            <view class="nutrition-item" wx:if="{{selectedRemedy.nutrition.carbs}}">
+              <text class="nutrition-label">碳水</text>
+              <text class="nutrition-value">{{selectedRemedy.nutrition.carbs}}g</text>
+            </view>
+            <view class="nutrition-item" wx:if="{{selectedRemedy.nutrition.protein}}">
+              <text class="nutrition-label">蛋白质</text>
+              <text class="nutrition-value">{{selectedRemedy.nutrition.protein}}g</text>
+            </view>
+            <view class="nutrition-item" wx:if="{{selectedRemedy.nutrition.fat}}">
+              <text class="nutrition-label">脂肪</text>
+              <text class="nutrition-value">{{selectedRemedy.nutrition.fat}}g</text>
+            </view>
+            <view class="nutrition-item" wx:if="{{selectedRemedy.nutrition.fiber}}">
+              <text class="nutrition-label">纤维</text>
+              <text class="nutrition-value">{{selectedRemedy.nutrition.fiber}}g</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-section" wx:if="{{selectedRemedy.benefits}}">
+          <view class="section-label">✨ 功效</view>
+          <view class="benefits-list">
+            <view 
+              wx:for="{{selectedRemedy.benefits}}" 
+              wx:for-item="benefit"
+              wx:key="*this"
+              class="benefit-item"
+            >
+              ✓ {{benefit}}
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-section" wx:if="{{selectedRemedy.tips}}">
+          <view class="section-label">💡 小贴士</view>
+          <view class="tips-list">
+            <view 
+              wx:for="{{selectedRemedy.tips}}" 
+              wx:for-item="tip"
+              wx:key="*this"
+              class="tip-item"
+            >
+              • {{tip}}
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-section" wx:if="{{selectedRemedy.science}}">
+          <view class="section-label">🔬 科学依据</view>
+          <view class="science-text">{{selectedRemedy.science}}</view>
+        </view>
+
+        <view class="detail-section" wx:if="{{selectedRemedy.timing}}">
+          <view class="section-label">⏰ 最佳时机</view>
+          <view class="timing-text">{{selectedRemedy.timing}}</view>
+        </view>
+
+        <view class="detail-section" wx:if="{{selectedRemedy.duration}}">
+          <view class="section-label">📅 持续周期</view>
+          <view class="duration-text">{{selectedRemedy.duration}}</view>
+        </view>
+      </scroll-view>
+
+      <view class="modal-footer">
+        <view class="modal-footer-actions">
+          <button class="btn-secondary" bindtap="closeDetail">关闭</button>
+          <view class="btn-copy-in-detail" bindtap="copyRecipe" data-remedy="{{selectedRemedy}}">📋 复制做法</view>
+          <button class="btn-primary" bindtap="addToPlan" data-remedy="{{selectedRemedy}}">添加到计划</button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

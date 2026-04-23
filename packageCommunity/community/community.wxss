@@ -1,0 +1,959 @@
+/* pages/community/community.wxss - 社区分享页 */
+.community-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #F5FBF7 0%, var(--neo-bg-0) 34%, #FFFFFF 100%);
+  padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.community-page::before {
+  content: '';
+  position: fixed;
+  top: -10vh;
+  left: -12vw;
+  width: 70vw;
+  height: 44vh;
+  background: radial-gradient(ellipse at 18% 20%, rgba(76, 175, 80, 0.10) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 顶部 Tab */
+.community-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  background: var(--neo-glass);
+  padding: 0 24rpx;
+  border-bottom: 1rpx solid var(--neo-border);
+  backdrop-filter: blur(16rpx) saturate(150%);
+  -webkit-backdrop-filter: blur(16rpx) saturate(150%);
+}
+
+.community-tab {
+  flex: 1;
+  text-align: center;
+  padding: 28rpx 0;
+  font-size: 30rpx;
+  color: #666;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.community-tab.active {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.community-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  width: 48rpx;
+  height: 4rpx;
+  background: #6BCB77;
+  border-radius: 2rpx;
+  transform: translateX(-50%);
+  transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.community-tab-indicator.tab-feed { left: 16.666%; }
+.community-tab-indicator.tab-recipe { left: 50%; }
+.community-tab-indicator.tab-restaurant { left: 83.333%; }
+
+/* 浮动发布按钮 */
+.community-fab {
+  position: fixed;
+  right: 32rpx;
+  bottom: calc(120rpx + env(safe-area-inset-bottom));
+  width: 112rpx;
+  height: 112rpx;
+  background: linear-gradient(145deg, #6BCB77 0%, #4CAF50 100%);
+  border-radius: 56rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(76, 175, 80, 0.35);
+  z-index: 99;
+  animation: breathing 3s ease-in-out infinite;
+  transition: transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.community-fab:active {
+  transform: scale(0.92);
+  animation: none;
+}
+
+.community-fab-icon {
+  font-size: 36rpx;
+  margin-bottom: 4rpx;
+}
+
+.community-fab-text {
+  font-size: 22rpx;
+  color: #fff;
+}
+
+/* 动态列表 */
+.community-list {
+  padding: 24rpx;
+}
+
+.feed-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.feed-search-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 72rpx;
+  padding: 0 24rpx;
+  background: var(--neo-glass);
+  border-radius: 36rpx;
+  border: 1rpx solid var(--neo-border);
+  box-shadow: 0 4rpx 14rpx rgba(76, 175, 80, 0.08);
+}
+
+.feed-search-icon {
+  font-size: 28rpx;
+  margin-right: 12rpx;
+  color: #999;
+}
+
+.feed-search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.feed-search-clear {
+  font-size: 32rpx;
+  color: #999;
+  padding: 0 8rpx;
+}
+
+.feed-sort {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.feed-sort-div {
+  margin: 0 12rpx;
+  color: #ddd;
+}
+
+.feed-sort-item.active {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.feed-hot-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.feed-hot-tag {
+  padding: 10rpx 20rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  color: #666;
+  border: 1rpx solid #eee;
+  transition: transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)),
+              background 0.15s ease;
+}
+
+.feed-hot-tag:active {
+  transform: scale(0.92);
+  background: rgba(76, 175, 80, 0.08);
+}
+
+.feed-hot-tag:active {
+  background: #F0F7F4;
+  color: #4CAF50;
+  border-color: #6BCB77;
+}
+
+.feed-more-btn {
+  width: 56rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+  text-align: center;
+  font-size: 36rpx;
+  color: #999;
+  margin-left: 8rpx;
+}
+
+.feed-more-btn:active {
+  color: #666;
+}
+
+.feed-list-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.feed-card {
+  background: var(--neo-glass);
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: var(--neo-shadow-soft);
+  border: 1rpx solid rgba(76, 175, 80, 0.12);
+  backdrop-filter: blur(14rpx);
+  -webkit-backdrop-filter: blur(14rpx);
+  animation: fadeInUp 0.45s ease-out both;
+  transition: transform 0.18s var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)), box-shadow 0.18s ease;
+}
+
+.feed-card:nth-child(1) { animation-delay: 0.04s; }
+.feed-card:nth-child(2) { animation-delay: 0.09s; }
+.feed-card:nth-child(3) { animation-delay: 0.14s; }
+.feed-card:nth-child(4) { animation-delay: 0.19s; }
+.feed-card:nth-child(5) { animation-delay: 0.24s; }
+.feed-card:nth-child(6) { animation-delay: 0.29s; }
+
+.feed-card:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-sm);
+  opacity: 0.98;
+}
+
+.feed-card-header {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 24rpx 16rpx;
+}
+
+.feed-user-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+}
+
+.feed-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-author {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4rpx;
+}
+
+.feed-date {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.feed-tag {
+  padding: 6rpx 14rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+}
+
+.feed-tag.tag-recipe { background: #F0F7F4; color: #4CAF50; }
+.feed-tag.tag-restaurant { background: #FFF7ED; color: #f59e0b; }
+.feed-tag.tag-meal { background: #EFF6FF; color: #3b82f6; }
+.feed-tag.tag-sport { background: #FDF4FF; color: #a855f7; }
+
+.feed-sport-card {
+  display: flex;
+  flex-direction: column;
+  background: #faf5ff;
+  border-radius: 14rpx;
+  padding: 16rpx 18rpx;
+  margin-top: 16rpx;
+  border: 1rpx solid #ede9fe;
+}
+
+.feed-sport-type {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #6d28d9;
+  margin-bottom: 8rpx;
+}
+
+.feed-sport-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.feed-card-body {
+  padding: 0 24rpx 20rpx;
+}
+
+.feed-desc {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.65;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.feed-cover {
+  border-radius: 12rpx;
+  overflow: hidden;
+  margin-bottom: 16rpx;
+}
+
+.feed-cover-img {
+  width: 100%;
+  display: block;
+  max-height: 480rpx;
+}
+
+.feed-attach {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 14rpx;
+  padding: 16rpx 18rpx;
+  border: 1rpx solid #eee;
+}
+
+.feed-attach-thumb {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 10rpx;
+  margin-right: 18rpx;
+}
+
+.feed-attach-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-attach-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6rpx;
+}
+
+.feed-attach-extra {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.feed-card-footer {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  border-top: 1rpx solid #f5f5f5;
+}
+
+.feed-action {
+  display: flex;
+  align-items: center;
+  margin-right: 40rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.feed-action-icon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+}
+
+.feed-action.liked .feed-action-icon {
+  animation: heartPop 0.3s ease;
+}
+
+@keyframes heartPop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* 空状态 */
+.community-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx 40rpx;
+  background: #fff;
+  border-radius: 20rpx;
+}
+
+.community-empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+.community-empty-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.community-empty-desc {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.community-load {
+  text-align: center;
+  padding: 32rpx;
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 菜谱/商家列表 */
+.recipe-list,
+.restaurant-list {
+  padding: 24rpx;
+}
+
+.recipe-item,
+.restaurant-item {
+  background: #fff;
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  display: flex;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+.recipe-item:active,
+.restaurant-item:active {
+  opacity: 0.98;
+}
+
+.recipe-image,
+.restaurant-image {
+  width: 220rpx;
+  height: 220rpx;
+  flex-shrink: 0;
+}
+
+.recipe-info,
+.restaurant-info {
+  flex: 1;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.recipe-name,
+.restaurant-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12rpx;
+}
+
+.recipe-meta,
+.restaurant-meta {
+  display: flex;
+  gap: 20rpx;
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.recipe-user,
+.restaurant-user {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar-small {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  margin-right: 12rpx;
+}
+
+.user-name-small {
+  font-size: 24rpx;
+  color: #666;
+  margin-right: 12rpx;
+}
+
+.share-time {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* ========== 发布分享弹窗布局 ========== */
+.publish-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.publish-modal.show {
+  display: flex;
+}
+
+.publish-modal-content {
+  width: 100%;
+  max-height: 85vh;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.publish-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx 32rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.publish-modal-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.publish-modal-close {
+  width: 64rpx;
+  height: 64rpx;
+  text-align: center;
+  line-height: 64rpx;
+  font-size: 36rpx;
+  color: #999;
+}
+
+.publish-modal-body {
+  flex: 1;
+  height: 0;
+  min-height: 200rpx;
+  padding: 24rpx 32rpx 32rpx;
+}
+
+/* 分区 */
+.publish-section {
+  margin-bottom: 32rpx;
+}
+
+.publish-section-label {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+
+.publish-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  padding: 24rpx;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  line-height: 1.6;
+  box-sizing: border-box;
+  background: #fafafa;
+}
+
+.publish-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16rpx;
+}
+
+.publish-emoji-btn {
+  padding: 14rpx 24rpx;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: #666;
+  background: #fff;
+  margin: 0;
+  line-height: 1.3;
+}
+.publish-emoji-btn::after {
+  border: none;
+}
+
+.publish-emoji-btn.active {
+  border-color: #6BCB77;
+  color: #6BCB77;
+  background: #F0F7F4;
+}
+
+.publish-char-count {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.publish-emoji-panel {
+  margin-bottom: 24rpx;
+  padding: 16rpx 0;
+  border-radius: 16rpx;
+  background: #f5f5f5;
+}
+
+.emoji-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.emoji-list {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 12rpx;
+  padding: 0 20rpx;
+  min-height: 64rpx;
+}
+
+.emoji-item {
+  flex-shrink: 0;
+  width: 64rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  font-size: 40rpx;
+  border-radius: 12rpx;
+}
+
+.emoji-item:active {
+  background: rgba(107, 203, 119, 0.25);
+}
+
+/* 图片区域 */
+.publish-images-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.publish-image-item {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.publish-image-preview {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.publish-image-del {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44rpx;
+  height: 44rpx;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 32rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 0 0 0 12rpx;
+}
+
+.publish-image-add {
+  width: 160rpx;
+  height: 160rpx;
+  border: 2rpx dashed #ccc;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  font-size: 48rpx;
+  color: #999;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+.publish-image-add::after {
+  border: none;
+}
+
+.publish-image-add-hover {
+  background: #f0f0f0;
+  border-color: #6BCB77;
+  color: #6BCB77;
+}
+
+.publish-options {
+  display: flex;
+  gap: 20rpx;
+}
+
+.publish-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 16rpx;
+  border: 2rpx solid #e8e8e8;
+  border-radius: 16rpx;
+  background: #fafafa;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.publish-option.active {
+  border-color: #6BCB77;
+  background: #F0F7F4;
+}
+
+.publish-option-icon {
+  font-size: 44rpx;
+  margin-bottom: 8rpx;
+}
+
+.publish-option-text {
+  font-size: 26rpx;
+  color: #333;
+}
+
+.publish-option.active .publish-option-text {
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+/* 运动记录表单 */
+.publish-sport-section {
+  margin-top: 24rpx;
+  padding: 20rpx 0;
+  background: #faf5ff;
+  border-radius: 14rpx;
+  padding: 20rpx;
+  border: 1rpx solid #ede9fe;
+}
+
+.publish-sport-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.publish-sport-row:last-child {
+  margin-bottom: 0;
+}
+
+.publish-sport-row .publish-section-label {
+  width: 200rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.publish-sport-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.publish-sport-type {
+  padding: 10rpx 20rpx;
+  font-size: 24rpx;
+  color: #666;
+  background: #fff;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 24rpx;
+}
+
+.publish-sport-type.active {
+  background: #6d28d9;
+  color: #fff;
+  border-color: #6d28d9;
+}
+
+.publish-sport-input {
+  flex: 1;
+  height: 64rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  background: #fff;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 12rpx;
+}
+
+.publish-link-row {
+  margin-top: 16rpx;
+  min-height: 36rpx;
+}
+
+.publish-link {
+  font-size: 26rpx;
+  color: #6BCB77;
+}
+
+.publish-link-done {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 底部发布按钮 */
+.publish-footer {
+  flex-shrink: 0;
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid #f0f0f0;
+  background: #fff;
+}
+
+.publish-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: linear-gradient(135deg, #6BCB77 0%, #4CAF50 100%);
+  color: #fff;
+  border: none;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+.publish-btn::after {
+  border: none;
+}
+
+.publish-btn.disabled,
+.publish-btn[disabled] {
+  background: #e8e8e8;
+  color: #bbb;
+}
+
+/* 评论弹窗 */
+.comments-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index: 1000;
+}
+
+.comments-modal.show {
+  display: flex;
+  flex-direction: column;
+}
+
+.comments-content {
+  width: 100%;
+  height: 70vh;
+  max-width: none;
+  border-radius: 24rpx 24rpx 0 0;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  bottom: 0;
+}
+
+.comments-list {
+  flex: 1;
+  padding: 20rpx;
+  overflow-y: auto;
+}
+
+.comment-item {
+  display: flex;
+  margin-bottom: 30rpx;
+}
+
+.comment-avatar {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+}
+
+.comment-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.comment-user {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.comment-text {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 8rpx;
+}
+
+.comment-time {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.comment-input-area {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  border-top: 1rpx solid #E5E5E5;
+  background: #fff;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 16rpx 20rpx;
+  border: 1rpx solid #E5E5E5;
+  border-radius: 50rpx;
+  font-size: 28rpx;
+  margin-right: 20rpx;
+}
+
+.comment-submit {
+  background: #6BCB77;
+  color: #fff;
+  border: none;
+  border-radius: 50rpx;
+  padding: 16rpx 40rpx;
+  font-size: 28rpx;
+}
+
+.comment-submit[disabled] {
+  background: #E5E5E5;
+  color: #999;
+}

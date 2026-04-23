@@ -1,0 +1,68 @@
+<!--packageUser/login/login.wxml - 主题动效：清新绿 · 一餐一会 -->
+<view class="container login-page login-page-shell {{logging ? 'is-logging' : ''}}">
+  <view class="login-decor">
+    <view class="login-orb login-orb--a"></view>
+    <view class="login-orb login-orb--b"></view>
+    <view class="login-leaf login-leaf--1">🌿</view>
+    <view class="login-leaf login-leaf--2">🥗</view>
+  </view>
+
+  <view class="content">
+    <view class="brand-card login-brand-card">
+      <view class="brand">
+        <view class="logo-wrap">
+          <view class="logo-shine"></view>
+          <text class="logo-icon">🍽️</text>
+        </view>
+        <text class="app-name">今天吃什么</text>
+        <text class="slogan">健康生活，从每一餐开始</text>
+        <text class="slogan sub">AI 营养师帮你选今天的一餐</text>
+        <view class="tag-row">
+          <text class="feature-tag">智能推荐</text>
+          <text class="feature-tag soft">饮食记录</text>
+          <text class="feature-tag soft">健康报告</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="login-section login-section-anim">
+      <button
+        class="btn-wx-login {{logging ? 'is-processing' : ''}}"
+        bindtap="onWxLogin"
+        disabled="{{logging}}"
+      >
+        <text class="btn-icon">{{logging ? '⏳' : '📱'}}</text>
+        <text class="btn-text">{{ logging ? '登录中...' : '微信一键登录' }}</text>
+      </button>
+      <view class="login-tip">使用微信授权，快速开始记录饮食与健康</view>
+      <view wx:if="{{showDevChannel}}" class="dev-channel-row" bindtap="onDevChannelEnter">
+        <text class="dev-channel-text">开发者通道进入（调试用，不经过微信登录）</text>
+      </view>
+    </view>
+
+    <view class="agreement login-agreement-anim">
+      <text class="agreement-text">登录即表示同意</text>
+      <text class="agreement-link" bindtap="onAgreement">《用户协议》</text>
+      <text class="agreement-text">和</text>
+      <text class="agreement-link" bindtap="onPrivacy">《隐私政策》</text>
+    </view>
+  </view>
+
+  <view
+    wx:if="{{showSuccessOverlay}}"
+    class="login-success-overlay"
+    catchtouchmove="noop"
+  >
+    <view class="login-success-panel">
+      <view class="login-success-visual">
+        <view class="login-success-ripple"></view>
+        <view class="login-success-ripple login-success-ripple--2"></view>
+        <view class="login-success-icon-wrap">
+          <text class="login-success-check">✓</text>
+        </view>
+      </view>
+      <text class="login-success-title">欢迎回来</text>
+      <text class="login-success-sub">正在为你打开今日饮食…</text>
+    </view>
+  </view>
+</view>

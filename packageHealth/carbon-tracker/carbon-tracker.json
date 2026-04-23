@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "绿色足迹",
+  "navigationBarBackgroundColor": "#34c759",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#f7f7f7",
+  "enablePullDownRefresh": true
+}

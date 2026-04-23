@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "运动导航",
+  "navigationBarBackgroundColor": "#6BCB77",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F0F7F4",
+  "enablePullDownRefresh": false
+}

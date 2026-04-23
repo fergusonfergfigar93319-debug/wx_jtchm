@@ -1,0 +1,36 @@
+分析报错根源:
+
+后端表现: Django 后端收到 POST /api/v1/diet/fridge/ 请求后，成功创建了资源，并符合 RESTful 规范地返回了 HTTP 201 Created 状态码。
+
+前端表现: 微信小程序报错 Error: 请求失败: 201 且指向 api.js:49。
+
+结论: 这是经典的前后端状态码对齐问题。前端的请求封装文件（api.js）过于严格，仅仅把 HTTP 200 视为成功，而把 201（以及可能的 204 No Content 等其他 2xx 成功状态码）误判为了失败抛出异常。
+
+
+修复方案 1：解决 Lottie 动画 eval 崩溃（核心痛点）
+由于小程序无法执行 eval，你必须从动画 JSON 资源文件入手：
+
+通知 UI/动效设计师：
+
+回到 After Effects (AE) 的 Bodymovin 插件导出界面。
+
+在导出设置 (Settings) 中，必须勾选 "Convert expressions to keyframes" (将表达式转换为关键帧) 或者在 AE 源文件中将所有的表达式 (Expressions) 烘焙成关键帧。
+
+重新导出 JSON 文件并替换小程序代码中的旧动画文件。
+
+(可选) 确保前端引入的是专为小程序定制的库 lottie-miniprogram，而不是普通的 Web 版 lottie-web。
+
+修复方案 2：消除弃用警告 (Aesthetics & Quality)
+针对 profile.js 和 report.js 中的黄色警告，遵循微信最新规范进行 API 替换：
+
+分析报错根源:
+
+后端表现: Django 收到 DELETE /api/v1/diet/fridge/41/ 请求，成功删除了数据，并标准地返回了 HTTP 204 No Content。这是完全符合 RESTful 规范的最佳实践（删除成功且无需返回请求体）。
+
+前端表现: 小程序报错 Error: 请求失败: 204，且抛出了 请注意 showLoading 与 hideLoading 必须配对使用 的警告。
+
+诊断:
+
+前端请求库（api.js）的拦截器依然没有正确放行 204 状态码。可能你在上一次修复 201 时，仅仅加了 if (res.statusCode === 200 || res.statusCode === 201)，而没有使用范围判断。
+
+连带反应 (Cascading Failure)：因为拦截器将 204 误判为 Error 并走了 reject 分支，导致 fridge.js 中的 await deleteItem() 抛出异常，跳过了原本正常流程中的 wx.hideLoading()，直接触发了全局的 loading 状态失控警告。

@@ -1,0 +1,172 @@
+<!--pages/snap-scan/snap-scan.wxml-->
+<view class="container">
+  <!-- 拍照区域 -->
+  <view class="camera-section">
+    <view wx:if="{{!imageUrl}}" class="camera-placeholder" bindtap="chooseImage">
+      <view class="camera-icon">📸</view>
+      <view class="camera-text">点击拍照或选择图片</view>
+      <view class="camera-hint">AI将自动识别食物并计算热量</view>
+    </view>
+    
+    <view wx:if="{{imageUrl}}" class="image-preview">
+      <image src="{{imageUrl}}" mode="aspectFit" class="preview-image"></image>
+      <view wx:if="{{scanning}}" class="scanning-overlay">
+        <view class="scanning-spinner"></view>
+        <text class="scanning-text">AI识别中...</text>
+        <text class="scanning-hint">请稍候，正在分析食物...</text>
+      </view>
+      <view wx:if="{{error}}" class="error-overlay">
+        <view class="error-icon">⚠️</view>
+        <text class="error-text">{{error}}</text>
+        <button class="retry-btn" bindtap="reScan">重新识别</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 多食物选择（如果识别到多个） -->
+  <view wx:if="{{showMultipleFoods && multipleFoods.length > 1}}" class="multiple-foods-section">
+    <view class="multiple-foods-card card">
+      <view class="multiple-foods-header">
+        <text class="multiple-foods-title">识别到多个食物</text>
+        <text class="multiple-foods-subtitle">请选择要记录的食物</text>
+      </view>
+      <view class="multiple-foods-list">
+        <view 
+          wx:for="{{multipleFoods}}" 
+          wx:key="index"
+          class="multiple-food-item"
+          bindtap="selectFood"
+          data-index="{{index}}"
+        >
+          <view class="food-item-name">{{item.name}}</view>
+          <view class="food-item-calories">{{item.calories}} kcal</view>
+          <view wx:if="{{item.confidenceText}}" class="food-item-confidence">
+            置信度: {{item.confidenceText}}
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 识别结果 -->
+  <view wx:if="{{hasResult && recognizedFood}}" class="result-section">
+    <view class="result-card card">
+      <view class="result-header">
+        <view class="result-header-left">
+          <text class="result-icon">✅</text>
+          <text class="result-title">识别成功</text>
+        </view>
+        <view wx:if="{{recognizedFood.confidenceText}}" class="confidence-badge">
+          <text class="confidence-text">置信度 {{recognizedFood.confidenceText}}</text>
+        </view>
+      </view>
+      
+      <view class="food-info">
+        <view class="food-name">{{recognizedFood.name}}</view>
+        <view class="food-weight">{{recognizedFood.weight}}</view>
+      </view>
+
+      <!-- 分量调整 -->
+      <view class="portion-section">
+        <view class="portion-label">分量调整</view>
+        <view class="portion-options">
+          <view 
+            wx:for="{{portionOptions}}" 
+            wx:key="*this"
+            class="portion-option {{portion === item ? 'active' : ''}}"
+            bindtap="adjustPortion"
+            data-portion="{{item}}"
+          >
+            {{item}}份
+          </view>
+        </view>
+      </view>
+
+      <!-- 调整后的热量显示 -->
+      <view class="calorie-display">
+        <view class="calorie-main">
+          <view class="calorie-number">{{adjustedCalories || recognizedFood.calories}}</view>
+          <view class="calorie-unit">kcal</view>
+        </view>
+        <view wx:if="{{portion !== 1.0}}" class="calorie-original">
+          (原: {{recognizedFood.calories}} kcal)
+        </view>
+      </view>
+
+      <!-- 与今日摄入对比 -->
+      <view wx:if="{{dailySummary}}" class="intake-comparison">
+        <view class="comparison-item">
+          <text class="comparison-label">今日剩余</text>
+          <text class="comparison-value">{{dailySummary.remaining || (dailySummary.daily_limit - dailySummary.intake_actual)}} kcal</text>
+        </view>
+        <view class="comparison-item">
+          <text class="comparison-label">记录后剩余</text>
+          <text class="comparison-value {{remainingAfter !== null && remainingAfter < 0 ? 'warning' : ''}}">
+            {{remainingAfter !== null ? remainingAfter : '--'}} kcal
+          </text>
+        </view>
+      </view>
+
+      <!-- 营养成分 -->
+      <view class="nutrition-info">
+        <view class="nutrition-item">
+          <text class="nutrition-label">碳水</text>
+          <text class="nutrition-value">{{adjustedNutrition ? adjustedNutrition.carb : recognizedFood.nutrition.carb}}g</text>
+          <text wx:if="{{portion !== 1.0}}" class="nutrition-original">
+            (原: {{recognizedFood.nutrition.carb}}g)
+          </text>
+        </view>
+        <view class="nutrition-item">
+          <text class="nutrition-label">蛋白质</text>
+          <text class="nutrition-value">{{adjustedNutrition ? adjustedNutrition.protein : recognizedFood.nutrition.protein}}g</text>
+          <text wx:if="{{portion !== 1.0}}" class="nutrition-original">
+            (原: {{recognizedFood.nutrition.protein}}g)
+          </text>
+        </view>
+        <view class="nutrition-item">
+          <text class="nutrition-label">脂肪</text>
+          <text class="nutrition-value">{{adjustedNutrition ? adjustedNutrition.fat : recognizedFood.nutrition.fat}}g</text>
+          <text wx:if="{{portion !== 1.0}}" class="nutrition-original">
+            (原: {{recognizedFood.nutrition.fat}}g)
+          </text>
+        </view>
+      </view>
+
+      <!-- 健康等级和提示 -->
+      <view class="health-section">
+        <view class="health-level health-level-{{recognizedFood.healthLevel}}">
+          <text class="health-level-icon">
+            {{recognizedFood.healthLevel === 'excellent' ? '🟢' : 
+              recognizedFood.healthLevel === 'good' ? '🟡' : 
+              recognizedFood.healthLevel === 'warning' ? '🟠' : '🔴'}}
+          </text>
+          <text class="health-level-text">
+            {{recognizedFood.healthLevel === 'excellent' ? '优秀' : 
+              recognizedFood.healthLevel === 'good' ? '良好' : 
+              recognizedFood.healthLevel === 'warning' ? '注意' : '警告'}}
+          </text>
+        </view>
+        <view class="health-tip">
+          <text class="health-icon">💡</text>
+          <text class="health-text">{{recognizedFood.healthTip}}</text>
+        </view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="action-buttons">
+        <button class="btn-secondary" bindtap="reScan">重新识别</button>
+        <button class="btn-primary" bindtap="confirmRecord">确认记录</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 使用提示 -->
+  <view wx:if="{{!hasResult && !imageUrl && !error}}" class="tips-section">
+    <view class="tips-card card">
+      <view class="tips-title">💡 使用提示</view>
+      <view class="tips-content">
+        <text wx:for="{{recognitionTips}}" wx:key="index" wx:for-item="tip">{{tip}}</text>
+      </view>
+    </view>
+  </view>
+</view>

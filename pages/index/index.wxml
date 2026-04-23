@@ -1,0 +1,250 @@
+<!-- pages/index/index.wxml - 课程风格首页 -->
+<view class="page-index page-container {{liteMode ? 'lite' : ''}}">
+  <!-- 顶部栏 + 搜索 -->
+  <view class="header">
+    <view class="status-bar">
+      <view class="status-text"></view>
+      <text class="status-text">{{timeText}}</text>
+      <text class="status-text">100%</text>
+    </view>
+
+    <view class="top-row">
+      <view
+        class="avatar pressable"
+        bindtap="goToProfile"
+        hover-class="press-hover"
+        hover-stay-time="80"
+      >
+        <image
+          wx:if="{{userAvatar}}"
+          class="avatar-img"
+          src="{{userAvatar}}"
+          mode="aspectFill"
+        />
+        <view wx:else class="avatar-placeholder"></view>
+      </view>
+
+      <view
+        class="search-box pressable"
+        bindtap="onSearchTap"
+        hover-class="press-hover"
+        hover-stay-time="80"
+      >
+        <text class="search-icon">🔍</text>
+        <text class="search-placeholder">美食记 - 免费教学</text>
+      </view>
+
+      <view class="header-icons">
+        <view
+          class="header-icon-wrap pressable"
+          bindtap="onNotificationTap"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <text>🔔</text>
+          <view class="notification-dot" wx:if="{{unreadCount > 0}}"></view>
+        </view>
+        <view
+          class="header-icon-wrap pressable"
+          bindtap="goToSnapScan"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <text>📷</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 问候与日期 -->
+  <view class="greeting-section">
+    <text class="greeting-text">{{greetingText}}</text>
+    <text class="greeting-icon">{{weatherIcon}}</text>
+    <text class="greeting-date">{{currentDate}}</text>
+  </view>
+
+  <!-- 主体内容滚动区 -->
+  <scroll-view class="main" scroll-y="true" enable-back-to-top="true">
+    <!-- 功能分类九宫格（可左右滑动多页） -->
+    <view class="category-section">
+      <scroll-view
+        class="category-scroll"
+        scroll-x="true"
+        show-scrollbar="false"
+        enable-flex="true"
+        paging-enabled="true"
+        scroll-with-animation="true"
+        bindscroll="onCategoryScroll"
+      >
+        <view class="category-pages">
+          <block wx:for="{{categoryGroups}}" wx:key="index">
+            <view class="category-page">
+              <block wx:for="{{item}}" wx:key="text" wx:for-item="cat" wx:for-index="ci">
+                <view
+                  class="category-item pressable category-icon-enter"
+                  style="animation-delay: {{ci * 42}}ms;"
+                  bindtap="onCategoryTap"
+                  data-item="{{cat}}"
+                  hover-class="press-hover"
+                  hover-stay-time="80"
+                >
+                  <view class="category-icon {{cat.type}}">
+                    <!-- 统一用 emoji：真机上本地 PNG 路径易加载失败（仅剩色块），emoji 全端稳定 -->
+                    <text class="category-icon-emoji">{{cat.icon}}</text>
+                  </view>
+                  <text class="category-text">{{cat.text}}</text>
+                </view>
+              </block>
+            </view>
+          </block>
+        </view>
+      </scroll-view>
+      <view class="category-dots" wx:if="{{categoryGroups.length > 1}}">
+        <block wx:for="{{categoryGroups}}" wx:key="index">
+          <view class="dot {{index === currentCategoryPage ? 'active' : ''}}"></view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 横幅推广（今日方案） -->
+    <view class="banner-section">
+      <view
+        class="banner-card pressable"
+        bindtap="goToCourseList"
+        hover-class="press-hover"
+        hover-stay-time="80"
+      >
+        <image class="banner-image" src="{{bannerImage}}" mode="aspectFill" />
+        <view class="banner-overlay">
+          <view>
+            <text class="banner-title">今天吃什么 · 智能推荐</text>
+            <text class="banner-desc">结合健康目标与今日记录，为你生成专属饮食方案。</text>
+          </view>
+          <view class="banner-btn">
+            <text wx:if="{{loadingSummary}}">加载中...</text>
+            <text wx:else>查看今日方案</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 一键选餐入口（与智能决策助手联动） -->
+    <view
+      class="smart-choice-entry pressable"
+      bindtap="goToSmartChoice"
+      hover-class="press-hover"
+      hover-stay-time="80"
+    >
+      <view class="smart-choice-entry-left">
+        <view class="smart-choice-entry-icon">🎯</view>
+        <view class="smart-choice-entry-text">
+          <text class="smart-choice-entry-title">智能选餐</text>
+          <text class="smart-choice-entry-desc">当前{{smartChoiceMealTypeName}} · 剩余 {{remainingCalories}} kcal，去选一份</text>
+        </view>
+      </view>
+      <text class="smart-choice-entry-arrow">›</text>
+    </view>
+
+    <!-- 今日概览 -->
+    <view class="summary-section">
+      <view
+        class="summary-item pressable"
+        bindtap="goToReport"
+        hover-class="press-hover"
+        hover-stay-time="80"
+      >
+        <text class="summary-label">今日热量</text>
+        <text class="summary-value">
+          {{dailySummary.intake_actual || 0}} / {{dailySummary.daily_limit || 2000}} kcal
+        </text>
+      </view>
+      <view
+        class="summary-item pressable"
+        bindtap="goToReport"
+        hover-class="press-hover"
+        hover-stay-time="80"
+      >
+        <text class="summary-label">{{remainingLabel}}</text>
+        <text class="summary-value {{remainingClass}}">
+          {{remainingCalories}} kcal
+        </text>
+      </view>
+      <view
+        class="summary-item pressable"
+        bindtap="goToWorkout"
+        hover-class="press-hover"
+        hover-stay-time="80"
+      >
+        <text class="summary-label">今日运动</text>
+        <text class="summary-value">
+          {{todayWorkout.minutes || 0}} 分 · {{todayWorkout.calories || 0}} kcal
+        </text>
+      </view>
+    </view>
+
+    <!-- 今日推荐功能 -->
+    <view class="course-section">
+      <view class="section-header">
+        <text class="section-title">今日推荐功能</text>
+        <text class="section-more" bindtap="goToCourseList">查看更多 ＞</text>
+      </view>
+
+      <scroll-view class="course-list" scroll-x="true" show-scrollbar="false" scroll-with-animation="true">
+        <block wx:for="{{courses}}" wx:key="id">
+          <view
+            class="course-card pressable"
+            bindtap="onCourseTap"
+            data-item="{{item}}"
+            hover-class="press-hover"
+            hover-stay-time="80"
+          >
+            <image class="course-img" src="{{item.cover}}" mode="aspectFill" />
+            <view class="course-body">
+              <text class="course-title">{{item.title}}</text>
+              <text class="course-sub">{{item.subtitle}}</text>
+            </view>
+          </view>
+        </block>
+      </scroll-view>
+    </view>
+
+    <!-- 健康小贴士 - 精致卡片 -->
+    <view class="tip-section">
+      <view class="tip-section-inner">
+        <view class="tip-header">
+          <view class="tip-title-wrap">
+            <view class="tip-icon-badge">
+              <text class="tip-icon-symbol">💡</text>
+            </view>
+            <view class="tip-title-block">
+              <text class="tip-title">今日小贴士</text>
+              <text class="tip-subtitle">每日一点健康灵感</text>
+            </view>
+          </view>
+          <view
+            class="tip-change-btn pressable"
+            bindtap="onTipRefresh"
+            hover-class="tip-change-hover"
+            hover-stay-time="80"
+          >
+            <text class="tip-change-text">换一条</text>
+          </view>
+        </view>
+        <block wx:for="{{[tipAnimKey]}}" wx:key="*this">
+          <view class="tip-progress-wrap">
+            <view class="tip-progress-bg">
+              <view class="tip-progress-fill"></view>
+            </view>
+            <text class="tip-progress-hint">5 秒后自动切换</text>
+          </view>
+          <view class="tip-box tip-box-in">
+            <view class="tip-quote"></view>
+            <text class="tip-text">{{healthTip}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <view class="bottom-gap"></view>
+  </scroll-view>
+</view>

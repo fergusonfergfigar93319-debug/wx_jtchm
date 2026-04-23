@@ -1,0 +1,108 @@
+<!--pages/achievements/achievements.wxml-->
+<view class="container page-container">
+  <!-- 用户统计卡片 -->
+  <view class="stats-card">
+    <view class="stats-header">
+      <view class="level-badge">
+        <text class="level-label">Lv.</text>
+        <text class="level-value">{{userLevel}}</text>
+      </view>
+      <view class="points-info">
+        <text class="points-label">积分</text>
+        <text class="points-value">{{userPoints}}</text>
+      </view>
+    </view>
+    <view class="progress-info">
+      <text class="progress-text">已解锁 {{unlockedCount}} / {{totalCount}} 个成就</text>
+      <view class="progress-bar">
+        <view 
+          class="progress-fill" 
+          style="width: {{(unlockedCount / totalCount) * 100}}%"
+        ></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类筛选 -->
+  <view class="filter-tabs">
+    <view 
+      class="filter-tab {{filterCategory === item.value ? 'active' : ''}}"
+      wx:for="{{categories}}" 
+      wx:key="value"
+      data-category="{{item.value}}"
+      bindtap="filterByCategory"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <!-- 成就列表 -->
+  <view class="achievements-list">
+    <!-- 已解锁 -->
+    <view class="section-subtitle" wx:if="{{unlockedCount > 0}}">
+      已解锁
+    </view>
+    <view 
+      class="achievement-card unlocked {{item.rarity}}"
+      wx:for="{{achievements}}" 
+      wx:key="id"
+      wx:if="{{item.unlocked && (filterCategory === 'all' || item.category === filterCategory)}}"
+      data-achievement="{{item}}"
+      bindtap="viewDetail"
+    >
+      <view class="achievement-icon-wrapper">
+        <text class="achievement-icon">{{item.icon}}</text>
+        <text class="unlock-badge">✓</text>
+      </view>
+      <view class="achievement-info">
+        <view class="achievement-header">
+          <text class="achievement-name">{{item.name}}</text>
+          <text class="achievement-points">+{{item.points}}</text>
+        </view>
+        <text class="achievement-desc">{{item.description}}</text>
+        <text class="achievement-date" wx:if="{{item.unlockedAt}}">
+          解锁于 {{item.unlockedAt.split('T')[0]}}
+        </text>
+      </view>
+      <view class="rarity-badge {{item.rarity}}">
+        {{item.rarity === 'common' ? '普通' : item.rarity === 'rare' ? '稀有' : '史诗'}}
+      </view>
+    </view>
+
+    <!-- 待解锁 -->
+    <view 
+      class="section-subtitle locked-subtitle"
+      wx:if="{{unlockedCount > 0 && unlockedCount < totalCount}}"
+    >
+      待解锁
+    </view>
+    <view 
+      class="achievement-card locked {{item.rarity}}"
+      wx:for="{{achievements}}" 
+      wx:key="id"
+      wx:if="{{!item.unlocked && (filterCategory === 'all' || item.category === filterCategory)}}"
+      data-achievement="{{item}}"
+      bindtap="viewDetail"
+    >
+      <view class="achievement-icon-wrapper">
+        <text class="achievement-icon">{{item.icon}}</text>
+      </view>
+      <view class="achievement-info">
+        <view class="achievement-header">
+          <text class="achievement-name">{{item.name}}</text>
+          <text class="achievement-points">+{{item.points}}</text>
+        </view>
+        <text class="achievement-desc">{{item.description}}</text>
+      </view>
+      <view class="rarity-badge {{item.rarity}}">
+        {{item.rarity === 'common' ? '普通' : item.rarity === 'rare' ? '稀有' : '史诗'}}
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{achievements.length === 0}}">
+      <text class="empty-icon">🏆</text>
+      <text class="empty-text">暂无成就</text>
+    </view>
+  </view>
+</view>

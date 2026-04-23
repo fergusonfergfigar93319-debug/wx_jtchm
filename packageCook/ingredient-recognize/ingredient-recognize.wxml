@@ -1,0 +1,201 @@
+<!--pages/ingredient-recognize/ingredient-recognize.wxml-->
+<view class="container">
+  <!-- 图片预览 -->
+  <view class="image-section">
+    <view wx:if="{{imagePath}}" class="image-wrapper">
+      <image src="{{imagePath}}" mode="aspectFit" class="preview-image"></image>
+      <view wx:if="{{scanning}}" class="scanning-overlay">
+        <text class="scanning-text">AI识别中...</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 识别结果 -->
+  <view wx:if="{{hasResult && recognizedIngredient}}" class="result-section">
+    <view class="result-card card">
+      <!-- 食材基本信息 -->
+      <view class="ingredient-header">
+        <text class="ingredient-icon">{{recognizedIngredient.icon || '🥬'}}</text>
+        <view class="ingredient-info">
+          <text class="ingredient-name">{{recognizedIngredient.name}}</text>
+          <view class="ingredient-meta">
+            <text class="ingredient-category">{{recognizedIngredient.sub_category || '食材'}}</text>
+            <text wx:if="{{recognizedIngredient.confidence}}" class="confidence-badge">
+              识别度: {{Math.round(recognizedIngredient.confidence * 100)}}%
+            </text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 营养成分 -->
+      <view class="nutrition-section">
+        <view class="section-title">营养成分（每100g）</view>
+        <view class="nutrition-grid">
+          <view class="nutrition-item">
+            <text class="nutrition-label">热量</text>
+            <text class="nutrition-value">{{recognizedIngredient.nutrition.calories}}kcal</text>
+          </view>
+          <view class="nutrition-item">
+            <text class="nutrition-label">蛋白质</text>
+            <text class="nutrition-value">{{recognizedIngredient.nutrition.protein}}g</text>
+          </view>
+          <view class="nutrition-item">
+            <text class="nutrition-label">脂肪</text>
+            <text class="nutrition-value">{{recognizedIngredient.nutrition.fat}}g</text>
+          </view>
+          <view class="nutrition-item">
+            <text class="nutrition-label">碳水</text>
+            <text class="nutrition-value">{{recognizedIngredient.nutrition.carb}}g</text>
+          </view>
+          <view class="nutrition-item" wx:if="{{recognizedIngredient.nutrition.fiber}}">
+            <text class="nutrition-label">膳食纤维</text>
+            <text class="nutrition-value">{{recognizedIngredient.nutrition.fiber}}g</text>
+          </view>
+          <view class="nutrition-item" wx:if="{{recognizedIngredient.nutrition.vitamin_c}}">
+            <text class="nutrition-label">维C</text>
+            <text class="nutrition-value">{{recognizedIngredient.nutrition.vitamin_c}}mg</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 营养价值 -->
+      <view class="functions-section">
+        <view class="section-title">营养价值</view>
+        <view class="functions-list">
+          <view class="function-item" wx:for="{{recognizedIngredient.functions}}" wx:key="*this">
+            <text class="function-icon">✓</text>
+            <text class="function-text">{{item}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 存储建议 -->
+      <view wx:if="{{recognizedIngredient.storage_tips}}" class="tips-section">
+        <view class="section-title">存储建议</view>
+        <text class="tips-text">{{recognizedIngredient.storage_tips}}</text>
+      </view>
+
+      <!-- 烹饪建议 -->
+      <view wx:if="{{recognizedIngredient.cooking_tips && recognizedIngredient.cooking_tips.length > 0}}" class="tips-section">
+        <view class="section-title">烹饪建议</view>
+        <view class="cooking-tips-list">
+          <text class="cooking-tip" wx:for="{{recognizedIngredient.cooking_tips}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="action-buttons">
+        <button class="btn-secondary" bindtap="reTakePhoto">重新拍照</button>
+        <button class="btn-primary" bindtap="showAddToFridge">加入冰箱</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading && !hasResult}}" class="loading-section">
+    <view class="loading-card card">
+      <text class="loading-icon">🔍</text>
+      <text class="loading-text">正在识别食材...</text>
+      <text class="loading-hint">请稍候</text>
+    </view>
+  </view>
+
+  <!-- 添加食材弹窗 -->
+  <view class="modal {{showAddModal ? 'show' : ''}}" catchtap="closeAddModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">添加到冰箱</text>
+        <text class="modal-close" bindtap="closeAddModal">✕</text>
+      </view>
+      <view class="modal-body">
+        <view class="form-item">
+          <text class="form-label">食材名称</text>
+          <text class="form-value">{{recognizedIngredient.name}}</text>
+        </view>
+        <view class="form-item">
+          <text class="form-label">数量</text>
+          <input 
+            class="form-input"
+            type="digit"
+            placeholder="请输入数量"
+            value="{{amount}}"
+            bindinput="onAmountInput"
+            disabled="{{unit === '适量'}}"
+          />
+        </view>
+        <view class="form-item">
+          <text class="form-label">单位</text>
+          <view class="unit-selector">
+            <view 
+              class="unit-option {{unit === '个' ? 'active' : ''}}"
+              bindtap="selectUnit"
+              data-unit="个"
+            >
+              个
+            </view>
+            <view 
+              class="unit-option {{unit === '只' ? 'active' : ''}}"
+              bindtap="selectUnit"
+              data-unit="只"
+            >
+              只
+            </view>
+            <view 
+              class="unit-option {{unit === '根' ? 'active' : ''}}"
+              bindtap="selectUnit"
+              data-unit="根"
+            >
+              根
+            </view>
+            <view 
+              class="unit-option {{unit === '斤' ? 'active' : ''}}"
+              bindtap="selectUnit"
+              data-unit="斤"
+            >
+              斤
+            </view>
+            <view 
+              class="unit-option {{unit === 'kg' ? 'active' : ''}}"
+              bindtap="selectUnit"
+              data-unit="kg"
+            >
+              kg
+            </view>
+            <view 
+              class="unit-option {{unit === '盒' ? 'active' : ''}}"
+              bindtap="selectUnit"
+              data-unit="盒"
+            >
+              盒
+            </view>
+            <view 
+              class="unit-option {{unit === '包' ? 'active' : ''}}"
+              bindtap="selectUnit"
+              data-unit="包"
+            >
+              包
+            </view>
+            <view 
+              class="unit-option {{unit === '瓶' ? 'active' : ''}}"
+              bindtap="selectUnit"
+              data-unit="瓶"
+            >
+              瓶
+            </view>
+            <view 
+              class="unit-option {{unit === '适量' ? 'active' : ''}}"
+              bindtap="selectUnit"
+              data-unit="适量"
+            >
+              适量
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-secondary" bindtap="closeAddModal">取消</button>
+        <button class="btn-primary" bindtap="confirmAddToFridge" disabled="{{unit !== '适量' && (!amount || parseFloat(amount) <= 0)}}">确认添加</button>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,375 @@
+/* pages/remedy-symptom/remedy-symptom.wxss */
+.container {
+  min-height: 100vh;
+  background: #F7F6FF;
+  padding: 24rpx 24rpx 60rpx;
+}
+
+.symptom-header {
+  background: linear-gradient(135deg, #FDE7F3 0%, #E4D6FF 50%, #D2F1FF 100%);
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx;
+  margin-bottom: 32rpx;
+  border-left: 8rpx solid #5F5CFF;
+  box-shadow: 0 8rpx 24rpx rgba(95, 92, 255, 0.12);
+}
+
+.symptom-icon-wrap {
+  margin-bottom: 16rpx;
+}
+
+.symptom-icon {
+  font-size: 80rpx;
+  filter: drop-shadow(0 4rpx 12rpx rgba(0,0,0,0.1));
+}
+
+.symptom-title {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 8rpx;
+}
+
+.symptom-desc {
+  font-size: 28rpx;
+  color: #665F8F;
+  line-height: 1.5;
+}
+
+.block {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 32rpx 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+.block-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.analysis-summary {
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.85;
+}
+
+.severity-hint {
+  margin-top: 24rpx;
+  padding: 20rpx 22rpx;
+  background: linear-gradient(135deg, rgba(95, 92, 255, 0.08) 0%, rgba(212, 232, 255, 0.5) 100%);
+  border-radius: 16rpx;
+  border-left: 6rpx solid #5F5CFF;
+}
+
+.severity-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #4A4580;
+  margin-bottom: 10rpx;
+}
+
+.severity-text {
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.75;
+}
+
+.detail-recipe-inline {
+  font-size: 28rpx;
+  color: #444;
+  line-height: 1.85;
+  background: #F8F9FA;
+  border-radius: 14rpx;
+  padding: 20rpx 22rpx;
+}
+
+.advice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.advice-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+}
+
+.advice-dot {
+  color: #5F5CFF;
+  font-size: 28rpx;
+  flex-shrink: 0;
+}
+
+.advice-text {
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.7;
+}
+
+.loading-wrap {
+  padding: 60rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.loading-spinner {
+  width: 56rpx;
+  height: 56rpx;
+  border: 4rpx solid rgba(95, 92, 255, 0.2);
+  border-top-color: #5F5CFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.empty-remedy {
+  padding: 60rpx 40rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 16rpx;
+  opacity: 0.7;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.remedy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.remedy-card {
+  padding: 28rpx 24rpx 24rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(95, 92, 255, 0.12);
+  box-shadow: 0 8rpx 24rpx rgba(95, 92, 255, 0.08);
+}
+
+.remedy-card-hover {
+  opacity: 0.95;
+  transform: scale(0.99);
+}
+
+.remedy-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20rpx;
+}
+
+.remedy-icon {
+  font-size: 56rpx;
+  margin-right: 16rpx;
+}
+
+.remedy-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.remedy-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 6rpx;
+}
+
+.remedy-desc {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+.remedy-calories {
+  font-size: 22rpx;
+  color: #999;
+  background: #eee;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+}
+
+.remedy-recipe {
+  padding: 16rpx 0;
+  border-top: 1rpx solid #eee;
+  border-bottom: 1rpx solid #eee;
+  margin-bottom: 20rpx;
+}
+
+.recipe-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
+.recipe-label {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.copy-btn {
+  font-size: 24rpx;
+  color: #5F5CFF;
+  padding: 6rpx 16rpx;
+  background: rgba(95, 92, 255, 0.1);
+  border-radius: 999rpx;
+}
+
+.recipe-text {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.7;
+}
+
+.remedy-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.remedy-actions .btn-secondary,
+.remedy-actions .btn-primary {
+  flex: 1;
+  margin: 0;
+  font-size: 26rpx;
+  padding: 20rpx;
+  border-radius: 16rpx;
+}
+
+.remedy-actions .btn-primary {
+  background: linear-gradient(135deg, #5F5CFF 0%, #7C79FF 100%);
+  color: #fff;
+  border: none;
+}
+
+.remedy-actions .btn-secondary {
+  background: #fff;
+  color: #5F5CFF;
+  border: 2rpx solid #5F5CFF;
+}
+
+/* 详情弹窗 */
+.modal {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: none;
+  align-items: flex-end;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  width: 100%;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 28rpx 32rpx;
+  border-bottom: 1rpx solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #222;
+}
+
+.modal-close {
+  font-size: 36rpx;
+  color: #999;
+  padding: 8rpx;
+}
+
+.modal-body {
+  flex: 1;
+  padding: 24rpx 32rpx;
+  max-height: 50vh;
+}
+
+.detail-desc {
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.8;
+  margin-bottom: 24rpx;
+}
+
+.detail-section {
+  margin-bottom: 24rpx;
+}
+
+.detail-label {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.step-item,
+.tip-item {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.75;
+  margin-bottom: 8rpx;
+}
+
+.modal-footer {
+  padding: 24rpx 32rpx;
+  border-top: 1rpx solid #eee;
+  display: flex;
+  gap: 20rpx;
+  align-items: center;
+}
+
+.footer-copy {
+  padding: 20rpx 28rpx;
+  font-size: 28rpx;
+  color: #5F5CFF;
+  background: rgba(95, 92, 255, 0.1);
+  border-radius: 16rpx;
+}
+
+.modal-footer .btn-primary {
+  flex: 1;
+  margin: 0;
+  background: linear-gradient(135deg, #5F5CFF 0%, #7C79FF 100%);
+  color: #fff;
+  border: none;
+  border-radius: 16rpx;
+}

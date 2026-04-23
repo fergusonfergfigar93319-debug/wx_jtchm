@@ -1,0 +1,244 @@
+<!--pages/restaurant/restaurant.wxml-->
+<view class="container page-container">
+  <!-- 顶部位置和筛选 -->
+  <view class="header card">
+    <view class="location-info" bindtap="updateLocation">
+      <text class="location-icon">📍</text>
+      <text class="location-text">{{locationText}}</text>
+      <text class="location-arrow">›</text>
+    </view>
+    
+    <!-- 搜索框 -->
+    <view class="search-section">
+      <view class="search-box {{showSearch ? 'active' : ''}}" wx:if="{{showSearch}}">
+        <input 
+          class="search-input" 
+          placeholder="搜索商家名称、菜品..." 
+          value="{{searchKeyword}}"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+          confirm-type="search"
+        />
+        <text class="search-clear" wx:if="{{searchKeyword}}" bindtap="clearSearch">✕</text>
+      </view>
+      <view class="search-toggle" bindtap="toggleSearch">
+        <text class="search-icon">{{showSearch ? '✕' : '🔍'}}</text>
+      </view>
+    </view>
+    
+    <!-- 健康筛选 -->
+    <scroll-view class="health-filter-scroll" scroll-x="true">
+      <view class="health-filter-list">
+        <view 
+          class="health-filter-tag {{selectedHealthFilter === item.value ? 'active' : ''}}"
+          wx:for="{{healthFilters}}"
+          wx:key="value"
+          bindtap="onHealthFilterTap"
+          data-value="{{item.value}}"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </scroll-view>
+    
+    <!-- 营养素定向搜索 -->
+    <scroll-view class="nutrition-filter-scroll" scroll-x="true">
+      <view class="nutrition-filter-list">
+        <view 
+          class="nutrition-filter-tag {{selectedNutritionFilter === item.value ? 'active' : ''}}"
+          wx:for="{{nutritionFilters}}"
+          wx:key="value"
+          bindtap="onNutritionFilterTap"
+          data-value="{{item.value}}"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </scroll-view>
+    
+    <!-- 饥饿程度选择 -->
+    <view class="hunger-selector card" wx:if="{{showHungerSelector}}">
+      <view class="hunger-selector-title">选择饥饿程度</view>
+      <view class="hunger-options">
+        <view 
+          class="hunger-option {{hungerLevel === 'normal' ? 'active' : ''}}"
+          bindtap="selectHungerLevel"
+          data-level="normal"
+        >
+          <text class="hunger-icon">😊</text>
+          <text class="hunger-label">正常</text>
+          <text class="hunger-desc">4小时内进食</text>
+        </view>
+        <view 
+          class="hunger-option {{hungerLevel === 'hungry' ? 'active' : ''}}"
+          bindtap="selectHungerLevel"
+          data-level="hungry"
+        >
+          <text class="hunger-icon">😋</text>
+          <text class="hunger-label">有点饿</text>
+          <text class="hunger-desc">4-6小时未进食</text>
+        </view>
+        <view 
+          class="hunger-option {{hungerLevel === 'very_hungry' ? 'active' : ''}}"
+          bindtap="selectHungerLevel"
+          data-level="very_hungry"
+        >
+          <text class="hunger-icon">🤤</text>
+          <text class="hunger-label">很饿</text>
+          <text class="hunger-desc">6小时以上未进食</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 饥饿程度提示 -->
+    <view class="hunger-tip card" wx:if="{{hungerLevel && hungerLevel !== 'normal'}}" bindtap="toggleHungerSelector">
+      <text class="hunger-tip-icon">{{hungerLevel === 'very_hungry' ? '🤤' : '😋'}}</text>
+      <text class="hunger-tip-text">
+        {{hungerLevel === 'very_hungry' ? '很饿状态' : '有点饿'}} - 已优先推荐低GI快速配送
+      </text>
+      <text class="hunger-tip-arrow">›</text>
+    </view>
+    
+    <!-- 排序筛选 -->
+    <scroll-view class="filter-scroll" scroll-x="true">
+      <view class="filter-list">
+        <view 
+          class="filter-tag {{filter === item.value ? 'active' : ''}}"
+          wx:for="{{filters}}"
+          wx:key="value"
+          bindtap="onFilterTap"
+          data-value="{{item.value}}"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 商家列表 -->
+  <scroll-view 
+    class="restaurant-list"
+    scroll-y="true"
+    bindscrolltolower="loadMore"
+    refresher-enabled="{{true}}"
+    refresher-triggered="{{refreshing}}"
+    bindrefresherrefresh="onRefresh"
+  >
+    <view wx:if="{{loading && restaurants.length === 0}}" class="skeleton-list">
+      <view class="skeleton-card" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton skeleton-image"></view>
+        <view class="skeleton skeleton-text"></view>
+        <view class="skeleton skeleton-text-short"></view>
+      </view>
+    </view>
+
+    <view wx:elif="{{restaurants.length > 0}}">
+      <view 
+        class="restaurant-card card"
+        wx:for="{{restaurants}}"
+        wx:key="id"
+        bindtap="goToDetail"
+        data-id="{{item.id}}"
+      >
+        <image
+          class="restaurant-image"
+          wx:if="{{item.image && !item.imageFailed}}"
+          src="{{item.image}}"
+          mode="aspectFill"
+          lazy-load="{{true}}"
+          binderror="onRestaurantImageError"
+          data-index="{{index}}"
+        ></image>
+        <view class="restaurant-image restaurant-image-placeholder" wx:else>
+          <text class="restaurant-icon">🏪</text>
+        </view>
+        <view class="restaurant-info">
+          <view class="restaurant-name">{{item.name}}</view>
+          <view class="restaurant-meta">
+            <text class="rating">⭐ {{item.rating || '0.0'}}</text>
+            <text class="distance">{{item.distance || '0'}}m</text>
+          </view>
+          <view class="restaurant-tags">
+            <text class="tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+          </view>
+          <view class="restaurant-footer">
+            <view class="health-indicator">
+              <view class="health-traffic-light {{item.health_level || 'yellow'}}">
+                <view class="traffic-light-icon">
+                  <text wx:if="{{item.health_level === 'green'}}">🟢</text>
+                  <text wx:elif="{{item.health_level === 'yellow'}}">🟡</text>
+                  <text wx:else>🔴</text>
+                </view>
+                <text class="health-badge {{getHealthClass(item.health_rating || item.health_score)}}">
+                  {{item.health_label || getHealthText(item.health_rating || item.health_score)}}
+                </text>
+                <text class="health-desc" wx:if="{{item.health_desc}}">{{item.health_desc}}</text>
+              </view>
+            </view>
+            <view class="hunger-match-tip" wx:if="{{item.hunger_match_tip}}">
+              <text class="hunger-match-text">{{item.hunger_match_tip}}</text>
+            </view>
+            <view class="restaurant-price" wx:if="{{item.price_range}}">
+              <text class="price-text">{{item.price_range}}</text>
+            </view>
+            <view class="restaurant-hours" wx:if="{{item.hours}}">
+              <text class="hours-text">{{item.hours}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <view class="empty-icon">🏪</view>
+      <text class="empty-text">附近暂无推荐商家</text>
+      <text class="empty-hint">请检查定位权限或稍后再试</text>
+      <button class="retry-btn" bindtap="onRefresh" wx:if="{{!loading}}">重新加载</button>
+    </view>
+    
+    <!-- 加载更多提示 -->
+    <view class="load-more-tip" wx:if="{{loading && restaurants.length > 0}}">
+      <text class="load-more-text">加载中...</text>
+    </view>
+    
+    <view class="no-more-tip" wx:if="{{!hasMore && restaurants.length > 0 && !loading}}">
+      <text class="no-more-text">没有更多了</text>
+    </view>
+  </scroll-view>
+
+  <!-- 深夜食堂负罪感缓冲弹窗 -->
+  <view class="modal {{showNightRemedy ? 'show' : ''}}" catchtap="closeNightRemedy">
+    <view class="modal-content night-remedy-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <view class="modal-title">🌙 深夜健康提醒</view>
+        <text class="modal-close" bindtap="closeNightRemedy">✕</text>
+      </view>
+      
+      <view class="night-remedy-content" wx:if="{{nightRemedyData}}">
+        <view class="night-remedy-message">{{nightRemedyData.message}}</view>
+        
+        <view class="remedy-list">
+          <view class="remedy-item" wx:for="{{nightRemedyData.remedies}}" wx:key="name">
+            <text class="remedy-icon">{{item.icon}}</text>
+            <view class="remedy-info">
+              <text class="remedy-name">{{item.name}}</text>
+              <text class="remedy-desc">{{item.desc}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="night-remedy-tip">
+          <text class="tip-icon">💡</text>
+          <text class="tip-text">深夜进食后，建议搭配健康补救方案，减少身体负担</text>
+        </view>
+      </view>
+      
+      <view class="modal-actions night-remedy-actions">
+        <button class="btn-secondary" bindtap="closeNightRemedy">知道了</button>
+        <button class="btn-primary" bindtap="goToRemedy">
+          <text>查看补救方案</text>
+        </button>
+      </view>
+    </view>
+  </view>
+</view>

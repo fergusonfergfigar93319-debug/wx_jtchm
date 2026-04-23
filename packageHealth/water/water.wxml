@@ -1,0 +1,105 @@
+<view class="page page-container">
+  <view class="header-card">
+    <view class="title-row">
+      <view class="title-left">
+        <text class="icon">💧</text>
+        <text class="title">饮水记录</text>
+      </view>
+      <picker mode="date" value="{{date}}" bindchange="onDateChange">
+        <view class="date-pill pressable" hover-class="press-hover" hover-stay-time="80">{{date}}</view>
+      </picker>
+    </view>
+
+    <view class="amount-row">
+      <text class="amount">{{waterTotalMl}}</text>
+      <text class="unit">/ {{waterGoalMl}} ml</text>
+    </view>
+
+    <view class="progress">
+      <view class="progress-bg">
+        <view class="progress-fill" style="width: {{waterProgressPct}}%;"></view>
+      </view>
+    </view>
+
+    <view class="subline">
+      <view class="sub-pill">
+        <view class="sub-dot sub-dot--manual"></view>
+        <text class="subtext">手动 {{waterManualMl}} ml</text>
+      </view>
+      <view class="sub-pill">
+        <view class="sub-dot sub-dot--food"></view>
+        <text class="subtext">食物水分 +{{waterFoodMl}} ml</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="actions-card">
+    <view class="actions-title">快速记录</view>
+    <view class="btn-row">
+      <view class="quick-btn pressable" bindtap="addWater" data-ml="200" hover-class="press-hover" hover-stay-time="80">
+        <text class="quick-icon">🥛</text>
+        <text class="quick-ml">+200</text>
+      </view>
+      <view class="quick-btn pressable" bindtap="addWater" data-ml="300" hover-class="press-hover" hover-stay-time="80">
+        <text class="quick-icon">🥤</text>
+        <text class="quick-ml">+300</text>
+      </view>
+      <view class="quick-btn pressable" bindtap="addWater" data-ml="500" hover-class="press-hover" hover-stay-time="80">
+        <text class="quick-icon">🧋</text>
+        <text class="quick-ml">+500</text>
+      </view>
+      <view class="quick-btn pressable" bindtap="addWater" data-ml="800" hover-class="press-hover" hover-stay-time="80">
+        <text class="quick-icon">💧</text>
+        <text class="quick-ml">+800</text>
+      </view>
+    </view>
+
+    <view class="custom-row">
+      <input
+        class="custom-input"
+        type="digit"
+        placeholder="自定义 ml（如 150）"
+        placeholder-class="custom-placeholder"
+        value="{{customMl}}"
+        bindinput="onCustomInput"
+      />
+      <view class="btn-add pressable" bindtap="addCustom" hover-class="press-hover" hover-stay-time="80">添加</view>
+    </view>
+
+    <view class="tool-row" wx:if="{{events.length > 0}}">
+      <view class="tool-btn text-only pressable" bindtap="undoLast" hover-class="press-hover" hover-stay-time="80">
+        <text>撤销上一条</text>
+      </view>
+      <view class="tool-btn outline pressable" bindtap="clearManual" hover-class="press-hover" hover-stay-time="80">
+        <text>{{isToday ? '清空今日清单' : '清空当日记录'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="list-card">
+    <view class="list-header">
+      <text class="list-title">{{isToday ? '今日饮水清单' : '当日饮水清单'}}</text>
+      <text class="list-sub">{{events.length}} 条</text>
+    </view>
+
+    <view wx:if="{{events.length > 0}}" class="list">
+      <view class="item" wx:for="{{events}}" wx:key="ts">
+        <view class="item-left">
+          <text class="item-time">{{item.timeText}}</text>
+          <text class="item-desc">{{item.sourceLabel}}</text>
+        </view>
+        <view class="item-right">
+          <text class="item-ml">+{{item.ml}} ml</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty">
+      <view class="empty-illus">
+        <text class="empty-illus-icon">🥛</text>
+      </view>
+      <text class="empty-text">{{isToday ? '杯子里还是空的哦' : '这一天没有手动记录'}}</text>
+      <text class="empty-hint">{{isToday ? '点上面快捷容量，先加一杯吧～' : '可切换回今天补充记录'}}</text>
+    </view>
+  </view>
+</view>
+

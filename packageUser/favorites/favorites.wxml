@@ -1,0 +1,118 @@
+<!--pages/favorites/favorites.wxml-->
+<view class="container">
+  <!-- 加载状态 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+  </view>
+
+  <!-- 分类标签 -->
+  <view class="tabs-section">
+    <view class="tab-item {{currentTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">
+      <text>全部</text>
+      <text class="tab-count">({{totalCount}})</text>
+    </view>
+    <view class="tab-item {{currentTab === 'recipe' ? 'active' : ''}}" bindtap="switchTab" data-tab="recipe">
+      <text>菜谱</text>
+      <text class="tab-count">({{recipeCount}})</text>
+    </view>
+    <view class="tab-item {{currentTab === 'restaurant' ? 'active' : ''}}" bindtap="switchTab" data-tab="restaurant">
+      <text>餐厅</text>
+      <text class="tab-count">({{restaurantCount}})</text>
+    </view>
+  </view>
+
+  <!-- 收藏列表 -->
+  <scroll-view class="favorites-list" scroll-y="true" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh">
+    <!-- 菜谱收藏 -->
+    <view class="favorites-section" wx:if="{{currentTab === 'all' || currentTab === 'recipe'}}">
+      <view class="section-header" wx:if="{{currentTab === 'all' && recipeList.length > 0}}">
+        <text class="section-title">菜谱收藏</text>
+        <text class="section-count">{{recipeList.length}}个</text>
+      </view>
+      <view class="recipe-grid" wx:if="{{recipeList.length > 0}}">
+        <view 
+          class="recipe-card" 
+          wx:for="{{recipeList}}" 
+          wx:key="id"
+          bindtap="goToRecipeDetail"
+          data-id="{{item.id}}"
+        >
+          <view class="recipe-image-wrapper">
+            <image class="recipe-image" wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill"></image>
+            <view class="recipe-image recipe-image-placeholder" wx:else>
+              <text class="recipe-icon">🍽️</text>
+            </view>
+            <view class="recipe-overlay">
+              <view class="recipe-kcal">{{item.calories || item.calories_per_100g || 0}} kcal</view>
+            </view>
+            <view class="favorite-btn active" bindtap="toggleFavorite" data-id="{{item.id}}" data-type="recipe" catchtap="stopPropagation">
+              <text class="favorite-icon">❤️</text>
+            </view>
+          </view>
+          <view class="recipe-info">
+            <text class="recipe-name">{{item.name}}</text>
+            <view class="recipe-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+              <text class="recipe-tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="empty-state" wx:else>
+        <text class="empty-icon">🍽️</text>
+        <text class="empty-text">暂无菜谱收藏</text>
+        <text class="empty-hint empty-hint-link" bindtap="goToRecipes">去发现喜欢的菜谱吧</text>
+      </view>
+    </view>
+
+    <!-- 餐厅收藏 -->
+    <view class="favorites-section" wx:if="{{currentTab === 'all' || currentTab === 'restaurant'}}">
+      <view class="section-header" wx:if="{{currentTab === 'all' && restaurantList.length > 0}}">
+        <text class="section-title">餐厅收藏</text>
+        <text class="section-count">{{restaurantList.length}}个</text>
+      </view>
+      <view class="restaurant-list" wx:if="{{restaurantList.length > 0}}">
+        <view 
+          class="restaurant-card" 
+          wx:for="{{restaurantList}}" 
+          wx:key="id"
+          bindtap="goToRestaurantDetail"
+          data-id="{{item.id}}"
+        >
+          <view class="restaurant-image-wrapper">
+            <image class="restaurant-image" wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill"></image>
+            <view class="restaurant-image restaurant-image-placeholder" wx:else>
+              <text class="restaurant-icon">🏪</text>
+            </view>
+            <view class="favorite-btn active" bindtap="toggleFavorite" data-id="{{item.id}}" data-type="restaurant" catchtap="stopPropagation">
+              <text class="favorite-icon">❤️</text>
+            </view>
+          </view>
+          <view class="restaurant-info">
+            <text class="restaurant-name">{{item.name}}</text>
+            <view class="restaurant-meta">
+              <text class="restaurant-rating" wx:if="{{item.rating}}">⭐ {{item.rating}}</text>
+              <text class="restaurant-distance" wx:if="{{item.distance}}">{{item.distance}}km</text>
+            </view>
+            <text class="restaurant-address" wx:if="{{item.address}}">{{item.address}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="empty-state" wx:else>
+        <text class="empty-icon">🏪</text>
+        <text class="empty-text">暂无餐厅收藏</text>
+        <text class="empty-hint empty-hint-link" bindtap="goToRestaurants">去发现喜欢的餐厅吧</text>
+      </view>
+    </view>
+
+    <!-- 全部为空 -->
+    <view class="empty-state full-empty" wx:if="{{totalCount === 0}}">
+      <text class="empty-icon">❤️</text>
+      <text class="empty-text">还没有收藏</text>
+      <text class="empty-hint">收藏喜欢的菜谱和餐厅，方便下次查看</text>
+      <button class="empty-button" bindtap="goToDiscover">去发现</button>
+    </view>
+  </scroll-view>
+</view>

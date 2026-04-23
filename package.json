@@ -1,0 +1,22 @@
+{
+  "name": "today-eat-max",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "compress-tabbar": "node scripts/compress-tabbar.js",
+    "icons:tabbar": "node scripts/generate-tabbar-icons.js",
+    "icons:categories": "node scripts/generate-category-icons.js",
+    "generate-tabbar-icons": "node scripts/generate-tabbar-icons.js",
+    "generate-seasonal-images": "node scripts/generate-seasonal-images.js",
+    "import-seasonal-photos": "node scripts/import-seasonal-ai-photos.js",
+    "generate-default-avatars": "node scripts/generate-default-avatars.js",
+    "compress-images": "node scripts/compress-main-package-images.js",
+    "compress-recipes": "node scripts/compress-recipes-images.js"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
+  },
+  "dependencies": {
+    "lottie-miniprogram": "^1.0.12"
+  }
+}

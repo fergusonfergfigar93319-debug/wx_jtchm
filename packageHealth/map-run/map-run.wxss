@@ -1,0 +1,320 @@
+/* pages/map-run/map-run.wxss */
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #F0F7F4;
+}
+
+/* 地图容器 */
+.map-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  min-height: 400rpx;
+}
+
+.workout-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* 运动类型选择器 */
+.workout-type-selector {
+  position: absolute;
+  top: 20rpx;
+  left: 20rpx;
+  right: 20rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24rpx;
+  padding: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.type-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.type-options {
+  display: flex;
+  justify-content: space-around;
+  gap: 20rpx;
+}
+
+.type-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx;
+  border-radius: 16rpx;
+  background: #F5F5F5;
+  transition: all 0.3s;
+}
+
+.type-option.active {
+  background: #6BCB77;
+  color: #fff;
+}
+
+.type-icon {
+  font-size: 48rpx;
+  margin-bottom: 8rpx;
+}
+
+.type-label {
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* 数据面板 */
+.data-panel {
+  background: #fff;
+  padding: 30rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 实时数据 */
+.real-time-data {
+  padding: 20rpx 0;
+}
+
+.data-row {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20rpx;
+}
+
+.data-row:last-child {
+  margin-bottom: 0;
+}
+
+.data-item {
+  flex: 1;
+  text-align: center;
+  padding: 10rpx;
+}
+
+.data-item.highlight {
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  border-radius: 16rpx;
+  padding: 20rpx 10rpx;
+}
+
+.data-value {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.data-value.highlight-value {
+  font-size: 48rpx;
+  color: #4CAF50;
+}
+
+.data-label {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 今日统计 */
+.today-stats {
+  padding: 20rpx 0;
+}
+
+.stats-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20rpx;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 20rpx 10rpx;
+  background: #F5F5F5;
+  border-radius: 16rpx;
+}
+
+.stat-value {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #6BCB77;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 控制面板 */
+.control-panel {
+  background: #fff;
+  padding: 30rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.control-buttons {
+  display: flex;
+  gap: 20rpx;
+}
+
+.control-btn {
+  flex: 1;
+  height: 100rpx;
+  border-radius: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+}
+
+.start-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #6BCB77 100%);
+  color: #fff;
+}
+
+.pause-btn {
+  background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+  color: #fff;
+}
+
+.resume-btn {
+  background: linear-gradient(135deg, #2196F3 0%, #42A5F5 100%);
+  color: #fff;
+}
+
+.stop-btn {
+  background: linear-gradient(135deg, #F44336 0%, #EF5350 100%);
+  color: #fff;
+}
+
+.btn-icon {
+  font-size: 40rpx;
+  margin-right: 10rpx;
+}
+
+.btn-text {
+  font-size: 32rpx;
+}
+
+/* 历史区域 */
+.history-section {
+  flex: 1;
+  background: #fff;
+  padding: 30rpx;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  background: #F5F5F5;
+  border-radius: 24rpx;
+  transition: all 0.3s;
+}
+
+.history-item:active {
+  background: #E0E0E0;
+}
+
+.history-icon {
+  font-size: 56rpx;
+  margin-right: 20rpx;
+}
+
+.history-content {
+  flex: 1;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.history-type {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.history-date {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.history-stats {
+  display: flex;
+  gap: 20rpx;
+}
+
+.history-stat {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.history-stat.highlight {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.history-arrow {
+  font-size: 32rpx;
+  color: #ccc;
+  margin-left: 20rpx;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 80rpx 20rpx;
+}
+
+.empty-text {
+  display: block;
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 12rpx;
+}
+
+.empty-hint {
+  display: block;
+  font-size: 24rpx;
+  color: #ccc;
+}

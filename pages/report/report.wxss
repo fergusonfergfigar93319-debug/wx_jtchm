@@ -1,0 +1,1675 @@
+/* pages/report/report.wxss - 与首页/冰箱统一风格 */
+page {
+  background: var(--neo-bg-0);
+}
+
+.container {
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  animation: pageFadeIn 0.5s ease-out;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, var(--neo-bg-0) 0%, var(--neo-bg-1) 42%, #FFFFFF 100%);
+}
+
+.container::before {
+  content: '';
+  position: fixed;
+  top: -14vh;
+  right: -10vw;
+  width: 64vw;
+  height: 42vh;
+  background: radial-gradient(ellipse at 80% 10%, rgba(59, 130, 246, 0.12) 0%, transparent 62%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 顶部统计卡片 - 白底/浅色卡片、24rpx 圆角、统一阴影 */
+.summary-cards {
+  display: flex;
+  gap: 20rpx;
+  margin: 24rpx 24rpx 16rpx;
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.summary-card {
+  flex: 1;
+  padding: 24rpx 20rpx;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 24rpx;
+  box-shadow: var(--neo-shadow-soft);
+  border: 1rpx solid var(--neo-border);
+  backdrop-filter: blur(16rpx);
+  -webkit-backdrop-filter: blur(16rpx);
+  animation: fadeInUp 0.5s ease-out both;
+  transition: transform 0.18s var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)), box-shadow 0.18s ease;
+}
+
+.summary-card:active {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-sm);
+}
+
+.consumed-card { animation-delay: 0.05s; }
+.target-card   { animation-delay: 0.12s; }
+
+.consumed-card {
+  background: linear-gradient(135deg, rgba(52, 199, 89, 0.14) 0%, rgba(52, 199, 89, 0.06) 100%);
+}
+
+.target-card {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12) 0%, rgba(167, 139, 250, 0.08) 100%);
+}
+
+.summary-icon {
+  font-size: 56rpx;
+  margin-right: 20rpx;
+}
+
+.summary-content {
+  flex: 1;
+}
+
+.summary-label {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
+/* 数字入场动画 */
+.summary-value {
+  font-size: 44rpx;
+  font-weight: 800;
+  color: #333;
+  line-height: 1;
+  animation: numberRoll 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.summary-unit {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: 4rpx;
+}
+
+.summary-progress {
+  position: relative;
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.progress-circle {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  position: relative;
+}
+
+.progress-circle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20rpx;
+  font-weight: bold;
+  color: #34c759;
+  z-index: 1;
+}
+
+/* 日历包装器 - 白卡 24rpx */
+.calendar-wrapper {
+  margin: 0 24rpx 20rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.calendar-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.view-switch {
+  display: flex;
+  background: #f5f5f5;
+  border-radius: 999rpx;
+  padding: 6rpx;
+}
+
+.switch-item {
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+  color: #666;
+  border-radius: 999rpx;
+  transition: all 0.2s ease;
+}
+
+.switch-item.active {
+  background: #e8e8e8;
+  color: #34c759;
+  font-weight: 600;
+}
+
+.calendar-bar {
+  white-space: nowrap;
+  padding: 10rpx 0;
+}
+
+.calendar-list {
+  display: flex;
+  padding: 0 20rpx;
+}
+
+.calendar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100rpx;
+  min-width: 100rpx;
+  padding: 16rpx 12rpx;
+  margin-right: 12rpx;
+  border-radius: 20rpx;
+  position: relative;
+  transition: transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)),
+              box-shadow 0.2s ease,
+              background 0.2s ease;
+  animation: calendarItemFadeIn 0.4s ease-out;
+  animation-fill-mode: both;
+  background: #f5f5f5;
+  border: 2rpx solid transparent;
+}
+
+.calendar-item:nth-child(1) { animation-delay: 0.05s; }
+.calendar-item:nth-child(2) { animation-delay: 0.1s; }
+.calendar-item:nth-child(3) { animation-delay: 0.15s; }
+.calendar-item:nth-child(4) { animation-delay: 0.2s; }
+.calendar-item:nth-child(5) { animation-delay: 0.25s; }
+.calendar-item:nth-child(6) { animation-delay: 0.3s; }
+.calendar-item:nth-child(7) { animation-delay: 0.35s; }
+
+.calendar-item:active {
+  transform: scale(0.95);
+}
+
+@keyframes calendarItemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.calendar-item.active {
+  background: #34c759;
+  border-color: #34c759;
+  box-shadow: 0 6rpx 18rpx rgba(52, 199, 89, 0.35);
+  transform: scale(1.08);
+}
+
+.calendar-item.active .date-text,
+.calendar-item.active .week-text {
+  color: #fff;
+}
+
+.calendar-item.today {
+  border-color: rgba(255, 107, 53, 0.5);
+}
+
+.calendar-item.today .date-wrapper::before {
+  content: '';
+  position: absolute;
+  bottom: -12rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8rpx;
+  height: 8rpx;
+  background: #ff6b35;
+  border-radius: 50%;
+}
+
+.date-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.date-text {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.week-text {
+  font-size: 22rpx;
+  color: #999;
+  font-weight: 500;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+}
+
+.status-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.today-badge {
+  font-size: 18rpx;
+  color: #ff6b35;
+  background: #fff3e0;
+  padding: 2rpx 8rpx;
+  border-radius: 8rpx;
+  font-weight: bold;
+}
+
+.calendar-item.success .status-dot {
+  background: #34c759;
+}
+
+.calendar-item.warning .status-dot {
+  background: #ff6b35;
+}
+
+/* 周末红点 */
+.calendar-item.weekend .status-dot {
+  background: #ff6b6b;
+}
+
+.data-section {
+  margin: 0;
+}
+
+/* 饮水记录卡片（与首页今日饮水联动） */
+.water-intake-card {
+  margin: 0 24rpx 20rpx;
+  padding: 24rpx;
+  background: linear-gradient(165deg, #ffffff 0%, #f0f9ff 100%);
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(33, 150, 243, 0.08);
+  border: 1rpx solid rgba(33, 150, 243, 0.1);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.water-intake-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.water-intake-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.water-intake-icon {
+  font-size: 28rpx;
+}
+
+.water-intake-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.water-intake-badge {
+  display: flex;
+  align-items: baseline;
+  padding: 8rpx 16rpx;
+  background: rgba(33, 150, 243, 0.1);
+  border-radius: 999rpx;
+}
+
+.water-intake-num {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.water-intake-div,
+.water-intake-total {
+  font-size: 24rpx;
+  color: #64b5f6;
+  margin: 0 4rpx;
+}
+
+.water-intake-unit {
+  font-size: 22rpx;
+  color: #90a4ae;
+}
+
+.water-intake-progress-bar {
+  margin-bottom: 16rpx;
+}
+
+.water-intake-progress-bg {
+  height: 8rpx;
+  background: rgba(33, 150, 243, 0.12);
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+
+.water-intake-progress-fill {
+  height: 100%;
+  border-radius: 4rpx;
+  background: linear-gradient(90deg, #64b5f6, #42a5f5);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.water-intake-footer {
+  margin-top: 12rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12rpx 16rpx;
+}
+
+.water-intake-btn-hint {
+  display: inline-block;
+  padding: 12rpx 24rpx;
+  font-size: 24rpx;
+  color: #1976d2;
+  background: rgba(33, 150, 243, 0.12);
+  border-radius: 20rpx;
+  pointer-events: none;
+}
+
+.water-intake-tip-inline {
+  font-size: 22rpx;
+  color: #90a4ae;
+  pointer-events: none;
+}
+
+.chart-card {
+  margin: 0 24rpx 20rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+  animation: fadeInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.chart-card:nth-child(1) {
+  animation-delay: 0.15s;
+}
+
+.chart-card:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.chart-header {
+  margin-bottom: 30rpx;
+}
+
+.chart-title-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.chart-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.chart-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #333;
+}
+
+.chart-subtitle {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 44rpx;
+}
+
+/* 营养素标题行：左文案 + 右侧口径切换 */
+.nutrient-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-left: 44rpx;
+}
+
+.nutrient-header-row .chart-subtitle {
+  margin-left: 0;
+}
+
+.nutrient-scope-switch {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 999rpx;
+  padding: 6rpx;
+  flex-shrink: 0;
+}
+
+.scope-item {
+  padding: 8rpx 16rpx;
+  font-size: 22rpx;
+  color: #666;
+  border-radius: 999rpx;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.scope-item.active {
+  background: #ffffff;
+  color: #34c759;
+  font-weight: 700;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 营养素图颜色图例：与半圆图扇区一一对应 */
+.nutrient-chart-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 28rpx;
+  margin-top: 16rpx;
+  margin-left: 44rpx;
+}
+
+.nutrient-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 22rpx;
+  color: #666;
+}
+
+.nutrient-legend-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 6rpx;
+  flex-shrink: 0;
+}
+
+.nutrient-legend-dot.carb-dot {
+  background: #9e9e9e;
+}
+.nutrient-legend-dot.protein-dot {
+  background: #fff;
+  border: 1rpx solid #e0e0e0;
+}
+.nutrient-legend-dot.fat-dot {
+  background: #9c27b0;
+}
+
+.chart-container {
+  width: 100%;
+  height: 300rpx;
+  margin-bottom: 20rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 营养素分布图：缩小并留足边距，保证完整可见 */
+.nutrient-chart-container {
+  width: 100%;
+  height: 240rpx;
+  padding: 24rpx 20rpx;
+  box-sizing: border-box;
+  position: relative;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nutrient-chart-container .chart-canvas {
+  width: 420rpx;
+  height: 200rpx;
+  display: block;
+  flex-shrink: 0;
+}
+
+.chart-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  position: relative;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #E0E0E0;
+  animation: legendFadeIn 0.45s ease-out 0.5s both;
+}
+
+.legend-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.legend-color {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 8rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.12);
+}
+
+@keyframes legendFadeIn {
+  from { opacity: 0; transform: translateY(8rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.consumed-color {
+  background: linear-gradient(135deg, #34c759 0%, #5dd879 100%);
+}
+
+.target-color {
+  background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
+}
+
+.remaining-color {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+}
+
+.legend-label {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.legend-value {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.legend-divider {
+  width: 1rpx;
+  height: 40rpx;
+  background: #E0E0E0;
+}
+
+/* 营养素统计 */
+.nutrient-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 30rpx;
+  padding-top: 30rpx;
+  border-top: 1rpx dashed #E0E0E0;
+  animation: legendFadeIn 0.5s ease-out 0.5s both;
+}
+
+.nutrient-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx;
+  border-radius: 16rpx;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.nutrient-stat-item:active {
+  background-color: rgba(0, 0, 0, 0.04);
+  transform: scale(0.98);
+}
+
+.nutrient-stat-item.active {
+  background: rgba(52, 199, 89, 0.08);
+  box-shadow: inset 0 0 0 2rpx rgba(52, 199, 89, 0.18);
+}
+
+.nutrient-stat-item.active .stat-percent {
+  background: rgba(52, 199, 89, 0.14);
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.nutrient-stat-item.active .stat-value {
+  color: #111827;
+}
+
+.stat-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+}
+
+.carb-icon {
+  background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+}
+
+.protein-icon {
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+}
+
+.fat-icon {
+  background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nutrient-stat-item .stat-label {
+  font-size: 22rpx;
+  color: #999;
+  margin-bottom: 4rpx;
+}
+
+/* 健康管理总览卡片（运动 / 碳足迹 / 补救 / 挑战） */
+.health-summary-section {
+  margin: 0 24rpx 26rpx;
+  padding: 24rpx 24rpx 10rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(145deg, #f5f9ff 0%, #f3fbf7 40%, #fff7f5 100%);
+  box-shadow: 0 6rpx 18rpx rgba(15, 23, 42, 0.06);
+  border: 1rpx solid rgba(148, 163, 184, 0.15);
+  animation: fadeInUp 0.5s ease-out 0.35s both;
+}
+
+.health-summary-header {
+  margin-bottom: 18rpx;
+}
+
+.health-summary-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #111827;
+}
+
+.health-summary-subtitle {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+.health-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16rpx;
+}
+
+.health-summary-card {
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 18rpx 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  box-shadow: 0 4rpx 12rpx rgba(15, 23, 42, 0.08);
+  border: 1rpx solid rgba(148, 163, 184, 0.16);
+  transition: transform 0.16s ease-out, box-shadow 0.16s ease-out, opacity 0.16s ease-out;
+}
+
+.health-summary-card:active {
+  transform: translateY(1rpx) scale(0.99);
+  box-shadow: 0 3rpx 10rpx rgba(15, 23, 42, 0.1);
+  opacity: 0.97;
+}
+
+.health-icon-circle {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  margin-bottom: 4rpx;
+}
+
+.workout-icon {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+}
+
+.carbon-icon {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+}
+
+.remedy-icon {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.challenge-icon {
+  background: linear-gradient(135deg, #fce7f3 0%, #f9a8d4 100%);
+}
+
+.health-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.health-card-label {
+  font-size: 24rpx;
+  color: #4b5563;
+}
+
+.health-card-value {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #111827;
+}
+
+.health-card-extra {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+.nutrient-stat-item .stat-value {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.stat-percent {
+  font-size: 20rpx;
+  color: #666;
+  background: #f5f5f5;
+  padding: 2rpx 8rpx;
+  border-radius: 8rpx;
+}
+
+.timeline-section {
+  margin: 0 24rpx 24rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+  animation: fadeInUp 0.6s ease-out 0.4s both;
+}
+
+/* 时间轴分组样式 */
+.timeline-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+}
+
+.meal-group {
+  background: #fafafa;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  border-left: 4rpx solid #34c759;
+  animation: fadeInUp 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.meal-group:nth-child(1) { animation-delay: 0.1s; }
+.meal-group:nth-child(2) { animation-delay: 0.2s; }
+.meal-group:nth-child(3) { animation-delay: 0.3s; }
+.meal-group:nth-child(4) { animation-delay: 0.4s; }
+.meal-group:nth-child(5) { animation-delay: 0.5s; }
+
+.meal-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 2rpx dashed #E0E0E0;
+}
+
+.meal-group-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.meal-group-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.meal-group-dot.breakfast {
+  background: linear-gradient(135deg, #ffc107 0%, #ffe082 100%);
+}
+
+.meal-group-dot.lunch {
+  background: linear-gradient(135deg, #34c759 0%, #5dd879 100%);
+}
+
+.meal-group-dot.afternoon_tea {
+  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+}
+
+.meal-group-dot.dinner {
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
+}
+
+.meal-group-dot.snack {
+  background: linear-gradient(135deg, #ff6b35 0%, #ffab91 100%);
+}
+
+.meal-group-label {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #333;
+}
+
+.meal-group-count {
+  font-size: 24rpx;
+  color: #999;
+  font-weight: normal;
+}
+
+.meal-group-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4rpx;
+}
+
+.meal-group-total-label {
+  font-size: 20rpx;
+  color: #999;
+}
+
+.meal-group-total-value {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #ff6b35;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.section-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #333;
+}
+
+.section-count {
+  font-size: 24rpx;
+  color: #999;
+  background: #f5f5f5;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 24rpx 0;
+  border-bottom: 1rpx dashed #E0E0E0;
+  position: relative;
+  animation: slideInRight 0.4s ease-out;
+  animation-fill-mode: both;
+  transition: all 0.3s ease;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 20rpx;
+  top: 0;
+  bottom: 0;
+  width: 2rpx;
+  background: linear-gradient(180deg, #34c759 0%, transparent 100%);
+}
+
+.timeline-dot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+  margin-top: 4rpx;
+  flex-shrink: 0;
+  border: 4rpx solid #fff;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-dot.breakfast {
+  background: linear-gradient(135deg, #ffc107 0%, #ffe082 100%);
+}
+
+.timeline-dot.lunch {
+  background: linear-gradient(135deg, #34c759 0%, #5dd879 100%);
+}
+
+.timeline-dot.afternoon_tea {
+  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+}
+
+.timeline-dot.dinner {
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
+}
+
+.timeline-dot.snack {
+  background: linear-gradient(135deg, #ff6b35 0%, #ffab91 100%);
+}
+
+.timeline-content-wrapper {
+  flex: 1;
+  padding-right: 20rpx;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.timeline-time-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.meal-type-hint {
+  font-size: 20rpx;
+  color: #999;
+  font-weight: normal;
+}
+
+.timeline-time {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.meal-type-label {
+  font-size: 20rpx;
+  color: #fff;
+  background: linear-gradient(135deg, #34c759 0%, #2da84a 100%);
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+}
+
+.timeline-cal-badge {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+.cal-icon {
+  font-size: 20rpx;
+}
+
+.cal-value {
+  font-size: 22rpx;
+  font-weight: bold;
+  color: #ff6b35;
+}
+
+.timeline-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.timeline-portion {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.timeline-nutrients {
+  font-size: 22rpx;
+  color: #666;
+  margin-top: 6rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.timeline-note {
+  font-size: 22rpx;
+  color: #888;
+  margin-top: 4rpx;
+  font-style: italic;
+}
+
+.timeline-action {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #F5F5F5;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.timeline-item:active {
+  transform: translateX(4rpx);
+  background: rgba(76, 175, 80, 0.05);
+  border-radius: 12rpx;
+  padding-left: 20rpx;
+  padding-right: 20rpx;
+}
+
+/* 长按提示 */
+.timeline-item {
+  position: relative;
+}
+
+.timeline-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.timeline-item:active::after {
+  opacity: 1;
+  background: rgba(76, 175, 80, 0.05);
+}
+
+.timeline-item:active .timeline-action {
+  background: #34c759;
+  transform: scale(1.05);
+}
+
+.action-icon {
+  font-size: 32rpx;
+  color: #999;
+  transition: all 0.3s ease;
+}
+
+.timeline-item:active .action-icon {
+  color: #fff;
+}
+
+.timeline-item:nth-child(1) { animation-delay: 0.05s; }
+.timeline-item:nth-child(2) { animation-delay: 0.1s; }
+.timeline-item:nth-child(3) { animation-delay: 0.15s; }
+.timeline-item:nth-child(4) { animation-delay: 0.2s; }
+.timeline-item:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.timeline-item:last-child {
+  border-bottom: none;
+}
+
+.timeline-time {
+  width: 120rpx;
+  font-size: 26rpx;
+  color: #999;
+  margin-right: 24rpx;
+}
+
+.timeline-content {
+  flex: 1;
+}
+
+.timeline-cal {
+  font-size: 24rpx;
+  color: #ff6b35;
+}
+
+.timeline-action {
+  font-size: 32rpx;
+  color: #999;
+}
+
+.empty-timeline {
+  text-align: center;
+  padding: 80rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.empty-hint {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 40rpx;
+}
+
+/* 周报样式 */
+.weekly-section {
+  padding-bottom: 40rpx;
+}
+
+.weekly-stats {
+  margin: 0 24rpx 20rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.weekly-header {
+  margin-bottom: 24rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.weekly-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #333;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.weekly-date {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.weekly-summary {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30rpx;
+  padding: 30rpx 0;
+  border-bottom: 1rpx dashed #E0E0E0;
+}
+
+.weekly-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.weekly-stat-item .stat-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.weekly-stat-item .stat-value {
+  font-size: 44rpx;
+  font-weight: 800;
+  color: #333;
+  line-height: 1;
+}
+
+.weekly-stat-item .stat-unit {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 4rpx;
+}
+
+.extreme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.extreme-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background: #F5F5F5;
+  transition: all 0.3s ease;
+}
+
+.extreme-item.max-item {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-left: 4rpx solid #ff6b35;
+}
+
+.extreme-item.min-item {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-left: 4rpx solid #34c759;
+}
+
+.extreme-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.extreme-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.extreme-label {
+  font-size: 22rpx;
+  color: #666;
+  margin-bottom: 4rpx;
+}
+
+.extreme-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.extreme-value {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.trend-chart-container {
+  height: 400rpx;
+  padding: 20rpx 0;
+}
+
+.timeline-date {
+  font-size: 22rpx;
+  color: #999;
+  margin-right: 8rpx;
+}
+
+/* 月报样式 */
+.monthly-section {
+  padding-bottom: 40rpx;
+}
+
+.monthly-calendar {
+  margin: 0 24rpx 24rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 30rpx;
+  padding-top: 30rpx;
+  border-top: 1rpx dashed #E0E0E0;
+}
+
+.calendar-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 22rpx;
+  color: #666;
+}
+
+.legend-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+.legend-dot.perfect {
+  background: #34c759;
+}
+
+.legend-dot.exceeded {
+  background: #FF5252;
+}
+
+.legend-dot.insufficient {
+  background: #FFC107;
+}
+
+.legend-dot.none {
+  background: #E0E0E0;
+}
+
+/* 日历状态点样式增强 */
+.calendar-item.perfect .status-dot {
+  background: #34c759;
+  box-shadow: 0 0 8rpx rgba(52, 199, 89, 0.5);
+}
+
+.calendar-item.exceeded .status-dot {
+  background: #FF5252;
+  box-shadow: 0 0 8rpx rgba(255, 82, 82, 0.5);
+}
+
+.calendar-item.insufficient .status-dot {
+  background: #FFC107;
+  box-shadow: 0 0 8rpx rgba(255, 193, 7, 0.5);
+}
+
+.calendar-item.none .status-dot {
+  background: #E0E0E0;
+}
+
+/* 按钮样式 - 主色绿 */
+.btn-primary {
+  background: linear-gradient(135deg, #34c759 0%, #2da84a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999rpx;
+  padding: 24rpx 48rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.mt-20 {
+  margin-top: 20rpx;
+}
+
+/* AI 营养师小结 - 白卡统一 */
+.ai-section {
+  margin: 0 24rpx 20rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+}
+
+.ai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.ai-title-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.ai-icon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+}
+
+.ai-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #333;
+}
+
+.ai-date {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.ai-body {
+  padding: 8rpx 0 12rpx;
+}
+
+.ai-main {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.7;
+}
+
+.ai-suggest-list {
+  margin-top: 12rpx;
+}
+
+.ai-suggest-item {
+  display: flex;
+  align-items: flex-start;
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+.ai-suggest-item .dot {
+  width: 24rpx;
+}
+
+.ai-warning {
+  margin-top: 14rpx;
+  padding: 10rpx 12rpx;
+  border-radius: 16rpx;
+  background: #fff4e5;
+}
+
+.ai-warning-title {
+  display: block;
+  font-size: 24rpx;
+  color: #d97706;
+  margin-bottom: 6rpx;
+}
+
+.ai-warning-item {
+  font-size: 24rpx;
+  color: #92400e;
+  line-height: 1.6;
+}
+
+.ai-footer {
+  margin-top: 6rpx;
+  padding-top: 10rpx;
+  border-top: 1rpx dashed #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-footer-text {
+  font-size: 20rpx;
+  color: #999;
+}
+
+.ai-link {
+  font-size: 22rpx;
+  color: #34c759;
+}
+
+/* 营养素详情弹层 */
+.nutrient-modal {
+  align-items: flex-end;
+}
+
+.nutrient-modal-content {
+  width: 100%;
+  max-width: 750rpx;
+  margin: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.nutrient-detail-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 10rpx 0 16rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  margin-bottom: 16rpx;
+}
+
+.nutrient-detail-pill {
+  font-size: 22rpx;
+  color: #666;
+  padding: 6rpx 12rpx;
+  background: #f5f5f5;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.nutrient-detail-metrics {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.nutrient-detail-gram {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #111827;
+}
+
+.nutrient-detail-percent {
+  font-size: 22rpx;
+  color: #2e7d32;
+  background: rgba(52, 199, 89, 0.12);
+  padding: 4rpx 10rpx;
+  border-radius: 999rpx;
+  font-weight: 700;
+}
+
+.nutrient-detail-kcal {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+.nutrient-detail-range {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14rpx 16rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(148, 163, 184, 0.18);
+}
+
+.range-label {
+  font-size: 24rpx;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.range-value {
+  font-size: 24rpx;
+  color: #111827;
+  font-weight: 700;
+}
+
+.nutrient-detail-tip {
+  margin-top: 16rpx;
+  padding: 16rpx;
+  background: rgba(255, 193, 7, 0.10);
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(255, 193, 7, 0.18);
+}
+
+.tip-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #b45309;
+  margin-bottom: 8rpx;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: #92400e;
+  line-height: 1.6;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

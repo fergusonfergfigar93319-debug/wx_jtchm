@@ -1,0 +1,330 @@
+《健康生活（今天吃什么）》后端架构与前端设计书
+
+0. 架构总览
+
+架构风格: 前后端分离 (RESTful API)。
+
+后端框架: Python Django + Django REST Framework (DRF)。
+
+数据库策略 (Hybrid Persistence):
+
+MySQL: 存储结构化强关联数据（用户账户、身体数据、冰箱库存关系、每日摄入日志、埋点数据）。
+
+MongoDB: 存储非结构化/半结构化数据（菜谱详情、高德API缓存的商家数据、复杂的用户画像标签）。
+
+缓存/中间件: Redis (用于存取Token、推荐算法的临时结果池、高频读取的配置项)。
+
+第三方服务: 微信登录/支付 API、高德地图 API。
+
+1. 核心功能模块拆解 & 业务逻辑
+
+1.1 智能选餐引擎 (核心)
+
+这是解决“不知道吃什么”的核心。
+
+逻辑流程:
+
+预筛选: 排除用户过敏源、黑名单食物。
+
+场景分流:
+
+自己做: 读取 MySQL 用户冰箱表 -> 匹配 MongoDB 菜谱库 -> 计算“食材匹配度” -> 结合“卡路里预算” -> 输出列表。
+
+点外卖: 获取经纬度 -> 检查 Redis/Mongo 缓存 (避免频繁调高德 API) -> 若无缓存调高德 API -> 标签过滤 -> 结合“卡路里预算” -> 输出列表。
+
+大转盘: 基于上述两个池子，进行加权随机。
+
+健康干预: 如果用户今日摄入已超标，强制降低高热量食物的推荐权重（或在转盘中加入“建议轻食”的提示）。
+
+1.2 冰箱与库存管理
+
+逻辑: 这是一个高频增删改的模块。为了体验，不记录具体数量（如 500g），只记录“有/无”。
+
+关联: 当用户在“自己做”界面点击“确认摄入”某菜谱时，后端自动提示“是否扣除冰箱内对应食材？”，实现库存闭环。
+
+1.3 每日健康报表 (量化)
+
+逻辑: 每次“确认选择”都会写入 DailyLog。
+
+动态计算: 每次请求日报接口时，实时聚合当日数据，对比 UserTarget (目标配额)，计算剩余卡路里窗口。
+
+2. 数据模型设计 (ER图概念)
+
+2.1 MySQL (关系型数据)
+
+User (用户表)
+
+id: PK
+
+openid: 微信唯一标识
+
+profile: JSON (包含性别、年龄、身高、体重、目标体重、活动系数)
+
+diet_tags: JSON (包含过敏源、偏好：[辣, 甜, 低碳])
+
+daily_quota: JSON (系统计算出的每日目标：{kcal: 2000, carb: 250, protein: 100, fat: 60})
+
+FridgeItem (冰箱库存表)
+
+id: PK
+
+user_id: FK -> User
+
+ingredient_name: String (标准化食材名，如"西红柿"，需与菜谱原料模糊匹配)
+
+category: String (蔬菜/肉类/蛋奶)
+
+create_time: DateTime (用于通过时间提醒食材新鲜度)
+
+DailyIntake (每日摄入日志)
+
+id: PK
+
+user_id: FK -> User
+
+date: Date (2026-01-01)
+
+meal_type: Enum (breakfast, lunch, dinner, snack)
+
+source_type: Enum (recipe, restaurant, custom)
+
+source_id: String (关联 Mongo ID 或 高德 ID)
+
+food_name: String (冗余字段，方便快速查询)
+
+nutrition: JSON ({kcal: 500, carb: 20, ...})
+
+2.2 MongoDB (文档型数据)
+
+Recipe (菜谱集合)
+
+基于你提供的数据结构，增加了索引字段
+
+_id: ObjectId
+
+name: String
+
+difficulty: String
+
+calories_per_100g: Float
+
+tags: Array [String] (索引)
+
+ingredients: Array [String] (分词索引，用于冰箱匹配)
+
+detail: Object (原 JSON 全部内容)
+
+RestaurantCache (商家缓存集合)
+
+用于减少高德 API 调用费用，缓存周期 24小时
+
+amap_id: String (Unique)
+
+geo_location: GeoJSON Point (2dsphere 索引)
+
+cached_at: DateTime
+
+data: Object (高德返回的原始数据清洗版)
+
+health_score: Float (后端根据 tag 计算的健康分，如“沙拉”得高分，“炸鸡”得低分)
+
+3. 前端界面展示与后端交互
+
+界面 1: 主界面 (Dashboard)
+
+展示:
+
+顶部：今日剩余卡路里/宏观营养素进度条 (调用 API-DailySummary)。
+
+中部：三个巨大卡片入口（自己做、点外卖、食物大转盘）。
+
+底部：Banner 展示一条健康小贴士。
+
+交互: 点击卡片跳转。
+
+界面 2: 自己做 (Cook Mode)
+
+展示:
+
+顶部开关：“仅看冰箱食材可做” (Toggle)。
+
+标签栏：[快手菜] [减脂] [高蛋白] (多选)。
+
+列表区域：瀑布流展示菜谱（图 + 名 + 匹配度 + 卡路里）。
+
+详情页:
+
+展示：大图、做法步骤、所需食材（高亮冰箱里有的）。
+
+底部三个按钮:
+
+确定选择: 弹出模态框 -> 调整分量 -> 提交后端 (API-LogIntake) -> 提示是否移除冰箱食材。
+
+收藏: (API-Favorite)。
+
+黑名单: (API-Block)。
+
+界面 3: 餐饮商店 (Restaurant Mode)
+
+展示:
+
+列表：附近商家。
+
+特殊逻辑: 列表上的标签不仅仅是高德的 tag，还有后端计算的“健康红绿灯”（绿灯=推荐，红灯=高热量）。
+
+详情页: 类似高德详情，但按钮逻辑同“自己做”，重点在于“记录摄入”。
+
+界面 4: 食物转盘 (The Wheel)
+
+展示: 一个大转盘 UI。
+
+交互:
+
+用户点击“开始”。
+
+后端逻辑: 此时后端不只是随机，而是运行 RecommendAlgorithm，返回 6-8 个候选结果给前端渲染在盘面上。
+
+转动停止：选中一个，弹出卡片。
+
+按钮：“就吃这个”（记录）、“再转一次”（埋点记录用户不喜欢该推荐）。
+
+界面 5: 冰箱管理 (Fridge)
+
+展示: 分类列表（蔬菜、肉类）。
+
+交互:
+
+顶部搜索框（带联想）。
+
+快速添加：点击常见食材标签直接入库。
+
+左滑删除。
+
+入口: 悬浮按钮 -> 进入“冰箱菜谱推荐”（复用界面 2，但强制开启“仅看冰箱”过滤器）。
+
+界面 6: 日报与我的 (Report & Profile)
+
+展示:
+
+ECharts 饼图/柱状图展示今日摄入 vs 目标。
+
+月报日历：哪天达标打钩，哪天超标打叉。
+
+身体数据修改入口。
+
+4. API 接口规划 (Core Endpoints)
+
+A. 用户与健康
+
+POST /api/user/login/: 微信登录，返回 JWT Token。
+
+GET/PATCH /api/user/profile/: 获取/更新身体数据，后端自动重新计算 BMR 和 营养配额。
+
+GET /api/report/summary/: 获取今日摄入总量、剩余配额、仪表盘数据。
+
+B. 食物与推荐 (核心)
+
+POST /api/recommend/search/:
+
+Input: { "mode": "cook/eat_out", "use_fridge": true, "tags": ["spicy"], "lat": 31.2, "lng": 107.4 }
+
+Output: [ { "id": "...", "name": "...", "match_score": 98, "calories": 300, "missing_ingredients": ["onion"] } ]
+
+Logic: 这是一个聚合接口，内部根据 mode 路由到不同逻辑。
+
+GET /api/recommend/wheel_items/:
+
+Input: { "lat": ..., "lng": ... }
+
+Output: 返回 6 个用于转盘的选项（3个健康，2个用户偏好，1个放纵餐）。
+
+C. 冰箱与记录
+
+GET /api/fridge/: 获取冰箱清单。
+
+POST /api/fridge/batch_update/: 批量增删食材。
+
+POST /api/intake/log/:
+
+Input: { "source_type": "recipe", "id": "mongo_obj_id", "portion": 1.0 }
+
+Output: 成功，并返回最新的今日剩余卡路里。
+
+5. 算法逻辑：基于健康与偏好的混合推荐 (Hybrid Recommendation)
+
+这是本系统的“大脑”。算法流程如下：
+
+Step 1: 召回 (Recall)
+
+场景 A (做饭):
+
+全文检索 MongoDB，查找 ingredients 包含用户冰箱食材的菜谱。
+
+计算 Availability Score (可用度): (菜谱所需且冰箱有的食材数 / 菜谱总食材数)。
+
+场景 B (外卖):
+
+GeoHash 搜索附近 3km 商家。
+
+Step 2: 过滤 (Filter)
+
+硬过滤: 剔除包含用户 Allergy Tags (过敏源) 的菜品。
+
+黑名单: 剔除用户历史拉黑的 ID。
+
+Step 3: 粗排打分 (Scoring)
+对召回的每个候选对象打分 Score = S_Health * 0.4 + S_Preference * 0.3 + S_Context * 0.3
+
+S_Health (健康分):
+
+读取用户今日 Remaining Calories (剩余热量)。
+
+如果 (菜品热量 > 剩余热量 * 1.2): 分数大幅降低 (惩罚)。
+
+如果 (菜品营养结构符合用户当前缺失，如缺蛋白质): 分数提升 (奖励)。
+
+S_Preference (偏好分):
+
+匹配用户口味标签（如“辣”）。
+
+分析历史 DailyIntake，如果用户周二经常吃面食，周二增加面食权重。
+
+S_Context (场景分):
+
+(自己做): Availability Score 越高分越高 (优先推荐不用买菜的)。
+
+(点外卖): 距离越近、评分越高，分越高。
+
+Step 4: 多样性重排 (Re-ranking)
+
+为了防止推荐列表全是“水煮鸡胸肉”，在最终 Top 20 列表中，强制插入 20% 的“高美味/低健康”食物（除非用户开启极度减脂模式），标记为“偶尔放纵”。
+
+6. 架构师建议：隐藏功能与优化
+
+Buried Points (数据埋点):
+
+核心埋点: 记录用户在“转盘”界面点击“再转一次”的行为。这是极其宝贵的负反馈数据。
+
+用途: 下次推荐时，降低该类食物的权重。
+
+Smart Caching (智能缓存):
+
+高德 API 降本: 不要每次用户刷新都调高德 API。
+
+策略: 以用户经纬度计算 GeoHash (精度 500m)。Redis Key: nearby_restaurants_{geohash}。有效期 1 小时。如果缓存命中，直接返回 MongoDB 中的缓存数据，不调高德。
+
+Shadow Mode (影子模式 - 预加载):
+
+当用户打开小程序首页时，后端异步触发一次“推荐计算”，将结果存入 Redis。
+
+当用户点击“开始选餐”时，毫秒级从 Redis 返回结果，体验极其丝滑。
+
+Fuzzy Ingredient Matching (模糊匹配优化):
+
+用户冰箱存的是“西红柿”，菜谱写的是“番茄”。
+
+解决: 建立一个 Synonym Dictionary (同义词典) 在代码中。在存入冰箱或搜索菜谱时，统一映射为标准 ID。
+
+Gamification (游戏化隐藏彩蛋):
+
+连续 7 天记录饮食且卡路里达标，解锁“健康达人”勋章，并在转盘中解锁特殊的“豪华欺骗餐”选项。

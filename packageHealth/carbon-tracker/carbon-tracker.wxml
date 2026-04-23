@@ -1,0 +1,133 @@
+<!--pages/carbon-tracker/carbon-tracker.wxml-->
+<wxs module="utils" src="./carbon-tracker.wxs"></wxs>
+<scroll-view class="container" scroll-y>
+  <!-- 顶部标题栏：与应用统一的绿色头部 -->
+  <view class="page-header">
+    <view class="page-header-main">
+      <text class="page-title">绿色足迹</text>
+      <view class="page-level-tag {{carbonLevel}}">
+        <text class="page-level-text">{{carbonLevel === 'low' ? '低' : carbonLevel === 'medium' ? '中' : '高'}}</text>
+      </view>
+    </view>
+    <text class="page-subtitle">饮食 · 出行 · 包装，一目了然</text>
+  </view>
+
+  <!-- 综合概览：碳足迹 + 本周 -->
+  <view class="summary-section">
+    <!-- 今日碳足迹卡片 -->
+    <view
+      class="carbon-card main-card pressable"
+      bindtap="onTodayCarbonTap"
+      hover-class="press-hover"
+      hover-stay-time="80"
+    >
+      <view class="card-header">
+        <text class="card-title">今日碳足迹</text>
+        <view class="carbon-level {{carbonLevel}}">
+          <text class="level-text">{{carbonLevel === 'low' ? '低' : carbonLevel === 'medium' ? '中' : '高'}}</text>
+        </view>
+      </view>
+      <view class="carbon-value">
+        <text class="value-number">{{todayCarbon.total.toFixed(2)}}</text>
+        <text class="value-unit">kg CO₂e</text>
+      </view>
+      <view class="carbon-breakdown">
+        <view class="breakdown-item">
+          <text class="breakdown-label">食物</text>
+          <text class="breakdown-value">{{todayCarbon.food.toFixed(2)}}kg</text>
+        </view>
+        <view class="breakdown-item">
+          <text class="breakdown-label">运输</text>
+          <text class="breakdown-value">{{todayCarbon.transport.toFixed(2)}}kg</text>
+        </view>
+        <view class="breakdown-item">
+          <text class="breakdown-label">包装</text>
+          <text class="breakdown-value">{{todayCarbon.packaging.toFixed(2)}}kg</text>
+        </view>
+      </view>
+      <view class="carbon-offset" wx:if="{{todayCarbon.offset < 0}}">
+        <text class="offset-label">🏃 运动抵消</text>
+        <text class="offset-value">{{carbonOffsetDisplay}}kg</text>
+      </view>
+    </view>
+
+    <!-- 本周统计 + 今日运动 -->
+    <view class="summary-grid">
+    <view
+      class="carbon-card week-card pressable"
+      bindtap="onWeekCarbonTap"
+      hover-class="press-hover"
+      hover-stay-time="80"
+    >
+      <view class="card-header">
+        <text class="card-title">本周平均</text>
+        <text class="trend {{weeklyCarbon.trend}}">
+          {{weeklyCarbon.trend === 'up' ? '↑' : weeklyCarbon.trend === 'down' ? '↓' : '→'}}
+        </text>
+      </view>
+      <view class="week-value">
+        <text class="value-number">{{weeklyCarbon.avg.toFixed(2)}}</text>
+        <text class="value-unit">kg CO₂e/天</text>
+      </view>
+      <text class="week-total">本周总计: {{weeklyCarbon.total.toFixed(2)}}kg</text>
+    </view>
+    <view
+      class="carbon-card workout-summary-card compact pressable"
+      bindtap="onTodayWorkoutCardTap"
+      hover-class="press-hover"
+      hover-stay-time="80"
+    >
+      <view class="card-header">
+        <text class="card-title">今日运动</text>
+        <text class="workout-hint">运动可抵消碳足迹</text>
+      </view>
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value">{{utils.formatDistance(todayStats.totalDistance)}}</text>
+          <text class="stat-label">总距离</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{utils.formatDuration(todayStats.totalDuration)}}</text>
+          <text class="stat-label">总时长</text>
+        </view>
+        <view class="stat-item muted">
+          <text class="stat-value">{{todayStats.totalCalories.toFixed(0)}}</text>
+          <text class="stat-label">消耗(kcal)</text>
+        </view>
+        <view class="stat-item highlight">
+          <text class="stat-value">{{todayStats.carbonOffset.toFixed(2)}}</text>
+          <text class="stat-label">碳抵消</text>
+        </view>
+      </view>
+    </view>
+    </view>
+  </view>
+
+  <!-- 运动区域：地图 + 控制 -->
+  <view class="workout-section">
+    <view class="section-header">
+      <text class="section-title">🔴 运动轨迹</text>
+      <view class="map-locate-btn pressable" bindtap="moveToCurrentLocation" hover-class="press-hover" hover-stay-time="80">
+        <text class="locate-icon">◎</text>
+        <text class="locate-text">定位</text>
+      </view>
+    </view>
+    <view class="map-wrapper">
+      <map
+        id="workoutMap"
+        class="workout-map"
+        latitude="{{latitude}}"
+        longitude="{{longitude}}"
+        scale="{{scale}}"
+        markers="{{markers}}"
+        polyline="{{polyline}}"
+        show-location="{{true}}"
+        enable-zoom="{{true}}"
+        enable-scroll="{{true}}"
+        enable-rotate="{{false}}"
+        bindtap="onMapTap"
+        bindmarkertap="onMarkerTap"
+      ></map>
+    </view>
+  </view>
+</scroll-view>

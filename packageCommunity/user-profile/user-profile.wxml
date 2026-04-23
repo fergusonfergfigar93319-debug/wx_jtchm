@@ -1,0 +1,62 @@
+<!-- 其他用户的主页：头像、昵称、简介、关注/粉丝/获赞、关注按钮、TA的动态 -->
+<view class="user-profile-page">
+  <view class="user-profile-card" wx:if="{{user}}">
+    <view class="user-profile-header">
+      <view class="user-profile-avatar-wrap">
+        <image class="user-profile-avatar" src="{{user.avatar || '/images/default-avatar.png'}}" mode="aspectFill"></image>
+      </view>
+      <view class="user-profile-main">
+        <text class="user-profile-nickname">{{user.nickname || '用户'}}</text>
+        <view class="user-profile-signature-wrap" wx:if="{{user.signature}}">
+          <view class="user-profile-signature-accent" aria-hidden="true"></view>
+          <view class="user-profile-signature-text">{{user.signature}}</view>
+        </view>
+        <text class="user-profile-signature placeholder" wx:else>暂无简介</text>
+        <view class="user-profile-stats">
+          <view class="user-stat">
+            <text class="user-stat-num">{{user.follow_count || 0}}</text>
+            <text class="user-stat-label">关注</text>
+          </view>
+          <view class="user-stat" bindtap="onFansTap">
+            <text class="user-stat-num">{{user.fans_count || 0}}</text>
+            <text class="user-stat-label">粉丝</text>
+          </view>
+          <view class="user-stat">
+            <text class="user-stat-num">{{user.like_count || 0}}</text>
+            <text class="user-stat-label">获赞</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="user-profile-actions">
+      <button class="btn-follow {{user.is_followed ? 'followed' : ''}}" bindtap="toggleFollow" disabled="{{followLoading}}">
+        {{followLoading ? '处理中...' : (user.is_followed ? '已关注' : '+ 关注')}}
+      </button>
+    </view>
+  </view>
+
+  <view class="user-section" wx:if="{{user}}">
+    <view class="user-section-title">TA 的动态</view>
+    <view class="user-posts-list" wx:if="{{posts.length > 0}}">
+      <view class="user-post-item" wx:for="{{posts}}" wx:key="id" bindtap="goToPost" data-id="{{item.id}}">
+        <image class="user-post-cover" wx:if="{{item.images && item.images.length}}" src="{{item.images[0]}}" mode="aspectFill"></image>
+        <image class="user-post-cover" wx:elif="{{item.image}}" src="{{item.image}}" mode="aspectFill"></image>
+        <view class="user-post-placeholder" wx:else></view>
+      </view>
+    </view>
+    <view class="user-posts-empty" wx:else>
+      <text class="empty-icon">📝</text>
+      <text class="empty-text">暂无动态</text>
+      <text class="empty-desc">TA 还没有发布内容</text>
+    </view>
+  </view>
+
+  <view class="user-profile-loading" wx:if="{{loading && !user}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+  <view class="user-profile-error" wx:if="{{error && !user}}">
+    <text class="error-text">{{error}}</text>
+    <button class="btn-retry" bindtap="loadUser">重试</button>
+  </view>
+</view>

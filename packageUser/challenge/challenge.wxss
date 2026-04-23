@@ -1,0 +1,476 @@
+/* pages/challenge/challenge.wxss */
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* 提醒栏 */
+.reminder-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 30rpx;
+  background: white;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.reminder-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.reminder-switch {
+  transform: scale(0.9);
+}
+
+/* 标签栏 */
+.tabs {
+  display: flex;
+  background: white;
+  padding: 0 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.tab {
+  flex: 1;
+  padding: 30rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: #999;
+  position: relative;
+}
+
+.tab.active {
+  color: #FF6B35;
+  font-weight: 500;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 4rpx;
+  background: #FF6B35;
+  border-radius: 2rpx;
+}
+
+/* 挑战列表 */
+.challenge-list {
+  padding: 30rpx;
+}
+
+.challenge-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 28rpx 26rpx;
+  margin-bottom: 22rpx;
+  box-shadow: 0 6rpx 18rpx rgba(15, 23, 42, 0.06);
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, opacity 0.15s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.challenge-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.challenge-card:active::before {
+  left: 100%;
+}
+
+.challenge-card.active {
+  border: 2rpx solid #FF6B35;
+  box-shadow: 0 8rpx 22rpx rgba(255, 107, 53, 0.28);
+  animation: cardPulse 2s ease-in-out infinite;
+}
+
+@keyframes cardPulse {
+  0%, 100% {
+    box-shadow: 0 4rpx 16rpx rgba(255, 107, 53, 0.2);
+  }
+  50% {
+    box-shadow: 0 6rpx 20rpx rgba(255, 107, 53, 0.3);
+  }
+}
+
+.challenge-card.completed {
+  opacity: 0.9;
+  background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+}
+
+.challenge-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20rpx;
+}
+
+.challenge-icon {
+  font-size: 60rpx;
+  margin-right: 20rpx;
+}
+
+.challenge-info {
+  flex: 1;
+}
+
+.challenge-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.challenge-desc {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  display: block;
+}
+
+.completed-badge {
+  background: #4caf50;
+  color: white;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+}
+
+/* 进度条 */
+.challenge-progress {
+  margin-bottom: 20rpx;
+}
+
+.progress-bar {
+  height: 8rpx;
+  background: #f0f0f0;
+  border-radius: 4rpx;
+  overflow: hidden;
+  margin-bottom: 10rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B35 0%, #FF8C5A 100%);
+  transition: width 0.5s ease;
+  border-radius: 4rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.progress-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 挑战信息 */
+.challenge-duration {
+  margin-bottom: 20rpx;
+  font-size: 26rpx;
+}
+
+.duration-label {
+  color: #999;
+}
+
+.duration-value {
+  color: #FF6B35;
+  font-weight: 500;
+}
+
+.challenge-reward {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 26rpx;
+  margin-bottom: 20rpx;
+}
+
+.reward-label {
+  color: #999;
+}
+
+.reward-points {
+  color: #FF6B35;
+  font-weight: 500;
+}
+
+.reward-badge {
+  color: #666;
+}
+
+/* 加入按钮 */
+.join-btn {
+  padding: 20rpx;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%);
+  color: white;
+  text-align: center;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 53, 0.3);
+}
+
+.join-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 1rpx 4rpx rgba(255, 107, 53, 0.3);
+}
+
+/* 操作按钮 */
+.challenge-actions {
+  display: flex;
+  gap: 15rpx;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 16rpx;
+  text-align: center;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  transition: all 0.3s ease;
+}
+
+.check-btn {
+  background: #fff3e0;
+  color: #FF6B35;
+  border: 1rpx solid #FF6B35;
+}
+
+.check-btn:active {
+  background: #ffe0b2;
+  transform: scale(0.95);
+}
+
+.abandon-btn {
+  background: #ffebee;
+  color: #f44336;
+  border: 1rpx solid #f44336;
+}
+
+.abandon-btn:active {
+  background: #ffcdd2;
+  transform: scale(0.95);
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 100rpx 0;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  display: block;
+  margin-bottom: 30rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #999;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.empty-hint {
+  font-size: 24rpx;
+  color: #ccc;
+  display: block;
+}
+
+/* 弹窗 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal.show {
+  display: flex;
+  opacity: 1;
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 24rpx;
+  width: 90%;
+  max-width: 600rpx;
+  overflow: hidden;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.modal.show .modal-content {
+  transform: scale(1);
+  animation: modalScaleIn 0.3s ease;
+}
+
+@keyframes modalScaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.modal-close {
+  font-size: 48rpx;
+  color: #999;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 30rpx;
+}
+
+.challenge-preview {
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.preview-icon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.preview-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.preview-desc {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  display: block;
+}
+
+.reward-preview {
+  background: #fff3e0;
+  padding: 20rpx;
+  border-radius: 8rpx;
+  text-align: center;
+}
+
+.preview-label {
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.preview-reward {
+  font-size: 28rpx;
+  color: #FF6B35;
+  font-weight: 500;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 20rpx;
+  padding: 30rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 24rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+}
+
+.modal-btn.cancel {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.modal-btn.confirm {
+  background: #FF6B35;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.modal-btn.confirm:active {
+  background: #e55a2b;
+  transform: scale(0.98);
+}
+
+.modal-btn.cancel:active {
+  background: #e0e0e0;
+  transform: scale(0.98);
+}

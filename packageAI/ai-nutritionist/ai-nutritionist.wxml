@@ -1,0 +1,290 @@
+<!--pages/ai-nutritionist/ai-nutritionist.wxml-->
+<view class="chat-page page-container">
+  <!-- 顶部右侧：历史 / 新建（常驻可见） -->
+  <view class="page-header-actions">
+    <view class="header-action-btn" bindtap="openConversationList" hover-class="header-action-hover" hover-stay-time="80">
+      <text class="header-action-icon">🕐</text>
+      <text class="header-action-label">历史</text>
+    </view>
+    <view class="header-action-btn header-action-primary" bindtap="createNewConversation" hover-class="header-action-hover" hover-stay-time="80">
+      <text class="header-action-icon">➕</text>
+      <text class="header-action-label">新建</text>
+    </view>
+  </view>
+  <scroll-view
+    class="chat-scroll"
+    scroll-y
+    scroll-into-view="{{scrollIntoView}}"
+    scroll-with-animation
+    bindscroll="onChatScroll"
+    enable-back-to-top
+  >
+    <!-- 顶部状态卡（无论是否有消息都显示） -->
+    <view class="status-card {{isStatusCompact ? 'is-compact' : ''}}" wx:if="{{dailySummary}}">
+      <view class="status-expanded" wx:if="{{!isStatusCompact}}">
+        <view class="status-expanded-inner">
+          <view class="status-card-head">
+            <text class="status-title">今日营养概览</text>
+            <text class="status-remain-head {{remainingLabel === '超出' ? 'exceed' : ''}}">{{remainingLabel}} {{remainingValue}} kcal</text>
+          </view>
+          <text class="status-sub">目标 {{dailySummary.target || 2000}} kcal</text>
+          <view class="status-card-body">
+            <view class="status-left">
+              <view class="status-ring">
+                <view
+                  class="status-ring-bg"
+                  style="background: conic-gradient({{remainingClass === 'exceed' ? '#fb7185' : '#60A5FA'}} {{caloriePercent * 3.6}}deg, rgba(15,23,42,0.08) 0deg);"
+                ></view>
+                <view class="status-ring-center">
+                  <text class="status-ring-value">{{dailySummary.consumed || 0}}</text>
+                  <text class="status-ring-unit">kcal</text>
+                </view>
+              </view>
+            </view>
+            <view class="status-macros">
+              <view class="macro-row">
+                <text class="macro-name">蛋白</text>
+                <view class="macro-bar"><view class="macro-fill protein" style="width: {{proteinPercent}}%"></view></view>
+                <view class="macro-right">
+                  <text class="macro-val">{{proteinG}}/{{proteinTargetG}}g</text>
+                  <text class="macro-pct">{{proteinPercent}}%</text>
+                </view>
+              </view>
+              <view class="macro-row">
+                <text class="macro-name">碳水</text>
+                <view class="macro-bar"><view class="macro-fill carb" style="width: {{carbPercent}}%"></view></view>
+                <view class="macro-right">
+                  <text class="macro-val">{{carbG}}/{{carbTargetG}}g</text>
+                  <text class="macro-pct">{{carbPercent}}%</text>
+                </view>
+              </view>
+              <view class="macro-row">
+                <text class="macro-name">脂肪</text>
+                <view class="macro-bar"><view class="macro-fill fat" style="width: {{fatPercent}}%"></view></view>
+                <view class="macro-right">
+                  <text class="macro-val">{{fatG}}/{{fatTargetG}}g</text>
+                  <text class="macro-pct">{{fatPercent}}%</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="status-hint-line" wx:if="{{macroHint}}">
+            <text class="status-hint-text">{{macroHint}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="status-compact" wx:else>
+        <view class="status-compact-inner">
+          <view class="status-compact-head">
+            <text class="status-title status-title-compact">今日概览</text>
+            <text class="status-remain-head status-remain-compact {{remainingLabel === '超出' ? 'exceed' : ''}}">{{remainingLabel}} {{remainingValue}} kcal</text>
+          </view>
+          <text class="status-sub status-sub-compact">目标 {{dailySummary.target || 2000}} kcal</text>
+          <view class="status-compact-row">
+            <view class="status-ring status-ring-compact">
+              <view
+                class="status-ring-bg status-ring-bg-compact"
+                style="background: conic-gradient({{remainingClass === 'exceed' ? '#fb7185' : '#60A5FA'}} {{caloriePercent * 3.6}}deg, rgba(15,23,42,0.08) 0deg);"
+              ></view>
+              <view class="status-ring-center status-ring-center-compact">
+                <text class="status-ring-value">{{dailySummary.consumed || 0}}</text>
+                <text class="status-ring-unit">kcal</text>
+              </view>
+            </view>
+          </view>
+          <view class="status-hint-line is-compact" wx:if="{{macroHint}}">
+            <text class="status-hint-text">{{macroHint}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="actions-section" wx:if="{{dailySummary || messages.length === 0}}">
+      <view class="actions-row">
+        <view class="action-item" bindtap="goLogIntake" hover-class="chip-hover" hover-stay-time="80">
+          <text class="action-icon">📝</text>
+          <text class="action-text">记录一餐</text>
+        </view>
+        <view class="action-item" bindtap="goSmartChoice" hover-class="chip-hover" hover-stay-time="80">
+          <text class="action-icon">✨</text>
+          <text class="action-text">智能选餐</text>
+        </view>
+        <view class="action-item" bindtap="goReport" hover-class="chip-hover" hover-stay-time="80">
+          <text class="action-icon">📈</text>
+          <text class="action-text">看趋势</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 无消息：聚合面板（层次：身份 → 能力网格 → FAQ；热量已在顶部状态卡展示，不再重复） -->
+    <view class="home-panel" wx:if="{{messages.length === 0}}">
+      <view class="ai-identity-card ai-identity-card--compact">
+        <view class="ai-identity-avatar">
+          <text class="ai-identity-emoji">🤖</text>
+          <view class="ai-identity-dot"></view>
+        </view>
+        <view class="ai-identity-info">
+          <text class="ai-identity-name">AI 营养师</text>
+          <text class="ai-identity-desc">{{dailySummary ? '已读取今日饮食，随时可问' : '补全档案与记录后建议更准'}}</text>
+        </view>
+      </view>
+
+      <view class="panel-section-label">问问 AI</view>
+      <view class="quick-actions-grid">
+        <view class="quick-action-item" bindtap="askQuestion" data-question="帮我分析今日营养摄入情况，给出改善建议" hover-class="chip-hover" hover-stay-time="80">
+          <view class="quick-action-icon-wrap qa-blue">
+            <text class="quick-action-icon">📊</text>
+          </view>
+          <text class="quick-action-name">营养分析</text>
+          <text class="quick-action-desc">分析今日摄入</text>
+        </view>
+        <view class="quick-action-item" bindtap="askQuestion" data-question="根据我的目标帮我制定今日餐食计划" hover-class="chip-hover" hover-stay-time="80">
+          <view class="quick-action-icon-wrap qa-orange">
+            <text class="quick-action-icon">🍽️</text>
+          </view>
+          <text class="quick-action-name">餐食规划</text>
+          <text class="quick-action-desc">制定今日计划</text>
+        </view>
+        <view class="quick-action-item" bindtap="askQuestion" data-question="推荐几道适合我当前目标的菜谱" hover-class="chip-hover" hover-stay-time="80">
+          <view class="quick-action-icon-wrap qa-green">
+            <text class="quick-action-icon">👨‍🍳</text>
+          </view>
+          <text class="quick-action-name">菜谱推荐</text>
+          <text class="quick-action-desc">个性化推荐</text>
+        </view>
+        <view class="quick-action-item" bindtap="askQuestion" data-question="给我一些个性化的健康饮食建议" hover-class="chip-hover" hover-stay-time="80">
+          <view class="quick-action-icon-wrap qa-purple">
+            <text class="quick-action-icon">💡</text>
+          </view>
+          <text class="quick-action-name">健康建议</text>
+          <text class="quick-action-desc">专属饮食方案</text>
+        </view>
+      </view>
+
+      <view class="panel-section-label panel-section-label--faq">大家都在问</view>
+      <view class="faq-card faq-card--in-panel">
+        <view class="faq-item" wx:for="{{quickQuestions}}" wx:key="*this" bindtap="askQuestion" data-question="{{item}}" hover-class="chip-hover" hover-stay-time="80">
+          <text class="faq-item-icon">💬</text>
+          <text class="faq-item-text">{{item}}</text>
+          <text class="faq-item-arrow">›</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 消息列表 -->
+    <view class="msg-list" wx:if="{{messages.length > 0}}">
+      <block wx:for="{{messages}}" wx:key="id">
+        <view class="msg-row {{item.role === 'user' ? 'is-user' : 'is-ai'}}" id="msg-{{item.id}}">
+          <view class="msg-avatar {{item.role === 'user' ? 'avatar-user' : 'avatar-ai'}}">
+            {{item.role === 'user' ? '👤' : '🤖'}}
+          </view>
+          <view class="msg-bubble {{item.role === 'user' ? 'bubble-user' : 'bubble-ai'}} {{item.streaming ? 'is-streaming' : ''}}">
+            <block wx:if="{{item.role === 'ai' && item.streaming && !item.content}}">
+              <view class="thinking-inline">
+                <view class="dots">
+                  <view class="dot"></view>
+                  <view class="dot"></view>
+                  <view class="dot"></view>
+                </view>
+                <text class="thinking-text">正在思考…</text>
+              </view>
+            </block>
+            <block wx:else>
+              <view class="msg-text-row">
+                <text class="msg-text" selectable="true">{{item.content}}</text>
+                <text wx:if="{{item.role === 'ai' && item.streaming && item.content}}" class="stream-cursor">▍</text>
+              </view>
+              <view class="msg-meta" wx:if="{{item.role === 'user' || !item.streaming}}">
+                <text class="msg-time">{{item.time}}</text>
+              </view>
+            </block>
+            <view class="follow-up" wx:if="{{item.role === 'ai' && item.suggestions && item.suggestions.length > 0 && !item.streaming}}">
+              <scroll-view class="follow-scroll" scroll-x>
+                <view class="follow-chip" wx:for="{{item.suggestions}}" wx:for-item="sug" wx:key="*this" bindtap="askQuestion" data-question="{{sug}}" hover-class="chip-hover" hover-stay-time="80">
+                  {{sug}}
+                </view>
+              </scroll-view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view id="scroll-anchor" class="scroll-anchor"></view>
+  </scroll-view>
+
+  <!-- 对话历史弹层 -->
+  <view class="conversation-overlay" wx:if="{{showConversationList}}" catchtap="hideConversationList">
+    <view class="conversation-sheet" catchtap="stopPropagation">
+      <view class="conversation-header">
+        <text class="conversation-title">对话历史</text>
+        <text class="conversation-close" bindtap="hideConversationList">×</text>
+      </view>
+
+      <scroll-view class="conversation-list" scroll-y="true">
+        <block wx:for="{{conversations}}" wx:key="id">
+          <view
+            class="conversation-item {{item.id === currentConversationId ? 'active' : ''}}"
+            bindtap="switchConversation"
+            data-id="{{item.id}}"
+          >
+            <text class="conversation-item-title">{{item.title || '新对话'}}</text>
+            <text class="conversation-item-time">{{item.updateTime}}</text>
+          </view>
+        </block>
+
+        <view class="empty-history" wx:if="{{conversations.length === 0}}">
+          <text class="empty-text">暂无对话记录</text>
+        </view>
+      </scroll-view>
+
+      <view class="conversation-footer">
+        <view class="conversation-new-btn" bindtap="createNewConversation">新建对话</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部输入栏 -->
+  <view class="composer">
+    <!-- 附件预览 -->
+    <view class="attach-preview" wx:if="{{pendingAttachments.length > 0}}">
+      <scroll-view class="attach-scroll" scroll-x>
+        <block wx:for="{{pendingAttachments}}" wx:key="id">
+          <view class="attach-item">
+            <view class="attach-thumb" wx:if="{{item.kind === 'image'}}" bindtap="previewAttachment" data-id="{{item.id}}">
+              <image class="attach-img" src="{{item.localPath}}" mode="aspectFill" />
+            </view>
+            <view class="attach-file" wx:else bindtap="openAttachment" data-id="{{item.id}}">
+              <text class="attach-file-icon">📄</text>
+              <text class="attach-file-name">{{item.name}}</text>
+            </view>
+            <view class="attach-remove" bindtap="removePendingAttachment" data-id="{{item.id}}" hover-class="chip-hover" hover-stay-time="80">×</view>
+          </view>
+        </block>
+      </scroll-view>
+    </view>
+
+    <view class="composer-box">
+      <view class="composer-attach" bindtap="chooseAttachment" hover-class="chip-hover" hover-stay-time="80">
+        <text class="attach-icon">📎</text>
+      </view>
+      <textarea
+        class="composer-input"
+        placeholder="发消息给 AI 营养师…"
+        value="{{inputText}}"
+        bindinput="onInput"
+        confirm-type="send"
+        bindconfirm="sendMessage"
+        auto-height
+        maxlength="500"
+        cursor-spacing="20"
+        show-confirm-bar="{{false}}"
+      ></textarea>
+      <view class="composer-send {{inputText.trim() ? 'active' : ''}}" bindtap="sendMessage" hover-class="send-hover" hover-stay-time="80">
+        <text class="send-icon">↑</text>
+      </view>
+    </view>
+    <view class="composer-hint">基于你的身体数据与饮食记录生成建议</view>
+  </view>
+</view>

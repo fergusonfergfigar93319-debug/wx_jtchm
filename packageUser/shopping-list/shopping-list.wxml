@@ -1,0 +1,221 @@
+<!--pages/shopping-list/shopping-list.wxml-->
+<view class="container">
+  <!-- 头部统计 -->
+  <view class="header">
+    <view class="stats">
+      <view class="stat-item">
+        <text class="stat-label">共</text>
+        <text class="stat-value">{{shoppingList.length}}</text>
+        <text class="stat-label">样</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">预计</text>
+        <text class="stat-value price">¥{{totalPrice}}</text>
+      </view>
+      <view class="stat-item" wx:if="{{bestPlatform}}">
+        <text class="stat-label">推荐</text>
+        <text class="stat-value platform">{{bestPlatform.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 筛选和排序 -->
+  <view class="toolbar">
+    <view class="filter-tabs">
+      <view 
+        class="filter-tab {{filterCategory === item.value ? 'active' : ''}}"
+        wx:for="{{categories}}" 
+        wx:key="value"
+        data-category="{{item.value}}"
+        bindtap="filterByCategory"
+      >
+        {{item.label}}
+      </view>
+    </view>
+    <view class="sort-options">
+      <view 
+        class="sort-option {{sortType === 'category' ? 'active' : ''}}"
+        data-sort="category"
+        bindtap="changeSort"
+      >
+        分类
+      </view>
+      <view 
+        class="sort-option {{sortType === 'price' ? 'active' : ''}}"
+        data-sort="price"
+        bindtap="changeSort"
+      >
+        价格
+      </view>
+      <view 
+        class="sort-option {{sortType === 'name' ? 'active' : ''}}"
+        data-sort="name"
+        bindtap="changeSort"
+      >
+        名称
+      </view>
+    </view>
+  </view>
+
+  <!-- 购物清单列表 -->
+  <view class="list-container">
+    <view 
+      class="shopping-item"
+      wx:for="{{filteredList}}" 
+      wx:key="id"
+    >
+      <view class="item-info">
+        <view class="item-name">{{item.name}}</view>
+        <view class="item-details">
+          <text class="item-amount">{{item.amount}}{{item.unit}}</text>
+          <text class="item-price">约¥{{item.estimatedPrice}}</text>
+        </view>
+      </view>
+      <view class="item-actions">
+        <view 
+          class="action-btn compare-btn"
+          data-item="{{item}}"
+          bindtap="viewCompare"
+        >
+          比价
+        </view>
+        <view 
+          class="action-btn delete-btn"
+          data-id="{{item.id}}"
+          bindtap="deleteItem"
+        >
+          删除
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态（与「自己做」联动：引导从菜谱添加） -->
+    <view class="empty-state" wx:if="{{filteredList.length === 0}}">
+      <text class="empty-icon">🛒</text>
+      <text class="empty-text">{{shoppingList.length === 0 ? '购物清单为空' : '该分类下暂无商品'}}</text>
+      <text class="empty-hint">{{emptyHintText}}</text>
+      <view class="empty-go-cook" wx:if="{{shoppingList.length === 0}}" bindtap="goToCookList">
+        <text class="empty-go-cook-icon">🍳</text>
+        <text class="empty-go-cook-text">去选菜谱，从详情页添加食材</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="bottom-btn secondary" bindtap="clearList" wx:if="{{shoppingList.length > 0}}">
+      清空
+    </view>
+    <view class="bottom-btn primary" bindtap="addToCart" wx:if="{{shoppingList.length > 0}}">
+      一键加入购物车
+    </view>
+    <view class="bottom-btn primary" bindtap="showAddModal">
+      添加商品
+    </view>
+  </view>
+
+  <!-- 比价弹窗 -->
+  <view class="modal {{showCompareModal ? 'show' : ''}}" bindtap="closeCompareModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">比价 - {{comparingItem.name}}</text>
+        <text class="modal-close" bindtap="closeCompareModal">×</text>
+      </view>
+      <view class="compare-list">
+        <view 
+          class="compare-item {{item.isBest ? 'best' : ''}}"
+          wx:for="{{comparingItem.platforms}}" 
+          wx:key="name"
+        >
+          <view class="platform-info">
+            <text class="platform-name">{{item.name}}</text>
+            <text class="platform-badge" wx:if="{{item.isBest}}">最划算</text>
+          </view>
+          <view class="platform-price">
+            <text class="price-label">商品</text>
+            <text class="price-value">¥{{item.price}}</text>
+          </view>
+          <view class="platform-delivery">
+            <text class="delivery-label">配送</text>
+            <text class="delivery-value">¥{{item.deliveryFee}}</text>
+          </view>
+          <view class="platform-total">
+            <text class="total-label">总计</text>
+            <text class="total-value">¥{{item.total}}</text>
+          </view>
+          <view 
+            class="platform-btn"
+            data-platform="{{item.name}}"
+            bindtap="goToPlatform"
+          >
+            去购买
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加商品弹窗 -->
+  <view class="modal {{showAddModal ? 'show' : ''}}" bindtap="closeAddModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">添加商品</text>
+        <text class="modal-close" bindtap="closeAddModal">×</text>
+      </view>
+      <view class="add-form">
+        <view class="form-item">
+          <text class="form-label">商品名称</text>
+          <input 
+            class="form-input" 
+            placeholder="请输入商品名称"
+            value="{{newItem.name}}"
+            bindinput="inputItemName"
+          />
+        </view>
+        <view class="form-item">
+          <text class="form-label">分类</text>
+          <view class="category-selector">
+            <view 
+              class="category-option {{newItem.category === item.value ? 'active' : ''}}"
+              wx:for="{{categories}}" 
+              wx:key="value"
+              wx:if="{{item.value !== 'all'}}"
+              data-category="{{item.value}}"
+              bindtap="selectCategory"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+        <view class="form-item">
+          <text class="form-label">数量</text>
+          <input 
+            class="form-input" 
+            type="digit"
+            placeholder="1"
+            value="{{newItem.amount}}"
+            bindinput="inputItemAmount"
+          />
+        </view>
+        <view class="form-item">
+          <text class="form-label">单位</text>
+          <view class="unit-selector">
+            <view 
+              class="unit-option {{newItem.unit === item.value ? 'active' : ''}}"
+              wx:for="{{unitOptions}}" 
+              wx:key="value"
+              data-unit="{{item.value}}"
+              bindtap="selectUnit"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+        <view class="form-actions">
+          <view class="form-btn cancel" bindtap="closeAddModal">取消</view>
+          <view class="form-btn confirm" bindtap="addNewItem">添加</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

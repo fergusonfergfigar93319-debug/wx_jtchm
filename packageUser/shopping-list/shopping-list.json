@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "购物清单",
+  "navigationBarBackgroundColor": "#FF6B35",
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true
+}

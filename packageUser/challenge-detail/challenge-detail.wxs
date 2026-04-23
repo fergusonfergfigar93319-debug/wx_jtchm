@@ -1,0 +1,30 @@
+// pages/challenge-detail/challenge-detail.wxs
+var formatDate = function(dateStr) {
+  if (!dateStr) return ''
+  var date = getDate(dateStr)
+  var month = date.getMonth() + 1
+  var day = date.getDate()
+  return month + '月' + day + '日'
+}
+
+var getRequirementText = function(requirement) {
+  if (requirement.type === 'consecutive_days') {
+    return '连续' + requirement.target + '天'
+  } else if (requirement.type === 'daily_calories') {
+    if (requirement.max) {
+      return '每日卡路里不超过' + requirement.target + 'kcal'
+    } else {
+      return '每日卡路里达到' + requirement.target + 'kcal'
+    }
+  } else if (requirement.type === 'daily_protein') {
+    return '每日蛋白质≥' + requirement.target + 'g'
+  } else if (requirement.type === 'vegetable_variety') {
+    return '摄入' + requirement.target + '种不同颜色蔬菜'
+  }
+  return '完成挑战条件'
+}
+
+module.exports = {
+  formatDate: formatDate,
+  getRequirementText: getRequirementText
+}

@@ -1,0 +1,122 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/fridge/fridge",
+    "pages/report/report",
+    "pages/profile/profile"
+  ],
+  "subpackages": [
+    {
+      "root": "packageCook",
+      "name": "packCook",
+      "pages": [
+        "cook/cook",
+        "cook-detail/cook-detail",
+        "seasonal/seasonal",
+        "seasonal-detail/seasonal-detail",
+        "ingredient-recognize/ingredient-recognize",
+        "smart-choice/smart-choice",
+        "snap-scan/snap-scan"
+      ]
+    },
+    {
+      "root": "packageRestaurant",
+      "name": "packRestaurant",
+      "pages": [
+        "restaurant/restaurant",
+        "restaurant-detail/restaurant-detail",
+        "group-order/group-order"
+      ]
+    },
+    {
+      "root": "packageHealth",
+      "name": "packHealth",
+      "pages": [
+        "intake-edit/index",
+        "water/water",
+        "remedy/remedy",
+        "triage/triage",
+        "remedy-symptom/remedy-symptom",
+        "carbon-tracker/carbon-tracker",
+        "map-run/map-run"
+      ]
+    },
+    {
+      "root": "packageCommunity",
+      "name": "packCommunity",
+      "pages": [
+        "community/community",
+        "community-post/community-post",
+        "user-profile/user-profile",
+        "notifications/notifications"
+      ]
+    },
+    {
+      "root": "packageUser",
+      "name": "packUser",
+      "pages": [
+        "login/login",
+        "profile-edit/profile-edit",
+        "favorites/favorites",
+        "shopping-list/shopping-list",
+        "challenge/challenge",
+        "challenge-detail/challenge-detail",
+        "achievements/achievements"
+      ]
+    },
+    {
+      "root": "packageAI",
+      "name": "packAI",
+      "pages": [
+        "ai-nutritionist/ai-nutritionist",
+        "ai-chat/ai-chat"
+      ]
+    }
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "今天吃什么",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F8FAFC",
+    "enablePullDownRefresh": false
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#94A3B8",
+    "selectedColor": "#0F9B7A",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/fridge/fridge", "text": "冰箱" },
+      { "pagePath": "pages/report/report", "text": "健康管理" },
+      { "pagePath": "pages/profile/profile", "text": "我的" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "preloadRule": {
+    "pages/fridge/fridge": {
+      "network": "all",
+      "packages": ["packCook"]
+    },
+    "pages/report/report": {
+      "network": "all",
+      "packages": ["packHealth"]
+    },
+    "pages/profile/profile": {
+      "network": "all",
+      "packages": ["packUser", "packCommunity"]
+    }
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于推荐附近采购地点和应季食材以及记录运动轨迹"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ]
+}

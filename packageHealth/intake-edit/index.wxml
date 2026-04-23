@@ -1,0 +1,67 @@
+<!--pages/intake-edit/index.wxml-->
+<view class="container">
+  <view class="section-card card">
+    <view class="card-header">
+      <text class="card-title">食物信息</text>
+    </view>
+    <view class="form-list">
+      <view class="form-item">
+        <text class="form-label">食物名称</text>
+        <input class="form-input" type="text" placeholder="请输入食物名称" value="{{form.food_name}}" bindinput="onFoodNameInput" maxlength="100"></input>
+      </view>
+      <view class="form-item">
+        <text class="form-label">餐次</text>
+        <picker mode="selector" range="{{mealTypeLabels}}" range-key="label" value="{{mealTypeIndex}}" bindchange="onMealTypeChange">
+          <view class="form-picker">{{form.meal_type_label || '请选择餐次'}}</view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">热量 (kcal)</text>
+        <input class="form-input" type="number" placeholder="请输入热量" value="{{form.calories}}" bindinput="onCaloriesInput"></input>
+      </view>
+      <view class="form-item">
+        <text class="form-label">份量</text>
+        <view class="form-row">
+          <input class="form-input form-input-half" type="digit" placeholder="数量" value="{{form.amount}}" bindinput="onAmountInput"></input>
+          <input class="form-input form-input-half" type="text" placeholder="单位" value="{{form.amount_unit}}" bindinput="onAmountUnitInput" maxlength="10"></input>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card card">
+    <view class="card-header">
+      <text class="card-title">营养素（克）</text>
+    </view>
+    <view class="form-list">
+      <view class="form-item">
+        <text class="form-label">蛋白质</text>
+        <input class="form-input" type="number" placeholder="选填" value="{{form.protein}}" bindinput="onProteinInput"></input>
+      </view>
+      <view class="form-item">
+        <text class="form-label">脂肪</text>
+        <input class="form-input" type="number" placeholder="选填" value="{{form.fat}}" bindinput="onFatInput"></input>
+      </view>
+      <view class="form-item">
+        <text class="form-label">碳水化合物</text>
+        <input class="form-input" type="number" placeholder="选填" value="{{form.carbs}}" bindinput="onCarbsInput"></input>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card card">
+    <view class="card-header">
+      <text class="card-title">备注</text>
+    </view>
+    <view class="form-list">
+      <view class="form-item form-item-note">
+        <textarea class="form-textarea" placeholder="如：苹果+香蕉、外食等" value="{{form.note}}" bindinput="onNoteInput" maxlength="200" auto-height></textarea>
+      </view>
+    </view>
+  </view>
+
+  <view class="btn-wrap">
+    <button class="btn-primary btn-full" bindtap="onSave">保存</button>
+    <button class="btn-outline btn-full mt-16" bindtap="onDelete">删除此条记录</button>
+  </view>
+</view>

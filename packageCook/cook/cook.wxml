@@ -1,0 +1,307 @@
+<!--pages/cook/cook.wxml-->
+<view class="container page-container">
+  <!-- 大扫除模式提示 -->
+  <view class="cleanup-mode-banner card" wx:if="{{cleanupMode}}">
+    <view class="cleanup-banner-content">
+      <text class="cleanup-banner-icon">🧹</text>
+      <view class="cleanup-banner-info">
+        <text class="cleanup-banner-title">大扫除模式</text>
+        <text class="cleanup-banner-desc">{{cleanupModeTip}}</text>
+      </view>
+    </view>
+  </view>
+
+
+
+  <!-- 搜索栏 -->
+  <view class="search-bar card {{searchFocused ? 'focused' : ''}}">
+    <view class="search-input-wrapper">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索菜谱..."
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearch"
+        bindfocus="onSearchFocus"
+        bindblur="onSearchBlur"
+        confirm-type="search"
+      />
+      <view wx:if="{{searchKeyword}}" class="search-clear" bindtap="clearSearch">✕</view>
+    </view>
+  </view>
+
+  <!-- 顶部工具栏 -->
+  <view class="toolbar card">
+    <view class="toolbar-top">
+      <view class="fridge-toggle">
+        <view class="toggle-icon">🧊</view>
+        <text class="toggle-label">只看冰箱里有的</text>
+        <switch checked="{{useFridge}}" bindchange="onFridgeToggle" color="#4CAF50"/>
+      </view>
+      <view class="toolbar-actions">
+        <view class="time-input-btn {{showTimeInput ? 'active' : ''}}" bindtap="toggleTimeInput">
+          <text class="time-btn-icon">⏰</text>
+          <text class="time-btn-text">{{remainingTime ? remainingTime + '分钟' : '时间'}}</text>
+        </view>
+        <view class="tool-selector-btn {{showToolSelector ? 'active' : ''}}" bindtap="toggleToolSelector">
+          <text class="tool-btn-icon">🍳</text>
+          <text class="tool-btn-text">厨具</text>
+        </view>
+        <view class="sort-selector" bindtap="showSortModal">
+          <text class="sort-text">{{sortText}}</text>
+          <text class="sort-arrow">▼</text>
+        </view>
+      </view>
+    </view>
+    
+    <scroll-view class="tag-scroll" scroll-x="true">
+      <view class="tag-list">
+        <view 
+          class="tag {{item.active ? 'tag-active' : ''}}"
+          wx:for="{{tags}}"
+          wx:key="value"
+          bindtap="onTagTap"
+          data-tag="{{item}}"
+        >
+          <text class="tag-icon">{{item.icon}}</text>
+          {{item.label}}
+        </view>
+      </view>
+    </scroll-view>
+    
+    <!-- 备餐模式开关 -->
+    <view class="meal-prep-toggle">
+      <view class="toggle-wrapper">
+        <text class="toggle-icon">📦</text>
+        <text class="toggle-label">备餐模式</text>
+        <text class="toggle-desc">推荐适合一次做吃三天的菜谱</text>
+      </view>
+      <switch checked="{{mealPrepMode}}" bindchange="onMealPrepToggle" color="#4CAF50"/>
+    </view>
+    
+    <!-- 时间输入 -->
+    <view class="time-input-section" wx:if="{{showTimeInput}}">
+      <view class="filter-section-title">
+        <text>设置剩余时间</text>
+        <text class="filter-section-desc">只显示能在剩余时间内完成的菜谱</text>
+      </view>
+      <view class="time-input-wrapper">
+        <input 
+          class="time-input"
+          type="number"
+          placeholder="输入剩余时间（分钟）"
+          value="{{remainingTime}}"
+          bindinput="onRemainingTimeInput"
+          confirm-type="done"
+        />
+        <view class="time-input-actions">
+          <button class="btn-clear" bindtap="clearRemainingTime">清除</button>
+          <button class="btn-confirm" bindtap="confirmRemainingTime">确定</button>
+        </view>
+      </view>
+      <view class="time-display" wx:if="{{remainingTime}}">
+        <text class="time-display-text">已设置：{{remainingTime}}分钟</text>
+      </view>
+    </view>
+
+    <!-- 厨具筛选 -->
+    <view class="tool-filter-section" wx:if="{{showToolSelector}}">
+      <view class="filter-section-title">
+        <text>选择可用厨具</text>
+        <text class="filter-section-desc">只显示能用现有厨具制作的菜谱</text>
+      </view>
+      <view class="tool-list">
+        <view 
+          class="tool-item {{availableTools.indexOf(item.value) > -1 ? 'tool-selected' : ''}}"
+          wx:for="{{toolOptions}}"
+          wx:key="value"
+          bindtap="toggleTool"
+          data-tool="{{item.value}}"
+        >
+          <text class="tool-icon">{{item.icon}}</text>
+          <text class="tool-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 高级筛选 -->
+    <view class="advanced-filters" wx:if="{{showAdvancedFilters}}">
+      <view class="filter-group">
+        <view class="filter-label">制作时间</view>
+        <view class="filter-options">
+          <view 
+            class="filter-option {{timeFilter === item.value ? 'active' : ''}}"
+            wx:for="{{timeFilters}}"
+            wx:key="value"
+            bindtap="selectTimeFilter"
+            data-value="{{item.value}}"
+          >
+            {{item.label}}
+          </view>
+        </view>
+      </view>
+      <view class="filter-group">
+        <view class="filter-label">难度等级</view>
+        <view class="filter-options">
+          <view 
+            class="filter-option {{difficultyFilter === item.value ? 'active' : ''}}"
+            wx:for="{{difficultyFilters}}"
+            wx:key="value"
+            bindtap="selectDifficultyFilter"
+            data-value="{{item.value}}"
+          >
+            {{item.label}}
+          </view>
+        </view>
+      </view>
+      <view class="filter-group">
+        <view class="filter-label">卡路里范围</view>
+        <view class="calorie-range">
+          <input class="range-input" type="number" placeholder="最低" value="{{calorieMin}}" bindinput="onCalorieMinInput"/>
+          <text class="range-separator">-</text>
+          <input class="range-input" type="number" placeholder="最高" value="{{calorieMax}}" bindinput="onCalorieMaxInput"/>
+        </view>
+      </view>
+    </view>
+    
+    <view class="filter-toggle" bindtap="toggleAdvancedFilters">
+      <text>{{showAdvancedFilters ? '收起筛选' : '展开筛选'}}</text>
+      <text class="toggle-arrow">{{showAdvancedFilters ? '▲' : '▼'}}</text>
+    </view>
+  </view>
+
+  <!-- 菜谱列表 -->
+  <scroll-view 
+    class="recipe-list"
+    scroll-y="true"
+    bindscrolltolower="loadMore"
+    refresher-enabled="{{true}}"
+    refresher-triggered="{{refreshing}}"
+    bindrefresherrefresh="onRefresh"
+  >
+    <view wx:if="{{loading && recipes.length === 0}}" class="skeleton-list">
+      <view class="skeleton-card" wx:for="{{[1,2,3,4]}}" wx:key="*this">
+        <view class="skeleton skeleton-image"></view>
+        <view class="skeleton skeleton-text"></view>
+        <view class="skeleton skeleton-text-short"></view>
+      </view>
+    </view>
+
+    <view wx:elif="{{recipes.length > 0}}">
+      <view 
+        class="recipe-card card"
+        wx:for="{{recipes}}"
+        wx:key="id"
+        bindtap="goToDetail"
+        data-id="{{item.id}}"
+        bindlongpress="onCardLongPress"
+        data-item="{{item}}"
+      >
+        <view class="recipe-image-wrapper">
+          <image class="recipe-image" src="{{item.image}}" mode="aspectFill" lazy-load data-id="{{item.id}}" binderror="onRecipeCardImageError"></image>
+          <view wx:if="{{item.recently_cooked}}" class="recent-badge">最近做过</view>
+          <view wx:if="{{item.is_favorite}}" class="favorite-badge">❤️</view>
+          <view class="recipe-overlay-info">
+            <text wx:if="{{item.cooking_time}}" class="time-badge">⏱ {{item.cooking_time}}分钟</text>
+            <text class="difficulty-badge difficulty-{{item.difficulty_level || 'simple'}}">
+              {{item.difficulty === '简单' ? '⭐' : item.difficulty === '中等' ? '⭐⭐' : '⭐⭐⭐'}}
+            </text>
+          </view>
+        </view>
+        <view class="recipe-info">
+          <view class="recipe-name">{{item.name}}</view>
+          <view class="recipe-tags-mini">
+            <text class="tag-mini" wx:for="{{item.tags.slice(0, 2)}}" wx:key="*this">{{item}}</text>
+          </view>
+          <view class="recipe-meta">
+            <text class="calorie-badge">🔥 {{item.calories}} kcal</text>
+            <text class="match-badge {{item.match_score >= 80 ? 'match-high' : item.match_score >= 60 ? 'match-medium' : 'match-low'}}">
+              {{item.match_reason || '匹配度: ' + item.match_score + '%'}}
+            </text>
+          </view>
+          <view wx:if="{{item.missing_ingredients && item.missing_ingredients.length > 0}}" class="missing-ingredients">
+            <text class="missing-text">缺: {{item.missing_ingredients.join('、')}}</text>
+          </view>
+          <view wx:if="{{item.meal_prep_suitable}}" class="meal-prep-badge">
+            <text class="meal-prep-icon">📦</text>
+            <text class="meal-prep-text">{{item.meal_prep_tip || '适合备餐'}}</text>
+          </view>
+        </view>
+        <view class="recipe-actions" catchtap="stopPropagation">
+          <view class="action-icon-btn" bindtap="quickFavorite" data-id="{{item.id}}" data-favorite="{{item.is_favorite}}">
+            <text>{{item.is_favorite ? '❤️' : '🤍'}}</text>
+          </view>
+          <view class="action-icon-btn" bindtap="quickShare" data-item="{{item}}">
+            <text>📤</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <view class="empty-icon">🍽️</view>
+      <text class="empty-text">暂无推荐菜谱</text>
+      <text class="empty-hint">试试调整筛选条件或添加更多食材到冰箱</text>
+      <button class="btn-primary mt-20" bindtap="goToFridge">去添加食材</button>
+    </view>
+
+    <view wx:if="{{hasMore}}" class="loading-more">
+      <text>加载更多...</text>
+    </view>
+  </scroll-view>
+
+  <!-- 排序弹窗 -->
+  <view class="modal {{showSortModal ? 'show' : ''}}" catchtap="selectSort" data-type="match">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">排序方式</view>
+      <view class="sort-options">
+        <view 
+          class="sort-option {{sortType === 'match' ? 'active' : ''}}"
+          bindtap="selectSort"
+          data-type="match"
+        >
+          <text>匹配度</text>
+          <text class="sort-check">✓</text>
+        </view>
+        <view 
+          class="sort-option {{sortType === 'calories' ? 'active' : ''}}"
+          bindtap="selectSort"
+          data-type="calories"
+        >
+          <text>卡路里（低到高）</text>
+          <text class="sort-check">✓</text>
+        </view>
+        <view 
+          class="sort-option {{sortType === 'time' ? 'active' : ''}}"
+          bindtap="selectSort"
+          data-type="time"
+        >
+          <text>时间（新到旧）</text>
+          <text class="sort-check">✓</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 长按预览弹窗 -->
+  <view class="modal {{showPreviewModal ? 'show' : ''}}" catchtap="closePreviewModal">
+    <view class="modal-content preview-content" catchtap="stopPropagation">
+      <image class="preview-image" src="{{previewRecipe.image}}" mode="aspectFill" binderror="onPreviewImageError"></image>
+      <view class="preview-info">
+        <view class="preview-name">{{previewRecipe.name}}</view>
+        <view class="preview-meta">
+          <text>🔥 {{previewRecipe.calories}} kcal</text>
+          <text wx:if="{{previewRecipe.cooking_time}}">⏱ {{previewRecipe.cooking_time}}分钟</text>
+        </view>
+        <view class="preview-tags">
+          <text wx:for="{{previewRecipe.tags}}" wx:key="*this" class="preview-tag">{{item}}</text>
+        </view>
+      </view>
+      <view class="preview-actions">
+        <button class="btn-secondary" bindtap="closePreviewModal">关闭</button>
+        <button class="btn-primary" bindtap="goToPreviewDetail">查看详情</button>
+      </view>
+    </view>
+  </view>
+</view>

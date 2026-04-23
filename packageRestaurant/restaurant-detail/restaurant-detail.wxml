@@ -1,0 +1,323 @@
+<!--pages/restaurant-detail/restaurant-detail.wxml-->
+<view class="container page-container">
+  <scroll-view class="content" scroll-y="true">
+    <!-- 商家信息 -->
+    <view class="header card">
+      <view class="header-image-wrap">
+        <image
+          wx:if="{{restaurant.image && !headerImageError}}"
+          class="header-image"
+          src="{{restaurant.image}}"
+          mode="aspectFill"
+          binderror="onRestaurantHeaderImageError"
+        />
+        <view wx:else class="header-image header-image-placeholder">
+          <text class="header-image-placeholder-emoji">🍽️</text>
+          <text class="header-image-placeholder-text">暂无门店图片</text>
+        </view>
+      </view>
+      <view class="header-info">
+        <view class="restaurant-name">{{restaurant.name}}</view>
+        <view class="restaurant-meta">
+          <text class="rating">⭐ {{restaurant.rating}}</text>
+          <text class="meta-sep" wx:if="{{distanceText}}">·</text>
+          <text class="distance" wx:if="{{distanceText}}">{{distanceText}}</text>
+        </view>
+        <view class="health-badge {{healthClass}}">
+          {{healthText}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 健康评分卡片 -->
+    <view class="health-section card">
+      <view class="section-title">健康评分</view>
+      <view class="health-score-info">
+        <view class="health-score-main">
+          <text class="health-score-value">{{restaurant.health_score || restaurant.health_rating || 8}}</text>
+          <text class="health-score-total">/100</text>
+        </view>
+        <view class="health-score-desc">
+          <text class="health-badge {{healthClass}}">{{healthText}}</text>
+          <text class="health-tips" wx:if="{{restaurant.health_tips}}">{{restaurant.health_tips}}</text>
+        </view>
+      </view>
+      <view class="health-indicators" wx:if="{{restaurant.health_indicators}}">
+        <view class="indicator-item" wx:for="{{restaurant.health_indicators}}" wx:key="name">
+          <text class="indicator-label">{{item.name}}</text>
+          <view class="indicator-bar">
+            <view class="indicator-fill" style="width: {{item.score * 10}}%"></view>
+          </view>
+          <text class="indicator-value">{{item.score}}分</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 商家详情 -->
+    <view class="info-section card">
+      <view class="section-title">商家信息</view>
+      <view class="info-item" bindtap="openMap">
+        <text class="info-label">📍 地址</text>
+        <text class="info-value">{{restaurant.address}}</text>
+        <text class="info-action">导航 ›</text>
+      </view>
+      <view class="info-item" bindtap="makePhoneCall">
+        <text class="info-label">📞 电话</text>
+        <text class="info-value">{{restaurant.phone || '暂无'}}</text>
+        <text class="info-action" wx:if="{{restaurant.phone}}">拨打 ›</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">🕐 营业时间</text>
+        <text class="info-value">{{restaurant.hours || restaurant.business_hours || '全天'}}</text>
+      </view>
+      <view class="delivery-info">
+        <view class="info-item">
+          <text class="info-label">🚚 配送时间</text>
+          <text class="info-value">{{deliveryTime}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">💰 起送价</text>
+          <text class="info-value">¥{{minOrderPrice}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">📦 配送费</text>
+          <text class="info-value">¥{{deliveryFee}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 推荐菜品 -->
+    <view class="menu-section card">
+      <view class="section-title">
+        <text>推荐健康搭配</text>
+        <text class="section-subtitle">营养均衡，热量适中</text>
+      </view>
+      <view class="menu-list">
+        <view 
+          class="menu-item {{item.hasAllergen ? 'has-allergen' : ''}}"
+          wx:for="{{recommendedDishes}}"
+          wx:key="id"
+          bindtap="selectDish"
+          data-dish="{{item}}"
+        >
+          <view class="dish-info">
+            <view class="dish-name">
+              {{item.name}}
+              <text class="allergen-warning" wx:if="{{item.hasAllergen}}">⚠️</text>
+            </view>
+            <view class="dish-desc">
+              {{item.suggestion || item.reason || '健康推荐'}}
+              <text class="allergen-tip" wx:if="{{item.allergenWarning}}">{{item.allergenWarning}}</text>
+            </view>
+            <view class="dish-meta">
+              <text class="dish-cal">🔥 {{item.calories || item.estimated_calories || 0}} kcal</text>
+              <text class="dish-price" wx:if="{{item.price}}">¥{{item.price}}</text>
+            </view>
+            <view class="dish-protein-info" wx:if="{{item.price_per_protein_text}}">
+              <text class="protein-label" wx:if="{{item.is_high_protein}}">💪 高蛋白</text>
+              <text class="protein-ratio">性价比: {{item.price_per_protein_text}}</text>
+            </view>
+          </view>
+          <text class="dish-arrow">›</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部按钮 -->
+  <view class="action-bar">
+    <view class="action-left">
+      <view class="action-btn" bindtap="toggleFavorite">
+        <text class="action-icon">{{isFavorite ? '❤️' : '🤍'}}</text>
+        <text class="action-text">收藏</text>
+      </view>
+      <view class="action-btn" bindtap="shareToCommunity">
+        <text class="action-icon">👥</text>
+        <text class="action-text">分享</text>
+      </view>
+      <view class="action-btn" bindtap="showBlacklistModal">
+        <text class="action-icon">⚠️</text>
+        <text class="action-text">标记避坑</text>
+      </view>
+    </view>
+    <view class="action-right">
+      <button wx:if="{{platforms && platforms.length > 0}}" class="btn-secondary order-btn" bindtap="goToOrder" data-platform="{{platforms[0].name}}">
+        <text class="order-icon">🛵</text>
+        <text>{{platforms.length === 1 ? (platforms[0].name === 'meituan' ? '美团' : platforms[0].name === 'eleme' ? '饿了么' : '去下单') : '去下单'}}</text>
+      </button>
+      <button class="btn-secondary" bindtap="goToGroupOrder" wx:if="{{restaurant.id}}">
+        <text class="group-icon">👥</text>
+        <text>拼单计算</text>
+      </button>
+      <button class="btn-primary" bindtap="recordMeal">
+        <text class="record-icon">📝</text>
+        <text>记录这一餐</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 外卖平台选择弹窗 -->
+  <view class="modal {{showPlatformModal ? 'show' : ''}}" catchtap="closePlatformModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">选择外卖平台</view>
+      <view class="platform-list">
+        <view 
+          class="platform-item"
+          wx:for="{{platforms}}"
+          wx:key="name"
+          bindtap="selectPlatform"
+          data-platform="{{item.name}}"
+        >
+          <view class="platform-info">
+            <text class="platform-icon">{{item.name === 'meituan' ? '🟡' : item.name === 'eleme' ? '🔵' : '📱'}}</text>
+            <view class="platform-details">
+              <text class="platform-name">{{item.label || (item.name === 'meituan' ? '美团外卖' : item.name === 'eleme' ? '饿了么' : item.name)}}</text>
+              <text class="platform-desc" wx:if="{{item.desc}}">{{item.desc}}</text>
+            </view>
+          </view>
+          <text class="platform-arrow">›</text>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="closePlatformModal">取消</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 菜品详情弹窗 -->
+  <view class="modal {{showDishModal ? 'show' : ''}}" catchtap="closeDishModal">
+    <view class="modal-content dish-modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <view class="modal-title">{{selectedDish.name || '菜品详情'}}</view>
+        <text class="modal-close" bindtap="closeDishModal">✕</text>
+      </view>
+      
+      <view class="dish-detail-content" wx:if="{{selectedDish}}">
+        <view class="dish-detail-section">
+          <view class="dish-detail-label">推荐理由</view>
+          <view class="dish-detail-value">{{selectedDish.suggestion || selectedDish.reason || '健康推荐'}}</view>
+        </view>
+        
+        <view class="dish-detail-section">
+          <view class="dish-detail-label">热量</view>
+          <view class="dish-detail-value">🔥 {{selectedDish.calories || selectedDish.estimated_calories || 0}} kcal</view>
+        </view>
+        
+        <view class="dish-detail-section" wx:if="{{selectedDish.nutrition}}">
+          <view class="dish-detail-label">营养成分</view>
+          <view class="nutrition-info">
+            <text class="nutrition-item">碳水: {{selectedDish.nutrition.carb || 0}}g</text>
+            <text class="nutrition-item">蛋白质: {{selectedDish.nutrition.protein || 0}}g</text>
+            <text class="nutrition-item">脂肪: {{selectedDish.nutrition.fat || 0}}g</text>
+          </view>
+          <view class="protein-ratio-info" wx:if="{{selectedDish.price_per_protein_text}}">
+            <view class="protein-ratio-card">
+              <text class="protein-ratio-label">💪 价格/蛋白比</text>
+              <text class="protein-ratio-value">{{selectedDish.price_per_protein_text}}</text>
+              <text class="protein-ratio-desc">每克蛋白质单价，越低越划算</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="dish-detail-section" wx:if="{{selectedDish.price}}">
+          <view class="dish-detail-label">价格</view>
+          <view class="dish-detail-value price-value">¥{{selectedDish.price}}</view>
+        </view>
+      </view>
+      
+      <view class="modal-actions dish-modal-actions">
+        <button class="btn-secondary" bindtap="closeDishModal">取消</button>
+        <button class="btn-primary" bindtap="recordDish" data-dish="{{selectedDish}}">记录这一餐</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 酱汁分离提醒弹窗 -->
+  <view class="modal {{showSauceTip ? 'show' : ''}}" catchtap="cancelSauceTip">
+    <view class="modal-content sauce-tip-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <view class="modal-title">💡 健康小贴士</view>
+        <text class="modal-close" bindtap="cancelSauceTip">✕</text>
+      </view>
+      
+      <view class="sauce-tip-content" wx:if="{{sauceTipData}}">
+        <view class="sauce-tip-icon">🥗</view>
+        <view class="sauce-tip-title">酱汁分离可减少热量</view>
+        <view class="sauce-tip-desc">
+          您选择的菜品中，以下菜品建议酱汁分装：
+        </view>
+        
+        <view class="sauce-dish-list">
+          <view class="sauce-dish-item" wx:for="{{sauceTipData.matchedDishes}}" wx:key="name">
+            <text class="sauce-dish-name">{{item.name}}</text>
+            <text class="sauce-dish-cal">可减少 {{item.sauceCalories}} kcal</text>
+          </view>
+        </view>
+        
+        <view class="sauce-tip-summary">
+          <view class="sauce-tip-highlight">
+            <text class="sauce-tip-number">{{sauceTipData.savedCalories}}</text>
+            <text class="sauce-tip-unit">kcal</text>
+          </view>
+          <text class="sauce-tip-text">总计可减少约 {{sauceTipData.savedPercent}}% 的热量</text>
+        </view>
+        
+        <view class="sauce-tip-note">
+          <text class="sauce-tip-note-icon">📝</text>
+          <text class="sauce-tip-note-text">下单时备注"酱汁分装"即可</text>
+        </view>
+      </view>
+      
+      <view class="modal-actions sauce-tip-actions">
+        <button class="btn-secondary" bindtap="cancelSauceTip">跳过</button>
+        <button class="btn-primary" bindtap="confirmSauceTip">
+          <text>已复制备注，去下单</text>
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 黑榜标记弹窗 -->
+  <view class="modal {{showBlacklistModal ? 'show' : ''}}" catchtap="closeBlacklistModal">
+    <view class="modal-content blacklist-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <view class="modal-title">⚠️ 标记避坑理由</view>
+        <text class="modal-close" bindtap="closeBlacklistModal">✕</text>
+      </view>
+      
+      <view class="blacklist-content">
+        <view class="blacklist-desc">帮助其他用户避开问题商家，请选择避坑理由：</view>
+        
+        <view class="reasons-grid">
+          <view 
+            class="reason-option {{selectedBlacklistReasons.indexOf(item) > -1 ? 'selected' : ''}}"
+            wx:for="{{blacklistReasons}}"
+            wx:key="*this"
+            bindtap="toggleBlacklistReason"
+            data-reason="{{item}}"
+          >
+            {{item}}
+          </view>
+        </view>
+        
+        <view class="note-section">
+          <view class="note-label">补充说明（可选）</view>
+          <textarea 
+            class="note-input"
+            placeholder="可以补充更多细节..."
+            value="{{blacklistNote}}"
+            bindinput="onBlacklistNoteInput"
+            maxlength="200"
+          />
+        </view>
+      </view>
+      
+      <view class="modal-actions blacklist-actions">
+        <button class="btn-secondary" bindtap="closeBlacklistModal">取消</button>
+        <button class="btn-primary" bindtap="submitBlacklist">
+          <text>提交标记</text>
+        </button>
+      </view>
+    </view>
+  </view>
+</view>

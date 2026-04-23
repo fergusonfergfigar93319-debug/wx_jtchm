@@ -1,0 +1,229 @@
+1. 文件：utils/auth.js (或 auth.js)
+[新增] parseWxJsonBody
+
+具体位置：文件顶部的变量声明下方（独立函数）。
+
+JavaScript
+function parseWxJsonBody(raw) {
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw)
+    } catch (e) {
+      return raw
+    }
+  }
+  return raw || {}
+}
+[新增] normalizeLoginPayload
+
+具体位置：紧跟在 parseWxJsonBody 函数下方。
+
+JavaScript
+function normalizeLoginPayload(body) {
+  const data = body.data || body || {}
+  // 兼容标准规范、多包一层data、各种大小写别名
+  const access_token = data.access_token || data.accessToken || data.token || body.access_token || ''
+  const refresh_token = data.refresh_token || data.refreshToken || body.refresh_token || ''
+  const user_id = data.user_id || data.userId || body.user_id || null
+  
+  return { access_token, refresh_token, user_id }
+}
+[修改] persistSession
+
+具体位置：原 persistSession 函数处。
+
+JavaScript
+function persistSession(app, payload) {
+  const { access_token, refresh_token, user_id } = payload || {}
+  if (access_token != null && access_token !== '') {
+    app.globalData.accessToken = access_token
+    try {
+      wx.setStorageSync(STORAGE_ACCESS, access_token)
+    } catch (e) {
+      // ignore
+    }
+  }
+  if (refresh_token != null && refresh_token !== '') {
+    app.globalData.refreshToken = refresh_token
+    try {
+      wx.setStorageSync(STORAGE_REFRESH, refresh_token)
+    } catch (e) {
+      // ignore
+    }
+  }
+  // [新增] 同步写入 user_id 到全局变量和本地缓存
+  if (user_id != null) {
+    app.globalData.userId = user_id
+    try {
+      wx.setStorageSync('user_id', user_id)
+    } catch (e) {
+      // ignore
+    }
+  }
+}
+[修改] clearSession
+
+具体位置：原 clearSession 函数处。
+
+JavaScript
+function clearSession(app) {
+  app.globalData.accessToken = null
+  app.globalData.refreshToken = null
+  app.globalData.userId = null
+  try {
+    wx.removeStorageSync(STORAGE_ACCESS)
+    wx.removeStorageSync(STORAGE_REFRESH)
+    wx.removeStorageSync(LEGACY_TOKEN)
+    // [新增] 登出时连同 user_id 一并清除
+    wx.removeStorageSync('user_id')
+  } catch (e) {
+    // ignore
+  }
+}
+[修改] module.exports
+
+具体位置：文件最末尾的导出对象处（请确保将新增的方法暴露出去）。
+
+JavaScript
+module.exports = {
+  readStoredTokens,
+  persistSession,
+  clearSession,
+  parseWxJsonBody,
+  normalizeLoginPayload
+}
+2. 文件：utils/api.js (或 util.api.js)
+[修改] request
+
+具体位置：原 request 核心请求封装函数处。
+
+JavaScript
+function request(url, method = 'GET', data = {}, needAuth = true) {
+  const API_BASE = getApp().globalData.apiBaseUrl
+
+  return new Promise((resolve, reject) => {
+    const header = {
+      'Content-Type': 'application/json'
+    }
+    
+    if (needAuth && app.globalData.accessToken) {
+      header['Authorization'] = `Bearer ${app.globalData.accessToken}`
+    }
+
+    wx.request({
+      url: `${API_BASE}${url}`,
+      method: method,
+      data: data,
+      header: header,
+      success: (res) => {
+        if (res.statusCode === 200) {
+          // [修改核心] 统一先使用 auth 中封装的方法将 res.data 转为标准对象
+          const body = auth.parseWxJsonBody(res.data)
+          
+          if (body.code === 200) {
+            resolve(body.data !== undefined ? body.data : body)
+          } else if (body.code === 401) {
+            auth.clearSession(app)
+            app.wxLogin()
+            reject(new Error('登录已过期，请重新登录'))
+          } else {
+            reject(new Error(body.message || body.msg || '请求失败'))
+          }
+        } else {
+          reject(new Error(`请求失败: ${res.statusCode}`))
+        }
+      },
+      fail: (err) => {
+        reject(new Error('网络请求失败'))
+      }
+    })
+  })
+}
+[新增/修改] login (若文件中已有该函数请替换，若没有请直接放入 module.exports = { ... } 内部)
+
+具体位置：暴漏给页面的 API 接口集合中。
+
+JavaScript
+  async login(code) {
+    const API_BASE = getApp().globalData.apiBaseUrl
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${API_BASE}/users/login/`,
+        method: 'POST',
+        data: { code: code },
+        success: (res) => {
+          // 1. 先将返回体转为对象
+          const body = auth.parseWxJsonBody(res.data)
+          if (body.code === 200) {
+            // 2. 利用标准化工具拆解令牌
+            const payload = auth.normalizeLoginPayload(body)
+            if (payload.access_token) {
+              resolve(payload)
+            } else {
+              // 3. 打印完整响应，方便对照后端字段
+              console.error('[api.login] 无法解析 access_token，完整响应:', body)
+              reject(new Error('未返回凭证'))
+            }
+          } else {
+            reject(new Error(body.message || body.msg || '登录失败'))
+          }
+        },
+        fail: (err) => reject(new Error('网络请求失败'))
+      })
+    })
+  }
+3. 文件：app.js
+[修改] wxLogin
+
+具体位置：App({ ... }) 内部的原 wxLogin 函数处。
+
+JavaScript
+  wxLogin() {
+    wx.login({
+      success: (res) => {
+        if (res.code) {
+          wx.request({
+            url: `${this.globalData.apiBaseUrl}/users/login/`,
+            method: 'POST',
+            data: { code: res.code },
+            success: (loginRes) => {
+              // [修改核心] 1. 先解析 JSON
+              const body = auth.parseWxJsonBody(loginRes.data)
+              
+              if (body && body.code === 200) {
+                // [修改核心] 2. 规范化获取 token 载荷
+                const payload = auth.normalizeLoginPayload(body)
+                
+                if (payload.access_token) {
+                  auth.persistSession(this, payload)
+                  this.getUserInfo() // 登录成功后立刻获取资料
+                } else {
+                  console.error('[wxLogin] 无法解析 access_token，完整响应:', body)
+                  wx.showToast({
+                    title: '登录失败，未返回凭证',
+                    icon: 'none'
+                  })
+                }
+              } else {
+                console.error('后端返回登录失败:', body)
+                wx.showToast({
+                  title: '登录失败，请重试',
+                  icon: 'none'
+                })
+              }
+            },
+            fail: (err) => {
+              console.error('后端接口调用失败', err)
+              wx.showToast({
+                title: '登录失败，请重试',
+                icon: 'none'
+              })
+            }
+          })
+        }
+      },
+      fail: (err) => {
+        console.error('wx.login 调用失败', err)
+      }
+    })
+  }

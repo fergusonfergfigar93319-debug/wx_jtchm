@@ -1,0 +1,1068 @@
+/* 吃什么/菜谱页：Neo + 美食感（暖色点缀、食欲氛围） */
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  animation: pageFadeIn 0.4s ease-out;
+  background: linear-gradient(180deg, var(--neo-bg-0) 0%, #FFF8F0 30%, #FFFAF5 55%, #FFFFFF 100%);
+}
+
+/* 个性化：左下角极淡暖色光晕（美食氛围） */
+.container::before {
+  content: '';
+  position: fixed;
+  bottom: -10vh;
+  left: -15vw;
+  width: 60vw;
+  height: 50vh;
+  background: radial-gradient(ellipse at 20% 80%, rgba(255, 159, 102, 0.08) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 快捷入口 - 毛玻璃 + 暖色边框点缀 */
+.quick-actions {
+  margin: 20rpx 20rpx 0;
+  padding: 20rpx;
+  background: var(--neo-glass);
+  border: 1rpx solid var(--neo-border);
+  border-radius: 20rpx;
+  box-shadow: var(--neo-shadow-soft), 0 0 0 1rpx rgba(255, 152, 0, 0.06) inset;
+  backdrop-filter: blur(18rpx);
+  -webkit-backdrop-filter: blur(18rpx);
+  position: relative;
+  z-index: 1;
+}
+
+.quick-action-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1rpx solid rgba(255, 152, 0, 0.12);
+  border-radius: 16rpx;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.quick-action-item:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 16rpx rgba(255, 152, 0, 0.12);
+}
+
+.quick-icon {
+  font-size: 40rpx;
+}
+
+/* 菜谱页快捷文案：暖色强调 */
+.quick-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #E65100;
+}
+
+/* 大扫除模式横幅 - 保留暖色、统一圆角与阴影 */
+.cleanup-mode-banner {
+  margin: 20rpx 20rpx 0;
+  padding: 24rpx;
+  background: linear-gradient(135deg, rgba(255, 243, 224, 0.95) 0%, rgba(255, 224, 178, 0.9) 100%);
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(255, 152, 0, 0.25);
+  box-shadow: var(--neo-shadow-soft);
+  animation: slideDown 0.3s ease-out;
+}
+
+.cleanup-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.cleanup-banner-icon {
+  font-size: 48rpx;
+}
+
+.cleanup-banner-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.cleanup-banner-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--color-warm-dark);
+}
+
+.cleanup-banner-desc {
+  font-size: 24rpx;
+  color: var(--color-warm);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 搜索栏 - 毛玻璃 + 美食向顶条（绿→橙→蓝） */
+.search-bar {
+  margin: 20rpx;
+  padding: 24rpx;
+  background: var(--neo-glass);
+  border: 1rpx solid rgba(255, 152, 0, 0.12);
+  border-radius: 20rpx;
+  box-shadow: var(--neo-shadow-soft);
+  backdrop-filter: blur(18rpx);
+  -webkit-backdrop-filter: blur(18rpx);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)),
+              box-shadow 0.2s ease;
+}
+
+.search-bar.focused {
+  transform: translateY(-2rpx);
+  box-shadow: var(--neo-shadow-soft), 0 8rpx 24rpx rgba(255, 152, 0, 0.14);
+  border-color: rgba(255, 152, 0, 0.28);
+}
+
+.search-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4rpx;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 40%, var(--neo-neon-a) 100%);
+  opacity: 0.75;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 248, 240, 0.8);
+  border: 1rpx solid rgba(255, 152, 0, 0.1);
+  border-radius: 48rpx;
+  padding: 0 24rpx;
+  height: 80rpx;
+}
+
+.search-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+  color: #E65100;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--neo-text);
+}
+
+.search-clear {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #ddd;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  margin-left: 12rpx;
+}
+
+.toolbar {
+  margin: 0 20rpx 20rpx;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 24rpx;
+  box-shadow: 
+    0 8rpx 24rpx rgba(0, 0, 0, 0.08),
+    0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.toolbar::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.toolbar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.tool-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  background: #F5F5F5;
+  border-radius: 20rpx;
+  transition: all 0.3s ease;
+}
+
+.tool-selector-btn.active {
+  background: #E3F2FD;
+  border: 2rpx solid #2196F3;
+}
+
+.tool-btn-icon {
+  font-size: 24rpx;
+}
+
+.tool-btn-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.tool-selector-btn.active .tool-btn-text {
+  color: #2196F3;
+  font-weight: bold;
+}
+
+.time-input-btn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  background: #F5F5F5;
+  border-radius: 20rpx;
+  transition: all 0.3s ease;
+}
+
+.time-input-btn.active {
+  background: #FFF3E0;
+  border: 2rpx solid #FF9800;
+}
+
+.time-btn-icon {
+  font-size: 24rpx;
+}
+
+.time-btn-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.time-input-btn.active .time-btn-text {
+  color: #FF9800;
+  font-weight: bold;
+}
+
+/* 时间输入区域 */
+.time-input-section {
+  margin-top: 16rpx;
+  padding: 20rpx;
+  background: #FFF3E0;
+  border-radius: 16rpx;
+  border: 2rpx solid #FF9800;
+}
+
+.time-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.time-input {
+  width: 100%;
+  padding: 16rpx;
+  background: #fff;
+  border: 2rpx solid #E0E0E0;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.time-input-actions {
+  display: flex;
+  gap: 12rpx;
+  justify-content: flex-end;
+}
+
+.btn-clear, .btn-confirm {
+  padding: 12rpx 24rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  border: none;
+}
+
+.btn-clear {
+  background: #F5F5F5;
+  color: #666;
+}
+
+.btn-confirm {
+  background: #FF9800;
+  color: #fff;
+}
+
+.time-display {
+  margin-top: 12rpx;
+  padding: 12rpx;
+  background: #fff;
+  border-radius: 8rpx;
+  text-align: center;
+}
+
+.time-display-text {
+  font-size: 24rpx;
+  color: #FF9800;
+  font-weight: bold;
+}
+
+.fridge-toggle {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.toggle-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.toggle-label {
+  font-size: 28rpx;
+  color: #333;
+  margin-right: 16rpx;
+}
+
+/* 备餐模式开关 */
+.meal-prep-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 20rpx;
+  margin-top: 16rpx;
+  background: #F8F9FA;
+  border-radius: 12rpx;
+  border: 2rpx solid #E0E0E0;
+  transition: all 0.3s ease;
+}
+
+.meal-prep-toggle:active {
+  background: #E8F5E9;
+  border-color: #4CAF50;
+}
+
+.toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex: 1;
+}
+
+.toggle-wrapper .toggle-icon {
+  font-size: 32rpx;
+}
+
+.toggle-wrapper .toggle-label {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-right: 8rpx;
+}
+
+.toggle-desc {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.sort-selector {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 20rpx;
+  background: #f5f5f5;
+  border-radius: 24rpx;
+}
+
+.sort-text {
+  font-size: 26rpx;
+  color: #666;
+  margin-right: 8rpx;
+}
+
+.sort-arrow {
+  font-size: 20rpx;
+  color: #999;
+}
+
+.tag-scroll {
+  white-space: nowrap;
+}
+
+.tag-list {
+  display: flex;
+  gap: 12rpx;
+  padding: 0 4rpx;
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 20rpx;
+  background: #F5F5F5;
+  border-radius: 24rpx;
+  font-size: 26rpx;
+  color: #666;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  border: 2rpx solid transparent;
+}
+
+.tag:active {
+  transform: scale(0.95);
+}
+
+.tag-active {
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: #fff;
+  border-color: #4CAF50;
+  box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.3);
+}
+
+.tag-icon {
+  font-size: 24rpx;
+  margin-right: 6rpx;
+}
+
+.recipe-list {
+  flex: 1;
+  height: 0;
+}
+
+.recipe-card {
+  display: flex;
+  margin: 20rpx;
+  padding: 0;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: listItemSlideIn 0.6s ease-out;
+  animation-fill-mode: both;
+  position: relative;
+  border-radius: 20rpx;
+}
+
+.recipe-image-wrapper {
+  position: relative;
+  width: 240rpx;
+  height: 180rpx;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.recipe-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.recipe-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6rpx;
+  height: 100%;
+  background: linear-gradient(180deg, #4CAF50 0%, #8BC34A 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+@keyframes listItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.recipe-card:nth-child(1) { animation-delay: 0.05s; }
+.recipe-card:nth-child(2) { animation-delay: 0.1s; }
+.recipe-card:nth-child(3) { animation-delay: 0.15s; }
+.recipe-card:nth-child(4) { animation-delay: 0.2s; }
+.recipe-card:nth-child(5) { animation-delay: 0.25s; }
+
+.recipe-card:active {
+  transform: translateX(-6rpx) scale(0.97);
+  box-shadow: 
+    0 12rpx 32rpx rgba(76, 175, 80, 0.2),
+    0 6rpx 16rpx rgba(0, 0, 0, 0.15);
+}
+
+.recipe-card:active::before {
+  opacity: 1;
+}
+
+.recipe-card:active::after {
+  opacity: 1;
+}
+
+.recipe-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 16rpx 0 0 16rpx;
+  object-fit: cover;
+  background: linear-gradient(135deg, #F5F5F5 0%, #E0E0E0 100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.recipe-overlay-info {
+  position: absolute;
+  top: 8rpx;
+  left: 8rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  z-index: 2;
+}
+
+.time-badge {
+  font-size: 20rpx;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4rpx 10rpx;
+  border-radius: 12rpx;
+  backdrop-filter: blur(4rpx);
+}
+
+.difficulty-badge {
+  font-size: 20rpx;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4rpx 10rpx;
+  border-radius: 12rpx;
+  backdrop-filter: blur(4rpx);
+}
+
+.recent-badge {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  font-size: 20rpx;
+  color: #fff;
+  background: linear-gradient(135deg, #FF9800 0%, #FF6F00 100%);
+  padding: 4rpx 10rpx;
+  border-radius: 12rpx;
+  z-index: 2;
+  box-shadow: 0 2rpx 8rpx rgba(255, 152, 0, 0.4);
+}
+
+.favorite-badge {
+  position: absolute;
+  bottom: 8rpx;
+  right: 8rpx;
+  font-size: 28rpx;
+  z-index: 2;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+}
+
+.recipe-tags-mini {
+  display: flex;
+  gap: 8rpx;
+  margin-bottom: 8rpx;
+}
+
+.tag-mini {
+  font-size: 22rpx;
+  color: #666;
+  background: #F5F5F5;
+  padding: 4rpx 10rpx;
+  border-radius: 8rpx;
+}
+
+.recipe-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.recipe-card:active .recipe-image {
+  transform: scale(1.05);
+}
+
+.recipe-card:active .recipe-image::after {
+  opacity: 1;
+}
+
+.recipe-info {
+  flex: 1;
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.recipe-actions {
+  position: absolute;
+  right: 12rpx;
+  top: 12rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  z-index: 3;
+}
+
+.action-icon-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.action-icon-btn:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 1);
+}
+
+.recipe-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.recipe-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.calorie-badge {
+  font-size: 24rpx;
+  color: #FF6F00;
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+  padding: 6rpx 14rpx;
+  border-radius: 16rpx;
+  font-weight: 600;
+  box-shadow: 
+    0 2rpx 8rpx rgba(255, 152, 0, 0.2),
+    inset 0 1rpx 2rpx rgba(255, 255, 255, 0.5);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.calorie-badge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+  animation: calorieShine 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes calorieShine {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.match-badge {
+  font-size: 22rpx;
+  padding: 6rpx 14rpx;
+  border-radius: 16rpx;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
+}
+
+.match-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.match-badge:active::before {
+  opacity: 1;
+}
+
+.match-high {
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  color: #2E7D32;
+  box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.2);
+}
+
+.match-medium {
+  background: linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%);
+  color: #E65100;
+  box-shadow: 0 2rpx 8rpx rgba(255, 193, 7, 0.2);
+}
+
+.match-low {
+  background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+  color: #C62828;
+  box-shadow: 0 2rpx 8rpx rgba(255, 82, 82, 0.2);
+}
+
+.missing-ingredients {
+  margin-top: 8rpx;
+}
+
+.missing-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.meal-prep-badge {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 8rpx;
+  padding: 8rpx 12rpx;
+  background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%);
+  border-radius: 8rpx;
+  border-left: 3rpx solid #03A9F4;
+}
+
+.meal-prep-icon {
+  font-size: 24rpx;
+}
+
+.meal-prep-text {
+  font-size: 22rpx;
+  color: #0277BD;
+  font-weight: 500;
+}
+
+.skeleton-list {
+  padding: 20rpx;
+}
+
+.skeleton-card {
+  display: flex;
+  margin-bottom: 20rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.skeleton-image {
+  width: 240rpx;
+  height: 180rpx;
+}
+
+.skeleton-text {
+  flex: 1;
+  height: 32rpx;
+  margin: 20rpx;
+  margin-bottom: 12rpx;
+}
+
+.skeleton-text-short {
+  width: 60%;
+  height: 24rpx;
+  margin: 0 20rpx 20rpx;
+}
+
+.loading-more {
+  text-align: center;
+  padding: 40rpx;
+  color: #999;
+  font-size: 26rpx;
+}
+
+/* 排序弹窗 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+.modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  margin: 40rpx;
+  max-width: 600rpx;
+  width: 100%;
+  transform: scale(0.9);
+  transition: transform 0.3s;
+}
+
+.modal.show .modal-content {
+  transform: scale(1);
+}
+
+.modal-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+
+.sort-options {
+  display: flex;
+  flex-direction: column;
+}
+
+.sort-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  border: 2rpx solid #E0E0E0;
+  border-radius: 12rpx;
+  transition: all 0.3s;
+}
+
+.sort-option.active {
+  border-color: #4CAF50;
+  background: #E8F5E9;
+  color: #4CAF50;
+}
+
+.sort-check {
+  color: #4CAF50;
+  font-size: 32rpx;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.sort-option.active .sort-check {
+  opacity: 1;
+}
+
+/* 高级筛选 */
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx;
+  margin: 0 20rpx 20rpx;
+  background: #F5F5F5;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.filter-toggle:active {
+  background: #E0E0E0;
+}
+
+.toggle-arrow {
+  margin-left: 8rpx;
+  font-size: 20rpx;
+}
+
+.advanced-filters {
+  margin: 0 20rpx 20rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-group {
+  margin-bottom: 24rpx;
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
+}
+
+.filter-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.filter-options {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.filter-option {
+  padding: 12rpx 24rpx;
+  background: #F5F5F5;
+  border-radius: 24rpx;
+  font-size: 26rpx;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.filter-option.active {
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: #fff;
+  box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.3);
+}
+
+.calorie-range {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.range-input {
+  flex: 1;
+  padding: 16rpx;
+  background: #F5F5F5;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+.range-separator {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 预览弹窗 */
+.preview-content {
+  max-width: 500rpx;
+  padding: 0;
+  overflow: hidden;
+}
+
+.preview-image {
+  width: 100%;
+  height: 300rpx;
+  object-fit: cover;
+}
+
+.preview-info {
+  padding: 24rpx;
+}
+
+.preview-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.preview-meta {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.preview-tag {
+  font-size: 22rpx;
+  color: #4CAF50;
+  background: #E8F5E9;
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 16rpx;
+  padding: 0 24rpx 24rpx;
+}
+
+.preview-actions button {
+  flex: 1;
+}

@@ -1,0 +1,1141 @@
+/* 应季食材 · 特色页：Neo + 春日粉 + 分层主推/列表 */
+
+.page-seasonal {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF0F5 0%, #FFF5F9 20%, #FFFFFF 55%, #F8FAFC 100%);
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 背景装饰光斑 */
+.page-seasonal::before {
+  content: '';
+  position: fixed;
+  top: -12vh;
+  right: -18vw;
+  width: 75vw;
+  height: 48vh;
+  background: radial-gradient(ellipse at 65% 25%, rgba(244, 114, 182, 0.18) 0%, rgba(167, 139, 250, 0.08) 40%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+  animation: heroGlowPulse 6s ease-in-out infinite;
+}
+
+.page-seasonal::after {
+  content: '';
+  position: fixed;
+  bottom: -10vh;
+  left: -15vw;
+  width: 60vw;
+  height: 40vh;
+  background: radial-gradient(ellipse at 35% 75%, rgba(52, 211, 153, 0.1) 0%, rgba(96, 165, 250, 0.06) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes heroGlowPulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+/* 顶部 Hero */
+.seasonal-hero {
+  position: relative;
+  z-index: 1;
+  padding: 24rpx 24rpx 8rpx;
+  animation: fadeInDown 0.5s ease-out both;
+}
+
+.seasonal-hero-glow {
+  position: absolute;
+  top: 0;
+  left: 24rpx;
+  right: 24rpx;
+  height: 220rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, rgba(255, 182, 193, 0.4) 0%, rgba(167, 139, 250, 0.15) 45%, rgba(52, 211, 153, 0.08) 100%);
+  pointer-events: none;
+  filter: blur(2rpx);
+}
+
+.seasonal-hero-inner {
+  position: relative;
+  padding: 32rpx 28rpx 28rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1rpx solid rgba(244, 114, 182, 0.18);
+  box-shadow: 0 12rpx 40rpx rgba(244, 114, 182, 0.1), 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(24rpx) saturate(180%);
+  -webkit-backdrop-filter: blur(24rpx) saturate(180%);
+  overflow: hidden;
+}
+
+/* Hero 内部浮动装饰 */
+.seasonal-hero-inner::before {
+  content: '🌸';
+  position: absolute;
+  top: -8rpx;
+  right: 20rpx;
+  font-size: 48rpx;
+  opacity: 0.15;
+  animation: floatSway 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.seasonal-hero-inner::after {
+  content: '🍃';
+  position: absolute;
+  bottom: 8rpx;
+  left: 16rpx;
+  font-size: 36rpx;
+  opacity: 0.12;
+  animation: floatSway 5s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+
+@keyframes floatSway {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12rpx) rotate(8deg); }
+}
+
+.seasonal-hero-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.seasonal-hero-badge {
+  font-size: 22rpx;
+  color: #db2777;
+  font-weight: 700;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.15) 0%, rgba(251, 207, 232, 0.25) 100%);
+  border: 1rpx solid rgba(244, 114, 182, 0.25);
+  letter-spacing: 0.5rpx;
+}
+
+.ops-entry {
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1rpx solid var(--neo-border);
+}
+
+.ops-entry-text {
+  font-size: 20rpx;
+  color: #64748b;
+}
+
+.seasonal-hero-title {
+  display: block;
+  font-size: 42rpx;
+  font-weight: 900;
+  color: var(--neo-text);
+  letter-spacing: 1rpx;
+  background: linear-gradient(135deg, #1a1a2e 0%, #db2777 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.seasonal-hero-meta-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 10rpx;
+  gap: 4rpx 6rpx;
+}
+
+.seasonal-hero-meta {
+  font-size: 24rpx;
+  color: var(--neo-text-2);
+  font-weight: 500;
+}
+
+.seasonal-hero-meta-dot {
+  font-size: 22rpx;
+  color: var(--neo-text-3);
+  opacity: 0.5;
+}
+
+.seasonal-hero-tip {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: var(--neo-text-3);
+  line-height: 1.55;
+}
+
+/* 滚动区 */
+.seasonal-scroll {
+  max-height: calc(100vh - 280rpx);
+  position: relative;
+  z-index: 1;
+  padding: 0 24rpx;
+  box-sizing: border-box;
+}
+
+.seasonal-scroll-pad {
+  height: calc(40rpx + env(safe-area-inset-bottom));
+}
+
+.seasonal-body {
+  padding-bottom: 24rpx;
+}
+
+/* 分区标题 */
+.seasonal-section {
+  margin-top: 28rpx;
+  animation: fadeInUp 0.45s ease-out both;
+}
+
+.seasonal-section:nth-child(1) { animation-delay: 0.05s; }
+.seasonal-section:nth-child(2) { animation-delay: 0.12s; }
+.seasonal-section:nth-child(3) { animation-delay: 0.19s; }
+.seasonal-section:nth-child(4) { animation-delay: 0.26s; }
+
+.seasonal-section:first-child {
+  margin-top: 8rpx;
+}
+
+.seasonal-section-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8rpx 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.seasonal-section-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f472b6, #a78bfa);
+}
+
+.seasonal-section-dot.subtle {
+  background: #94a3b8;
+}
+
+.seasonal-section-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--neo-text);
+}
+
+.seasonal-section-sub {
+  font-size: 22rpx;
+  color: var(--neo-text-3);
+  margin-left: 4rpx;
+}
+
+/* 主推大卡 */
+.seasonal-featured {
+  border-radius: 28rpx;
+  overflow: hidden;
+  border: 1rpx solid rgba(244, 114, 182, 0.15);
+  background: #ffffff;
+  animation: fadeInUp 0.5s ease-out both;
+  transition: transform 0.22s var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)), box-shadow 0.22s ease;
+}
+
+.seasonal-featured:active {
+  transform: scale(0.985);
+}
+
+.seasonal-featured.tone-0 { box-shadow: 0 20rpx 56rpx rgba(244, 114, 182, 0.16), 0 8rpx 24rpx rgba(244, 114, 182, 0.08); }
+.seasonal-featured.tone-1 { box-shadow: 0 20rpx 56rpx rgba(96, 165, 250, 0.16), 0 8rpx 24rpx rgba(96, 165, 250, 0.08); }
+.seasonal-featured.tone-2 { box-shadow: 0 20rpx 56rpx rgba(52, 211, 153, 0.16), 0 8rpx 24rpx rgba(52, 211, 153, 0.08); }
+.seasonal-featured.tone-3 { box-shadow: 0 20rpx 56rpx rgba(251, 191, 36, 0.16), 0 8rpx 24rpx rgba(251, 191, 36, 0.08); }
+
+.seasonal-featured-cover {
+  position: relative;
+  height: 300rpx;
+  overflow: hidden;
+}
+
+/* 主推多图轮播 */
+.seasonal-featured-swiper {
+  width: 100%;
+  height: 300rpx;
+}
+
+.seasonal-featured-swiper .seasonal-featured-cover {
+  height: 100%;
+}
+
+.seasonal-featured-dots {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 0 8rpx;
+}
+
+.seasonal-featured-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 999rpx;
+  background: rgba(148, 163, 184, 0.35);
+  transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.seasonal-featured-dot.is-active {
+  width: 32rpx;
+  background: linear-gradient(90deg, #f472b6 0%, #ec4899 100%);
+  box-shadow: 0 4rpx 14rpx rgba(236, 72, 153, 0.4);
+}
+
+.seasonal-featured-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.seasonal-featured-emoji-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seasonal-featured-emoji {
+  font-size: 128rpx;
+  line-height: 1;
+  filter: drop-shadow(0 16rpx 32rpx rgba(0, 0, 0, 0.12));
+  animation: floatSway 3.5s ease-in-out infinite;
+}
+
+.seasonal-featured-scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60%;
+  background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.6) 100%);
+  pointer-events: none;
+}
+
+.seasonal-featured-floating {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24rpx 28rpx;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.seasonal-featured-name {
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.4);
+  margin-right: 12rpx;
+  letter-spacing: 0.5rpx;
+}
+
+.status-badge.light {
+  background: rgba(255, 255, 255, 0.92);
+  color: #64748b;
+}
+
+.seasonal-featured-body {
+  padding: 22rpx 24rpx 24rpx;
+}
+
+.seasonal-featured-desc {
+  font-size: 26rpx;
+  color: var(--neo-text-2);
+  line-height: 1.55;
+  margin-bottom: 16rpx;
+}
+
+/* 营养价值 / 当季说明 */
+.seasonal-rich-card {
+  margin-top: 16rpx;
+  padding: 20rpx 20rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 240, 245, 0.6) 100%);
+  border: 1rpx solid rgba(244, 114, 182, 0.15);
+  box-shadow: 0 4rpx 16rpx rgba(244, 114, 182, 0.06);
+  transition: transform 0.2s ease;
+}
+
+.seasonal-rich-card:active {
+  transform: scale(0.99);
+}
+
+.seasonal-rich-hd {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8rpx;
+  margin-bottom: 10rpx;
+}
+
+.seasonal-rich-title {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: var(--neo-text);
+}
+
+.seasonal-bullet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.seasonal-bullet {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.seasonal-bullet-mark {
+  flex-shrink: 0;
+  width: 26rpx;
+  font-size: 32rpx;
+  line-height: 1.35;
+  color: #db2777;
+  font-weight: 700;
+}
+
+.seasonal-bullet-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: var(--neo-text-2);
+  line-height: 1.55;
+}
+
+.seasonal-rich-p {
+  font-size: 24rpx;
+  color: var(--neo-text-2);
+  line-height: 1.65;
+  display: block;
+}
+
+/* 推荐做法芯片 */
+.seasonal-recipe-block {
+  margin-top: 16rpx;
+}
+
+.seasonal-recipe-tip {
+  margin-left: auto;
+  font-size: 20rpx;
+  color: var(--neo-text-3);
+}
+
+.seasonal-recipe-chips {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+
+.seasonal-recipe-chips--compact {
+  margin-top: 10rpx;
+}
+
+.recipe-chip {
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, rgba(251, 207, 232, 0.5) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1rpx solid rgba(244, 114, 182, 0.3);
+  max-width: 100%;
+  transition: transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)),
+              box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.recipe-chip:active {
+  transform: scale(0.92);
+  background: rgba(251, 207, 232, 0.65);
+  box-shadow: 0 4rpx 14rpx rgba(236, 72, 153, 0.2);
+}
+
+.recipe-chip--sm {
+  padding: 8rpx 16rpx;
+}
+
+.recipe-chip-text {
+  font-size: 23rpx;
+  color: #9d174d;
+  font-weight: 700;
+}
+
+.seasonal-action-hint {
+  margin-top: 18rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 16rpx;
+  background: rgba(241, 250, 255, 0.72);
+  border: 1rpx solid rgba(96, 165, 250, 0.12);
+}
+
+.seasonal-action-hint-text {
+  font-size: 21rpx;
+  color: #64748b;
+  line-height: 1.55;
+}
+
+/* 列表区：营养/当季摘要 */
+.seasonal-list-mini {
+  margin-top: 10rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8rpx;
+}
+
+.seasonal-list-mini-label {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #db2777;
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+  background: rgba(244, 114, 182, 0.1);
+}
+
+.seasonal-list-mini-text {
+  flex: 1;
+  font-size: 22rpx;
+  color: var(--neo-text-2);
+  line-height: 1.5;
+}
+
+.seasonal-featured-actions {
+  margin-top: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.btn.wide {
+  width: 100%;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  padding: 0 24rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+}
+
+/* 紧凑列表 */
+.seasonal-list-item {
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 24rpx;
+  padding: 0 0 16rpx;
+  margin-bottom: 20rpx;
+  border: 1rpx solid rgba(244, 114, 182, 0.1);
+  box-shadow: 0 8rpx 28rpx rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(14rpx);
+  -webkit-backdrop-filter: blur(14rpx);
+  overflow: hidden;
+  animation: fadeInUp 0.45s ease-out both;
+  transition: transform 0.2s var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)),
+              box-shadow 0.2s ease;
+}
+
+.seasonal-list-item:nth-child(1) { animation-delay: 0.05s; }
+.seasonal-list-item:nth-child(2) { animation-delay: 0.10s; }
+.seasonal-list-item:nth-child(3) { animation-delay: 0.15s; }
+.seasonal-list-item:nth-child(4) { animation-delay: 0.20s; }
+.seasonal-list-item:nth-child(5) { animation-delay: 0.25s; }
+.seasonal-list-item:nth-child(6) { animation-delay: 0.30s; }
+
+.seasonal-list-item:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+}
+
+.seasonal-list-item.tone-0 { border-color: rgba(244, 114, 182, 0.15); }
+.seasonal-list-item.tone-1 { border-color: rgba(96, 165, 250, 0.18); }
+.seasonal-list-item.tone-2 { border-color: rgba(52, 211, 153, 0.18); }
+.seasonal-list-item.tone-3 { border-color: rgba(251, 191, 36, 0.2); }
+
+.seasonal-item-main {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 20rpx 22rpx 0;
+}
+
+.seasonal-cover {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 10rpx 28rpx rgba(37, 99, 235, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.seasonal-cover:active {
+  transform: scale(0.95);
+}
+
+.seasonal-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 55%);
+  pointer-events: none;
+}
+
+.seasonal-cover-emoji {
+  font-size: 60rpx;
+  z-index: 1;
+  filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.08));
+}
+
+.seasonal-cover-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 22rpx;
+  z-index: 1;
+}
+
+.seasonal-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.seasonal-item-title-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.seasonal-item-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--neo-text);
+}
+
+.status-badge {
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+}
+
+.status-badge.primary {
+  background: rgba(244, 114, 182, 0.12);
+  color: #db2777;
+}
+
+.status-badge.subtle {
+  background: rgba(148, 163, 184, 0.15);
+  color: #64748b;
+}
+
+.seasonal-item-desc {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: var(--neo-text-2);
+  line-height: 1.45;
+}
+
+.seasonal-benefits {
+  margin-top: 10rpx;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.benefit-pill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1rpx solid rgba(244, 114, 182, 0.15);
+  transition: transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.benefit-pill:active {
+  transform: scale(0.92);
+}
+
+.benefit-dot {
+  font-size: 18rpx;
+  color: #ec4899;
+  margin-right: 6rpx;
+  animation: benefitDotPulse 2s ease-in-out infinite;
+}
+
+@keyframes benefitDotPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.benefit-text {
+  font-size: 20rpx;
+  color: var(--neo-text-2);
+}
+
+.seasonal-item-tags {
+  margin-top: 10rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.tag {
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  color: #be185d;
+  background: rgba(251, 207, 232, 0.35);
+  transition: transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.tag:active {
+  transform: scale(0.88);
+}
+
+.seasonal-item-actions {
+  margin-top: 16rpx;
+  padding: 0 22rpx 4rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.btn {
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  padding: 0 20rpx;
+  transition: transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)),
+              box-shadow 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.93);
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4rpx 14rpx rgba(236, 72, 153, 0.25);
+}
+
+.btn.primary:active {
+  box-shadow: 0 2rpx 8rpx rgba(236, 72, 153, 0.3);
+}
+
+.btn.secondary {
+  background: #ffffff;
+  color: #db2777;
+  border: 1rpx solid rgba(244, 114, 182, 0.45);
+}
+
+.btn.ghost {
+  background: #ffffff;
+  color: #94a3b8;
+  border: 1rpx solid #e2e8f0;
+}
+
+.empty-state {
+  margin-top: 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--neo-text-3);
+  padding: 0 24rpx;
+}
+
+.empty-icon {
+  font-size: 60rpx;
+  margin-bottom: 12rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  margin-bottom: 4rpx;
+  color: var(--neo-text-2);
+}
+
+.empty-hint {
+  font-size: 22rpx;
+  text-align: center;
+}
+
+/* 详情抽屉 */
+.drawer-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8rpx);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0 20rpx 20rpx;
+  box-sizing: border-box;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.drawer {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 32rpx;
+  overflow: hidden;
+  box-shadow: 0 -8rpx 40rpx rgba(0, 0, 0, 0.15), 0 20rpx 60rpx rgba(0, 0, 0, 0.12);
+  animation: slideUpBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUpBounce {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.drawer-handle {
+  width: 72rpx;
+  height: 8rpx;
+  background: #e0e0e0;
+  border-radius: 999rpx;
+  margin: 16rpx auto 10rpx;
+}
+
+.drawer-header {
+  padding: 10rpx 22rpx 16rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.drawer-cover {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.drawer-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 60%);
+}
+
+.drawer-cover-emoji {
+  font-size: 44rpx;
+  z-index: 1;
+}
+
+.drawer-title-area {
+  flex: 1;
+}
+
+.drawer-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #222222;
+}
+
+.drawer-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #999999;
+}
+
+.drawer-close {
+  padding: 10rpx 12rpx;
+  border-radius: 16rpx;
+  background: #f7f7f7;
+}
+
+.drawer-close-text {
+  font-size: 22rpx;
+  color: #666666;
+}
+
+.drawer-body {
+  max-height: 58vh;
+  padding: 0 22rpx 18rpx;
+  box-sizing: border-box;
+}
+
+.recipes-loading {
+  padding: 14rpx 14rpx;
+  border-radius: 16rpx;
+  background: #f7f7f7;
+}
+
+.recipes-loading-text {
+  font-size: 24rpx;
+  color: #777777;
+}
+
+.recipe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.recipe-card {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 14rpx 14rpx;
+  border-radius: 18rpx;
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+}
+
+.recipe-card-main {
+  flex: 1;
+}
+
+.recipe-name {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #222222;
+}
+
+.recipe-meta {
+  margin-top: 6rpx;
+  display: flex;
+  flex-direction: row;
+  gap: 12rpx;
+}
+
+.recipe-meta-item {
+  font-size: 22rpx;
+  color: #888888;
+}
+
+.recipe-tags {
+  margin-top: 8rpx;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.recipe-tag {
+  padding: 3rpx 10rpx;
+  border-radius: 999rpx;
+  background: #ffeaf3;
+  color: #b2527a;
+  font-size: 20rpx;
+}
+
+.recipe-reason {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #666666;
+}
+
+.recipe-go {
+  margin-left: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12rpx;
+  border-radius: 14rpx;
+  background: #fff7fb;
+  border: 1px solid rgba(255, 59, 127, 0.12);
+}
+
+.recipe-go-text {
+  font-size: 22rpx;
+  color: #ff3b7f;
+  font-weight: 650;
+}
+
+.recipes-empty {
+  padding: 14rpx 14rpx;
+  border-radius: 16rpx;
+  background: #f7f7f7;
+}
+
+.recipes-empty-text {
+  font-size: 24rpx;
+  color: #777777;
+  line-height: 1.6;
+}
+
+.recipes-empty-actions {
+  margin-top: 12rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.section {
+  padding-top: 12rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 650;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.section-text {
+  font-size: 24rpx;
+  color: #555555;
+  line-height: 1.7;
+}
+
+.bullet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.bullet {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.bullet-dot {
+  width: 20rpx;
+  font-size: 26rpx;
+  line-height: 1.4;
+  color: #ff3b7f;
+  margin-right: 10rpx;
+}
+
+.bullet-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #555555;
+  line-height: 1.7;
+}
+
+.drawer-footer {
+  padding: 12rpx 22rpx 18rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 12rpx;
+  border-top: 1px solid #f1f1f1;
+}
+
+/* 运营分析 */
+.ops-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8rpx);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 24rpx;
+  box-sizing: border-box;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.ops-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 28rpx;
+  overflow: hidden;
+  box-shadow: 0 24rpx 56rpx rgba(0, 0, 0, 0.18);
+  animation: slideUpBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ops-head {
+  padding: 18rpx 20rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.ops-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #222222;
+}
+
+.ops-close {
+  margin-left: auto;
+  padding: 8rpx 12rpx;
+  border-radius: 16rpx;
+  background: #f7f7f7;
+}
+
+.ops-close-text {
+  font-size: 22rpx;
+  color: #666666;
+}
+
+.ops-body {
+  padding: 12rpx 20rpx 18rpx;
+}
+
+.ops-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10rpx 0;
+}
+
+.ops-k {
+  font-size: 24rpx;
+  color: #666666;
+}
+
+.ops-v {
+  margin-left: auto;
+  font-size: 24rpx;
+  color: #333333;
+  font-weight: 650;
+}
+
+.ops-note {
+  margin-top: 10rpx;
+  padding: 12rpx 14rpx;
+  border-radius: 16rpx;
+  background: #fff7fb;
+}
+
+.ops-note-text {
+  font-size: 22rpx;
+  color: #b96a8a;
+  line-height: 1.6;
+}
+
+.ops-empty {
+  font-size: 24rpx;
+  color: #999999;
+}
+

@@ -1,0 +1,126 @@
+<view class="page {{liteMode ? 'lite' : ''}}">
+  <view class="hero" style="background: {{item.coverBg || '#FFF1F7'}};">
+    <view class="hero-top">
+      <view class="hero-title-area">
+        <text class="hero-title">{{item.name || '食材详情'}}</text>
+        <text class="hero-sub">{{month}}月 · {{regionName}}{{season ? ' · ' + season : ''}}</text>
+      </view>
+      <view class="hero-badge" wx:if="{{item.added}}">
+        <text class="hero-badge-text">已在冰箱 {{item.amount_in_fridge || 1}} 份</text>
+      </view>
+    </view>
+
+    <view class="hero-cover">
+      <image
+        wx:if="{{item.image}}"
+        class="hero-img"
+        src="{{item.image}}"
+        mode="aspectFill"
+        lazy-load="true"
+      />
+      <text wx:else class="hero-emoji" style="color: {{item.coverFg || '#FF3B7F'}};">{{item.coverEmoji || item.icon || '🥗'}}</text>
+    </view>
+
+    <view class="hero-actions">
+      <button class="btn primary" size="mini" bindtap="addToFridge">{{item.added ? '补货 1 份' : '加到冰箱'}}</button>
+      <button class="btn secondary" size="mini" bindtap="goSmartChoice">用它做菜</button>
+    </view>
+  </view>
+
+  <scroll-view class="body" scroll-y="true">
+    <view class="card">
+      <text class="card-title">应季说明</text>
+      <text class="card-text">{{item.explain || item.desc || '应季新鲜，营养实惠。'}}</text>
+    </view>
+
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">营养分析（估算）</text>
+        <text class="card-note">可后续接权威数据库</text>
+      </view>
+      <view class="nutri-grid">
+        <view class="nutri-item">
+          <text class="nutri-k">热量</text>
+          <text class="nutri-v">{{nutrition.kcal}} kcal/100g</text>
+        </view>
+        <view class="nutri-item">
+          <text class="nutri-k">蛋白质</text>
+          <text class="nutri-v">{{nutrition.protein}} g</text>
+        </view>
+        <view class="nutri-item">
+          <text class="nutri-k">碳水</text>
+          <text class="nutri-v">{{nutrition.carbs}} g</text>
+        </view>
+        <view class="nutri-item">
+          <text class="nutri-k">脂肪</text>
+          <text class="nutri-v">{{nutrition.fat}} g</text>
+        </view>
+        <view class="nutri-item">
+          <text class="nutri-k">膳食纤维</text>
+          <text class="nutri-v">{{nutrition.fiber}} g</text>
+        </view>
+        <view class="nutri-item">
+          <text class="nutri-k">亮点</text>
+          <text class="nutri-v">{{nutrition.highlight}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{item.eatTips && item.eatTips.length}}">
+      <text class="card-title">做法建议</text>
+      <view class="bullet-list">
+        <view class="bullet" wx:for="{{item.eatTips}}" wx:key="*this">
+          <text class="dot">•</text>
+          <text class="bullet-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{item.caution && item.caution.length}}">
+      <text class="card-title">注意事项</text>
+      <view class="bullet-list">
+        <view class="bullet" wx:for="{{item.caution}}" wx:key="*this">
+          <text class="dot">•</text>
+          <text class="bullet-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <text class="card-title">可以完成哪些应季美食</text>
+
+      <view wx:if="{{recipesLoading}}" class="loading">
+        <text class="loading-text">正在匹配菜谱…</text>
+      </view>
+
+      <view wx:elif="{{recipes && recipes.length}}">
+        <view class="recipe-list">
+          <view class="recipe-card" wx:for="{{recipes}}" wx:key="id" bindtap="goRecipeDetail" data-id="{{item.id}}" data-name="{{item.name}}">
+            <view class="recipe-main">
+              <text class="recipe-name">{{item.name}}</text>
+              <view class="recipe-meta">
+                <text class="recipe-meta-item" wx:if="{{item.cooking_time}}">{{item.cooking_time}}分钟</text>
+                <text class="recipe-meta-item" wx:if="{{item.calories}}">{{item.calories}} kcal</text>
+              </view>
+              <view class="recipe-tags" wx:if="{{item.tags && item.tags.length}}">
+                <text class="recipe-tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+              </view>
+              <text class="recipe-reason" wx:if="{{item.match_reason}}">{{item.match_reason}}</text>
+            </view>
+            <view class="recipe-go"><text class="recipe-go-text">查看</text></view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="empty">
+        <text class="empty-text">{{recipesError || '暂时没有匹配结果。'}}</text>
+        <view class="empty-actions">
+          <button class="btn secondary" size="mini" bindtap="goSmartChoice">去智能推荐</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="bottom-space"></view>
+  </scroll-view>
+</view>
+

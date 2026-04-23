@@ -1,0 +1,429 @@
+<!--pages/profile/profile.wxml - 参照首页的简约设计-->
+<view class="page-profile page-container">
+  <!-- 加载状态 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+  </view>
+
+  <!-- 顶部栏（与首页风格统一，精简为标题 + 右侧入口） -->
+  <view class="header">
+    <view class="status-bar">
+      <view class="status-text"></view>
+      <text class="status-text">{{timeText}}</text>
+      <text class="status-text">100%</text>
+    </view>
+    <view class="top-row">
+      <view class="header-title-wrap">
+        <text class="header-title">我的</text>
+      </view>
+      <view class="header-actions">
+        <view
+          class="header-icon-wrap pressable"
+          bindtap="goToAINutritionist"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <text>🤖</text>
+        </view>
+        <view
+          class="header-icon-wrap pressable"
+          bindtap="goToShoppingList"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <text>🛒</text>
+        </view>
+        <view
+          class="header-icon-wrap pressable"
+          bindtap="showSettings"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <text>⚙️</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 问候与日期（与首页结构统一，文案更偏个人） -->
+  <view class="greeting-section">
+    <text class="greeting-text">{{profileGreeting}}</text>
+    <text class="greeting-icon">🙂</text>
+    <text class="greeting-date">{{currentDate}}</text>
+  </view>
+
+  <!-- 个性名片：头像 + 目标 + 社交 + 打卡（BMI 仅在下方身体档案展示，避免重复） -->
+  <view class="profile-card personality-card card" wx:if="{{!loading || userInfo.nickname}}">
+    <view class="personality-card-glow"></view>
+    <view class="personality-card-body">
+      <view class="personality-top">
+        <view class="avatar-ring" catchtap="onAvatarTap" hover-class="press-hover" hover-stay-time="80">
+          <view class="avatar-wrapper">
+            <!-- 仅在有头像 URL 时渲染 Lottie：无头像时与默认占位同区域会线条叠在 👤 上 -->
+            <view class="avatar-lottie-elastic" wx:if="{{showAvatarLottie && userInfo.avatar}}">
+              <canvas
+                type="2d"
+                id="profileLottie"
+                class="avatar-lottie"
+              ></canvas>
+            </view>
+            <image class="avatar" wx:if="{{userInfo.avatar}}" src="{{avatarSrc}}" mode="aspectFill"></image>
+            <view class="avatar avatar-placeholder" wx:else>
+              <text class="avatar-icon">👤</text>
+            </view>
+            <view class="avatar-badge">
+              <text class="avatar-badge-text">换头像</text>
+            </view>
+          </view>
+        </view>
+        <view class="personality-main">
+          <view class="nickname-block">
+            <text class="nickname">{{userInfo.nickname || '健康达人'}}</text>
+            <view class="goal-chip" wx:if="{{userInfo.goal_type}}">
+              <text class="goal-chip-icon">🎯</text>
+              <text wx:if="{{userInfo.goal_type === 'lose'}}">减脂</text>
+              <text wx:elif="{{userInfo.goal_type === 'gain'}}">增肌</text>
+              <text wx:else>维持</text>
+            </view>
+          </view>
+          <text class="personality-tagline">记录每一餐，累积健康</text>
+          <view class="user-medals" wx:if="{{featuredBadges && featuredBadges.length}}">
+            <view class="user-medal" wx:for="{{featuredBadges}}" wx:key="id">
+              <text class="user-medal-icon">{{item.icon}}</text>
+            </view>
+          </view>
+          <view class="signature-block" wx:if="{{userInfo.signature}}">
+            <view class="signature-accent-bar" aria-hidden="true"></view>
+            <view class="signature-text">{{userInfo.signature}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="social-panel">
+        <view class="social-cell pressable" catchtap="editProfile" hover-class="press-hover" hover-stay-time="80">
+          <text class="social-stat-num">{{userInfo.follow_count || 0}}</text>
+          <text class="social-stat-label">关注</text>
+        </view>
+        <view class="social-divider"></view>
+        <view class="social-cell pressable" catchtap="goToFans" hover-class="press-hover" hover-stay-time="80">
+          <text class="social-stat-num">{{userInfo.fans_count || 0}}</text>
+          <text class="social-stat-label">粉丝</text>
+        </view>
+        <view class="social-divider"></view>
+        <view class="social-cell pressable" catchtap="editProfile" hover-class="press-hover" hover-stay-time="80">
+          <text class="social-stat-num">{{userInfo.like_count || 0}}</text>
+          <text class="social-stat-label">获赞</text>
+        </view>
+      </view>
+
+      <view class="streak-banner pressable" bindtap="editProfile" hover-class="press-hover" hover-stay-time="80">
+        <view class="streak-banner-left">
+          <text class="streak-emoji">📝</text>
+          <view class="streak-copy">
+            <text class="streak-title">坚持记录</text>
+            <text class="streak-sub">连续 {{streakDays}} 天 · 体测与 BMI 见下方</text>
+          </view>
+        </view>
+        <text class="streak-chevron">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 身体档案 -->
+  <view class="section-card card body-archive-card">
+    <view class="card-header" bindtap="editProfile">
+      <view class="card-title-wrapper">
+        <text class="card-icon card-icon-chart">📊</text>
+        <text class="card-title">身体档案</text>
+      </view>
+      <text class="card-arrow">›</text>
+    </view>
+    <view class="body-data">
+      <view class="data-grid">
+        <view class="data-item-grid">
+          <text class="data-icon">📏</text>
+          <view class="data-content">
+            <text class="data-label">身高</text>
+            <text class="data-value">{{userInfo.height || '--'}} cm</text>
+          </view>
+        </view>
+        <view class="data-item-grid">
+          <text class="data-icon">⚖️</text>
+          <view class="data-content">
+            <text class="data-label">体重</text>
+            <text class="data-value">{{userInfo.weight || '--'}} kg</text>
+          </view>
+        </view>
+        <view class="data-item-grid">
+          <text class="data-icon">🎯</text>
+          <view class="data-content">
+            <text class="data-label">目标体重</text>
+            <text class="data-value">{{userInfo.target_weight || '--'}} kg</text>
+          </view>
+        </view>
+        <view class="data-item-grid highlight">
+          <text class="data-icon">🔥</text>
+          <view class="data-content">
+            <text class="data-label">每日目标</text>
+            <text class="data-value highlight-value">{{userInfo.daily_kcal_limit || '--'}} kcal</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- BMI健康状态指示（偏瘦|正常|偏胖|肥胖） -->
+    <view class="bmi-indicator" wx:if="{{bmi > 0}}">
+      <view class="bmi-bar">
+        <view class="bmi-fill {{bmiStatus}}" style="width: {{bmiPercent}}%"></view>
+        <view class="bmi-marker" style="left: {{bmiPercent}}%"></view>
+      </view>
+      <view class="bmi-labels">
+        <text class="bmi-label">偏瘦</text>
+        <text class="bmi-label">正常</text>
+        <text class="bmi-label">偏胖</text>
+        <text class="bmi-label">肥胖</text>
+      </view>
+    </view>
+
+    <!-- 每日营养素目标（碳水/蛋白质/脂肪） -->
+    <view class="macros-section" wx:if="{{macrosTarget}}">
+      <view class="macros-title">每日营养素目标</view>
+      <view class="macros-list">
+        <view class="macro-item macro-carb">
+          <view class="macro-header">
+            <text class="macro-icon macro-icon-carb">🍞</text>
+            <text class="macro-name">碳水</text>
+            <text class="macro-value">{{macrosTarget.carb}}g</text>
+          </view>
+          <view class="macro-bar">
+            <view class="macro-fill carb-fill" style="width: 100%"></view>
+          </view>
+        </view>
+        <view class="macro-item macro-protein">
+          <view class="macro-header">
+            <text class="macro-icon macro-icon-protein">❤️</text>
+            <text class="macro-name">蛋白质</text>
+            <text class="macro-value">{{macrosTarget.protein}}g</text>
+          </view>
+          <view class="macro-bar">
+            <view class="macro-fill protein-fill" style="width: 100%"></view>
+          </view>
+        </view>
+        <view class="macro-item macro-fat">
+          <view class="macro-header">
+            <text class="macro-icon macro-icon-fat">🥑</text>
+            <text class="macro-name">脂肪</text>
+            <text class="macro-value">{{macrosTarget.fat}}g</text>
+          </view>
+          <view class="macro-bar">
+            <view class="macro-fill fat-fill" style="width: 100%"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 体重记录 -->
+    <view class="weight-chart" wx:if="{{weightHistory.length > 0}}">
+      <view class="chart-title">体重趋势</view>
+      <canvas canvas-id="weightChart" class="chart-canvas"></canvas>
+    </view>
+    <view class="empty-state weight-empty" wx:else>
+      <text class="empty-icon">📊</text>
+      <text class="empty-text">暂无体重记录</text>
+      <text class="empty-hint">记录体重后可查看趋势</text>
+    </view>
+  </view>
+
+  <!-- 我的目标 -->
+  <view class="section-card card">
+    <view class="card-header">
+      <view class="card-title-wrapper">
+        <text class="card-icon">🎯</text>
+        <text class="card-title">我的目标</text>
+      </view>
+    </view>
+    <view class="goal-cards">
+      <view 
+        class="goal-card {{userInfo.goal_type === 'lose' ? 'active' : ''}}" 
+        bindtap="setGoal"
+        data-goal="lose">
+        <view class="goal-icon">🔥</view>
+        <text class="goal-name">减脂</text>
+        <text class="goal-desc">控制热量摄入</text>
+        <text class="goal-kcal" wx:if="{{userInfo.goal_type === 'lose'}}">{{goalKcal.lose}} kcal</text>
+      </view>
+      <view 
+        class="goal-card {{userInfo.goal_type === 'maintain' ? 'active' : ''}}" 
+        bindtap="setGoal"
+        data-goal="maintain">
+        <view class="goal-icon">⚖️</view>
+        <text class="goal-name">维持</text>
+        <text class="goal-desc">保持当前体重</text>
+        <text class="goal-kcal" wx:if="{{userInfo.goal_type === 'maintain'}}">{{goalKcal.maintain}} kcal</text>
+      </view>
+      <view 
+        class="goal-card {{userInfo.goal_type === 'gain' ? 'active' : ''}}" 
+        bindtap="setGoal"
+        data-goal="gain">
+        <view class="goal-icon">💪</view>
+        <text class="goal-name">增肌</text>
+        <text class="goal-desc">增加肌肉量</text>
+        <text class="goal-kcal" wx:if="{{userInfo.goal_type === 'gain'}}">{{goalKcal.gain}} kcal</text>
+      </view>
+    </view>
+    <view class="custom-goal" bindtap="editProfile">
+      <text class="custom-goal-text">⚙️ 自定义目标设置</text>
+      <text class="custom-goal-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 偏好设置（简约版） -->
+  <view class="section-card card">
+    <view class="card-header">
+      <view class="card-title-wrapper">
+        <text class="card-icon">❤️</text>
+        <text class="card-title">偏好设置</text>
+      </view>
+    </view>
+    <view class="preference-list">
+      <view class="preference-item" bindtap="editAllergens">
+        <view class="preference-icon-wrapper">
+          <text class="preference-icon">⚠️</text>
+        </view>
+        <view class="preference-content">
+          <text class="preference-label">忌口管理</text>
+          <view class="preference-tags">
+            <text class="tag tag-warning" wx:for="{{allergens}}" wx:key="*this">{{item}}</text>
+            <text wx:if="{{allergens.length === 0}}" class="preference-empty">还未设置忌口，点击添加</text>
+          </view>
+        </view>
+        <text class="preference-arrow">›</text>
+      </view>
+      <view class="preference-item" bindtap="editTaste">
+        <view class="preference-icon-wrapper">
+          <text class="preference-icon">🌶️</text>
+        </view>
+        <view class="preference-content">
+          <text class="preference-label">口味偏好</text>
+          <view class="preference-tags">
+            <text class="tag" wx:for="{{tastePreferences}}" wx:key="*this">{{item}}</text>
+            <text wx:if="{{tastePreferences.length === 0}}" class="preference-empty">还未设置口味偏好，点击添加</text>
+          </view>
+        </view>
+        <text class="preference-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 账号与安全：退出登录 / 重新登录 -->
+  <view class="section-card card account-section-card">
+    <view class="card-header">
+      <view class="card-title-wrapper">
+        <text class="card-icon">🔐</text>
+        <text class="card-title">账号与安全</text>
+      </view>
+    </view>
+    <view class="account-actions">
+      <view
+        class="account-row pressable"
+        bindtap="onLogoutTap"
+        hover-class="press-hover"
+        hover-stay-time="80"
+      >
+        <view class="account-row-main">
+          <text class="account-row-title">退出登录</text>
+          <text class="account-row-desc">通知服务器作废令牌并清空本机全部缓存</text>
+        </view>
+        <text class="account-row-arrow">›</text>
+      </view>
+      <view class="account-row-divider"></view>
+      <view
+        class="account-row pressable"
+        bindtap="onReloginTap"
+        hover-class="press-hover"
+        hover-stay-time="80"
+      >
+        <view class="account-row-main">
+          <text class="account-row-title">重新登录</text>
+          <text class="account-row-desc">仅清除本机登录信息，前往重新微信授权</text>
+        </view>
+        <text class="account-row-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 过敏源选择弹窗 -->
+  <view class="modal-mask" wx:if="{{showAllergenModal}}" bindtap="closeAllergenModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">选择过敏源</text>
+        <text class="modal-close" bindtap="closeAllergenModal">✕</text>
+      </view>
+      <view class="modal-body">
+        <view class="option-grid">
+          <view 
+            class="option-item {{selectedAllergens.indexOf(item) > -1 ? 'selected' : ''}}"
+            wx:for="{{allergenOptions}}" 
+            wx:key="*this"
+            bindtap="toggleAllergen"
+            data-allergen="{{item}}">
+            <text>{{item}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="modal-button" bindtap="saveAllergens">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 口味偏好选择弹窗 -->
+  <view class="modal-mask" wx:if="{{showTasteModal}}" bindtap="closeTasteModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">选择口味偏好</text>
+        <text class="modal-close" bindtap="closeTasteModal">✕</text>
+      </view>
+      <view class="modal-body">
+        <view class="option-grid">
+          <view 
+            class="option-item {{selectedTastes.indexOf(item) > -1 ? 'selected' : ''}}"
+            wx:for="{{tasteOptions}}" 
+            wx:key="*this"
+            bindtap="toggleTaste"
+            data-taste="{{item}}">
+            <text>{{item}}</text>
+          </view>
+        </view>
+        <view class="spiciness-section">
+          <text class="spiciness-label">辣度等级: {{spicinessLevel}}</text>
+          <slider 
+            class="spiciness-slider"
+            min="0" 
+            max="5" 
+            step="1" 
+            value="{{spicinessLevel}}" 
+            bindchange="onSpicinessChange"
+            activeColor="#FF5252"
+            backgroundColor="#E0E0E0"
+            block-color="#FF5252"
+            block-size="20"/>
+          <view class="spiciness-labels">
+            <text>不辣</text>
+            <text>微辣</text>
+            <text>中辣</text>
+            <text>重辣</text>
+            <text>特辣</text>
+            <text>变态辣</text>
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="modal-button" bindtap="saveTaste">保存</button>
+      </view>
+    </view>
+  </view>
+</view>

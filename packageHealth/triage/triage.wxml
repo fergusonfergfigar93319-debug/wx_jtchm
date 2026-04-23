@@ -1,0 +1,84 @@
+<!-- packageHealth/triage/triage.wxml -->
+<view class="container">
+  <view class="header">
+    <view class="header-tag">
+      <view class="header-tag-icon">🧪</view>
+      <view class="header-texts">
+        <view class="header-title">对症下药</view>
+        <view class="header-desc">输入你的行为与症状，快速匹配最可能的“重点症状”，再去查看对应方案</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="triage-card">
+    <view class="triage-field">
+      <view class="triage-label">你做了什么</view>
+      <textarea
+        class="triage-textarea"
+        placeholder="例如：昨晚通宵加班 + 喝了两杯咖啡，今天头痛又没精神…"
+        value="{{actionText}}"
+        maxlength="200"
+        auto-height
+        bindinput="onActionInput"
+      />
+      <view class="triage-counter">{{actionLen}}/200</view>
+    </view>
+
+    <view class="triage-field">
+      <view class="triage-label">有哪些症状（可多选）</view>
+      <scroll-view class="triage-chip-scroll" scroll-x="true" show-scrollbar="false">
+        <view class="triage-chip-row">
+          <block wx:for="{{quickSymptoms}}" wx:key="id">
+            <view
+              class="triage-chip {{selectedIds.indexOf(item.id) >= 0 ? 'active' : ''}}"
+              style="--chipColor: {{item.color}};"
+              data-id="{{item.id}}"
+              bindtap="toggleSymptom"
+            >
+              <text class="triage-chip-ico">{{item.icon}}</text>
+              <text class="triage-chip-txt">{{item.name}}</text>
+            </view>
+          </block>
+        </view>
+      </scroll-view>
+
+      <input
+        class="triage-input"
+        placeholder="也可以自定义症状关键词（用空格分隔），如：口干 咽痛 反酸"
+        value="{{customSymptoms}}"
+        maxlength="60"
+        bindinput="onCustomInput"
+      />
+    </view>
+
+    <view class="triage-actions">
+      <button class="triage-btn-primary" loading="{{loading}}" bindtap="run">对症下药</button>
+      <button class="triage-btn-ghost" bindtap="clearAll">清空</button>
+    </view>
+  </view>
+
+  <view wx:if="{{hasRun}}" class="result-card">
+    <view wx:if="{{matchedSymptoms.length === 0}}" class="triage-empty">
+      <text class="triage-empty-icon">🩹</text>
+      <text class="triage-empty-text">暂时没匹配到重点症状</text>
+      <text class="triage-empty-hint">试试补充更具体的行为/症状关键词，或选择上方标签</text>
+    </view>
+
+    <view wx:else>
+      <view class="result-title">匹配到的重点症状</view>
+      <view class="matched-grid">
+        <view wx:for="{{matchedSymptoms}}" wx:key="id" class="matched-item" style="border-color: {{item.color}};">
+          <view class="matched-ico">{{item.icon}}</view>
+          <view class="matched-name">{{item.name}}</view>
+          <view class="matched-score">匹配度 {{item.score}}</view>
+          <view class="matched-actions">
+            <button class="btn-secondary" bindtap="goToSolutions" data-id="{{item.id}}">看方案</button>
+            <button class="btn-primary" bindtap="goToAnalysis" data-id="{{item.id}}">分析建议</button>
+          </view>
+        </view>
+      </view>
+      <view class="result-hint">“看方案”会跳到急救包首页并自动定位该症状（本地也能用）。</view>
+    </view>
+  </view>
+</view>
+

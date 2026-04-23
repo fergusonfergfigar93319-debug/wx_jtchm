@@ -1,0 +1,114 @@
+<!--pages/profile-edit/profile-edit.wxml-->
+<view class="container">
+  <!-- 头像编辑 -->
+  <view class="section-card card">
+    <view class="card-header">
+      <text class="card-title">头像</text>
+    </view>
+    <view class="avatar-edit" bindtap="chooseAvatar">
+      <image class="avatar-preview" wx:if="{{userInfo.avatar}}" src="{{userInfo.avatar}}" mode="aspectFill"></image>
+      <view class="avatar-preview avatar-placeholder" wx:else>
+        <text class="avatar-icon">👤</text>
+      </view>
+      <view class="avatar-mask">
+        <text class="avatar-text">{{uploadingAvatar ? '上传中...' : '相册 / 相机'}}</text>
+      </view>
+      <view class="avatar-loading" wx:if="{{uploadingAvatar}}">
+        <view class="loading-spinner"></view>
+      </view>
+    </view>
+    <text class="avatar-section-hint">点击上方从相册或拍照；或选用下方默认形象</text>
+
+    <view class="default-avatar-block">
+      <text class="default-avatar-label">默认形象</text>
+      <view class="default-avatar-grid">
+        <view
+          class="default-avatar-cell {{userInfo.avatar === item.path ? 'is-selected' : ''}}"
+          wx:for="{{defaultAvatars}}"
+          wx:key="id"
+          bindtap="selectDefaultAvatar"
+          data-path="{{item.path}}"
+        >
+          <view class="default-avatar-thumb-wrap">
+            <image class="default-avatar-img" src="{{item.path}}" mode="aspectFill" />
+          </view>
+          <text class="default-avatar-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 基本信息 -->
+  <view class="section-card card">
+    <view class="card-header">
+      <text class="card-title">基本信息</text>
+    </view>
+    <view class="form-list">
+      <view class="form-item">
+        <text class="form-label">昵称</text>
+        <input class="form-input" type="text" placeholder="请输入昵称" value="{{nickname}}" bindinput="onNicknameInput" maxlength="20"></input>
+      </view>
+      <view class="form-item form-item-signature">
+        <view class="form-item-signature-row">
+          <text class="form-label">个性签名</text>
+          <textarea class="form-textarea" placeholder="请输入个性签名" value="{{signature}}" bindinput="onSignatureInput" maxlength="50" auto-height></textarea>
+        </view>
+        <view class="signature-preview-block" wx:if="{{signature}}">
+          <text class="signature-preview-hint">资料页展示效果</text>
+          <view class="signature-preview-inner">
+            <view class="signature-preview-accent"></view>
+            <view class="signature-preview-text">{{signature}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 身体数据 -->
+  <view class="section-card card">
+    <view class="card-header">
+      <text class="card-title">身体数据</text>
+    </view>
+    <view class="form-list">
+      <view class="form-item">
+        <text class="form-label">身高 (cm)</text>
+        <input class="form-input" type="digit" placeholder="请输入身高" value="{{height}}" bindinput="onHeightInput"></input>
+      </view>
+      <view class="form-item">
+        <text class="form-label">体重 (kg)</text>
+        <input class="form-input" type="digit" placeholder="请输入体重" value="{{weight}}" bindinput="onWeightInput"></input>
+      </view>
+      <view class="form-item">
+        <text class="form-label">目标体重 (kg)</text>
+        <input class="form-input" type="digit" placeholder="请输入目标体重" value="{{targetWeight}}" bindinput="onTargetWeightInput"></input>
+      </view>
+    </view>
+  </view>
+
+  <!-- 目标设置 -->
+  <view class="section-card card">
+    <view class="card-header">
+      <text class="card-title">目标设置</text>
+    </view>
+    <view class="form-list">
+      <view class="form-item">
+        <text class="form-label">目标类型</text>
+        <picker mode="selector" range="{{goalTypes}}" range-key="label" value="{{goalTypeIndex}}" bindchange="onGoalTypeChange" data-index="{{goalTypeIndex}}">
+          <view class="picker-view">
+            <text class="picker-text">{{goalTypes[goalTypeIndex].label}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">每日目标 (kcal)</text>
+        <input class="form-input" type="number" placeholder="请输入每日卡路里目标" value="{{dailyKcalLimit}}" bindinput="onDailyKcalInput"></input>
+      </view>
+    </view>
+  </view>
+
+  <!-- 保存按钮 -->
+  <view class="save-button-container">
+    <button class="save-button" bindtap="saveProfile">保存</button>
+  </view>
+</view>

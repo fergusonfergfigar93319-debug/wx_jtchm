@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "识别食材",
+  "navigationBarBackgroundColor": "#2563EB",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F9FAFB",
+  "enablePullDownRefresh": false
+}

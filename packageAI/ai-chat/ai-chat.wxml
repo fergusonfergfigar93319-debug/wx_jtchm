@@ -1,0 +1,380 @@
+<!--pages/ai-chat/ai-chat.wxml-->
+<view class="chat-container">
+  <!-- 顶部栏 -->
+  <view class="header-bar">
+    <view class="header-left">
+      <view class="new-chat-btn" bindtap="showConversationList">
+        <text class="new-chat-icon">💬</text>
+        <text class="new-chat-text">{{currentConversationTitle || '新对话'}}</text>
+        <text class="new-chat-arrow">▼</text>
+      </view>
+    </view>
+    <view class="header-right">
+      <view class="deep-think-toggle {{deepThinkMode ? 'active' : ''}}" bindtap="toggleDeepThink">
+        <text class="deep-think-icon">{{deepThinkMode ? '🧠' : '💡'}}</text>
+        <text class="deep-think-label">{{deepThinkMode ? '深度' : '普通'}}</text>
+      </view>
+      <view class="new-conversation-btn" bindtap="createNewConversation">
+        <text class="new-icon">✏️</text>
+      </view>
+      <view class="custom-btn" bindtap="showCustomModal">
+        <text class="custom-icon">⚙️</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 消息列表区域 -->
+  <scroll-view
+    class="message-list"
+    scroll-y="true"
+    scroll-into-view="{{scrollIntoView}}"
+    scroll-with-animation="true"
+    enable-back-to-top="true"
+  >
+    <!-- ===== 初始欢迎页（无消息时显示） ===== -->
+    <view class="welcome-page" wx:if="{{messages.length === 0}}">
+
+      <!-- AI 身份卡片 -->
+      <view class="ai-hero-card">
+        <view class="ai-hero-avatar">
+          <text class="ai-hero-emoji">🤖</text>
+          <view class="ai-hero-dot"></view>
+        </view>
+        <view class="ai-hero-info">
+          <text class="ai-hero-name">AI 营养师</text>
+          <text class="ai-hero-status">在线 · 随时为你服务</text>
+        </view>
+        <view class="ai-hero-badge">
+          <text class="ai-hero-badge-text">智能</text>
+        </view>
+      </view>
+
+      <!-- 今日数据摘要卡片 -->
+      <view class="data-card" wx:if="{{dailySummary}}">
+        <view class="data-card-header">
+          <text class="data-card-title">📊 今日饮食概览</text>
+          <text class="data-card-date">今天</text>
+        </view>
+        <view class="data-card-body">
+          <view class="data-stat">
+            <text class="data-stat-value">{{todayConsumed}}</text>
+            <text class="data-stat-unit">kcal</text>
+            <text class="data-stat-label">已摄入</text>
+          </view>
+          <view class="data-stat-divider"></view>
+          <view class="data-stat">
+            <text class="data-stat-value">{{todayTarget}}</text>
+            <text class="data-stat-unit">kcal</text>
+            <text class="data-stat-label">目标</text>
+          </view>
+          <view class="data-stat-divider"></view>
+          <view class="data-stat">
+            <text class="data-stat-value {{todayRemainingClass}}">{{todayRemaining}}</text>
+            <text class="data-stat-unit {{todayRemainingClass}}">kcal</text>
+            <text class="data-stat-label">{{todayRemainingLabel}}</text>
+          </view>
+        </view>
+        <!-- 进度条 -->
+        <view class="data-progress-wrap">
+          <view class="data-progress-bar">
+            <view class="data-progress-fill {{todayProgressOver ? 'over' : ''}}"
+              style="width: {{todayProgressPct}}%">
+            </view>
+          </view>
+          <text class="data-progress-pct">{{todayProgressPct}}%</text>
+        </view>
+      </view>
+
+      <!-- 无数据时的提示卡片 -->
+      <view class="data-card data-card-empty" wx:else>
+        <text class="data-card-empty-icon">📋</text>
+        <text class="data-card-empty-text">补全档案与饮食记录后，建议会更精准</text>
+      </view>
+
+      <!-- 功能快捷入口 -->
+      <view class="shortcut-section">
+        <text class="shortcut-title">快捷功能</text>
+        <view class="shortcut-grid">
+          <view class="shortcut-item" bindtap="sendQuickQuestion" data-question="帮我分析今日营养摄入情况">
+            <view class="shortcut-icon-wrap shortcut-blue">
+              <text class="shortcut-icon">📊</text>
+            </view>
+            <text class="shortcut-name">营养分析</text>
+          </view>
+          <view class="shortcut-item" bindtap="sendQuickQuestion" data-question="根据我的目标帮我制定今日餐食计划">
+            <view class="shortcut-icon-wrap shortcut-orange">
+              <text class="shortcut-icon">🍽️</text>
+            </view>
+            <text class="shortcut-name">餐食规划</text>
+          </view>
+          <view class="shortcut-item" bindtap="sendQuickQuestion" data-question="推荐几道适合我的菜谱">
+            <view class="shortcut-icon-wrap shortcut-green">
+              <text class="shortcut-icon">👨‍🍳</text>
+            </view>
+            <text class="shortcut-name">菜谱推荐</text>
+          </view>
+          <view class="shortcut-item" bindtap="sendQuickQuestion" data-question="给我一些个性化的健康饮食建议">
+            <view class="shortcut-icon-wrap shortcut-purple">
+              <text class="shortcut-icon">💡</text>
+            </view>
+            <text class="shortcut-name">健康建议</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 常见问题 -->
+      <view class="faq-section">
+        <text class="faq-title">大家都在问</text>
+        <view class="faq-list">
+          <view
+            class="faq-item"
+            wx:for="{{quickQuestions}}"
+            wx:key="*this"
+            bindtap="sendQuickQuestion"
+            data-question="{{item}}"
+          >
+            <text class="faq-icon">💬</text>
+            <text class="faq-text">{{item}}</text>
+            <text class="faq-arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 底部提示 -->
+      <view class="welcome-footer">
+        <text class="welcome-footer-text">基于你的身体数据与饮食记录生成建议</text>
+      </view>
+
+    </view>
+
+    <!-- 消息列表 -->
+    <view
+      class="message-item {{item.type === 'user' ? 'user-message' : 'ai-message'}}"
+      wx:for="{{messages}}"
+      wx:key="id"
+      id="msg-{{item.id}}"
+    >
+      <!-- AI头像 -->
+      <view class="ai-avatar-wrap" wx:if="{{item.type === 'ai'}}">
+        <view class="message-avatar ai-avatar">
+          <text class="ai-avatar-icon">🤖</text>
+        </view>
+      </view>
+      <!-- 用户头像 -->
+      <view class="message-avatar user-avatar" wx:if="{{item.type === 'user'}}">
+        <text>👤</text>
+      </view>
+
+      <view class="message-content {{item.type === 'user' ? 'user-content' : 'ai-content'}}">
+        <!-- 消息文本：支持换行渲染 -->
+        <view class="message-text-wrap" wx:if="{{item.text}}">
+          <text class="message-text" selectable="true" space="nbsp">{{item.text}}</text>
+        </view>
+        <!-- 附件展示 -->
+        <view class="message-attachments" wx:if="{{item.type === 'user' && item.attachments && item.attachments.length > 0}}">
+          <image
+            class="msg-attach-img"
+            wx:for="{{item.attachments}}"
+            wx:for-item="att"
+            wx:key="name"
+            wx:if="{{att.kind === 'image'}}"
+            src="{{att.localPath || att.url}}"
+            mode="aspectFill"
+          />
+          <view class="msg-attach-file" wx:for="{{item.attachments}}" wx:for-item="att" wx:key="name" wx:if="{{att.kind === 'file'}}">
+            <text class="msg-attach-file-name">📄 {{att.name}}</text>
+          </view>
+        </view>
+        <!-- 消息底部：时间 + 操作 -->
+        <view class="message-meta">
+          <text class="message-time">{{item.time}}</text>
+          <view class="message-actions" wx:if="{{item.type === 'ai'}}">
+            <view class="action-btn" bindtap="copyMessage" data-text="{{item.text}}">
+              <text class="action-btn-icon">📋</text>
+              <text class="action-btn-text">复制</text>
+            </view>
+            <view class="action-btn {{item.liked ? 'liked' : ''}}" bindtap="likeMessage" data-id="{{item.id}}">
+              <text class="action-btn-icon">{{item.liked ? '👍' : '👍'}}</text>
+              <text class="action-btn-text">{{item.liked ? '已赞' : '点赞'}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- AI思考中提示 -->
+    <view class="message-item ai-message" wx:if="{{isThinking}}">
+      <view class="ai-avatar-wrap">
+        <view class="message-avatar ai-avatar">
+          <text class="ai-avatar-icon">🤖</text>
+        </view>
+        <view class="ai-avatar-dot thinking-dot-active"></view>
+      </view>
+      <view class="message-content ai-content thinking">
+        <view class="thinking-dots">
+          <view class="dot"></view>
+          <view class="dot"></view>
+          <view class="dot"></view>
+        </view>
+        <text class="thinking-text">{{deepThinkMode ? '深度思考中...' : 'AI 正在思考...'}}</text>
+      </view>
+    </view>
+
+    <!-- 底部快捷问题入口（消息列表末尾，始终可见） -->
+    <view class="quick-entry" wx:if="{{messages.length > 0}}">
+      <view class="quick-entry-scroll">
+        <scroll-view scroll-x class="quick-scroll">
+          <view
+            class="quick-chip"
+            wx:for="{{quickQuestions}}"
+            wx:key="*this"
+            bindtap="sendQuickQuestion"
+            data-question="{{item}}"
+          >{{item}}</view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <!-- 底部占位，防止被输入栏遮挡 -->
+    <view class="list-bottom-pad"></view>
+  </scroll-view>
+
+  <!-- 底部输入栏 -->
+  <view class="input-bar">
+    <!-- 附件预览 -->
+    <view class="attach-preview" wx:if="{{pendingAttachments.length > 0}}">
+      <scroll-view class="attach-scroll" scroll-x>
+        <view class="attach-item" wx:for="{{pendingAttachments}}" wx:key="id">
+          <view class="attach-thumb" wx:if="{{item.kind === 'image'}}" bindtap="previewAttachment" data-id="{{item.id}}">
+            <image class="attach-img" src="{{item.localPath}}" mode="aspectFill" />
+          </view>
+          <view class="attach-file" wx:else bindtap="openAttachment" data-id="{{item.id}}">
+            <text class="attach-file-icon">📄</text>
+            <text class="attach-file-name">{{item.name}}</text>
+          </view>
+          <view class="attach-remove" bindtap="removePendingAttachment" data-id="{{item.id}}">×</view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 输入框行 -->
+    <view class="input-row">
+      <view class="input-wrapper">
+        <!-- 左侧：附件 -->
+        <view class="action-icon" bindtap="chooseAttachment">
+          <text class="icon">📎</text>
+        </view>
+
+        <!-- 输入框 -->
+        <textarea
+          class="message-input"
+          placeholder="{{deepThinkMode ? '深度思考模式已开启...' : '发消息，或 @ 选择技能'}}"
+          value="{{inputText}}"
+          bindinput="onInput"
+          bindfocus="onInputFocus"
+          bindblur="onInputBlur"
+          confirm-type="send"
+          bindconfirm="sendMessage"
+          auto-height
+          maxlength="500"
+          cursor-spacing="20"
+          show-confirm-bar="{{false}}"
+        ></textarea>
+
+        <!-- 右侧：技能 + 语音 -->
+        <view class="action-icon" bindtap="showSkillPanel">
+          <text class="icon">⚡</text>
+        </view>
+        <view class="action-icon voice-btn {{isRecording ? 'recording' : ''}}" bindtap="toggleVoiceInput">
+          <text class="icon">🎤</text>
+        </view>
+      </view>
+
+      <!-- 发送按钮 -->
+      <view class="send-btn {{inputText.trim() || pendingAttachments.length ? 'active' : ''}}" bindtap="sendMessage">
+        <text class="send-icon">↑</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 技能选择面板 -->
+  <view class="skill-panel {{showSkillPanel ? 'show' : ''}}" catchtap="hideSkillPanel">
+    <view class="skill-content" catchtap="stopPropagation">
+      <view class="skill-header">
+        <text class="skill-title">选择技能</text>
+        <view class="skill-close" bindtap="hideSkillPanel">×</view>
+      </view>
+      <view class="skill-grid">
+        <view class="skill-item" wx:for="{{skills}}" wx:key="id" bindtap="selectSkill" data-skill="{{item}}">
+          <view class="skill-icon-wrap">
+            <text class="skill-icon">{{item.icon}}</text>
+          </view>
+          <text class="skill-name">{{item.name}}</text>
+          <text class="skill-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 自定义栏目弹窗 -->
+  <view class="custom-modal {{showCustomModal ? 'show' : ''}}" bindtap="hideCustomModal">
+    <view class="custom-content" catchtap="stopPropagation">
+      <view class="custom-header">
+        <text class="custom-title">自定义栏目</text>
+        <view class="custom-close" bindtap="hideCustomModal">×</view>
+      </view>
+      <view class="custom-body">
+        <view class="custom-item" wx:for="{{customOptions}}" wx:key="id">
+          <text class="custom-label">{{item.label}}</text>
+          <switch checked="{{item.enabled}}" bindchange="toggleCustomOption" data-id="{{item.id}}" color="#ff6b35"/>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 语音录制提示 -->
+  <view class="voice-recording {{isRecording ? 'show' : ''}}">
+    <view class="recording-content">
+      <view class="recording-wave">
+        <view class="wave-bar" wx:for="{{[1,2,3,4,5]}}" wx:key="*this" style="animation-delay: {{index * 0.1}}s"></view>
+      </view>
+      <text class="recording-text">正在录音，点击结束</text>
+      <text class="recording-time">{{recordingTime}}s</text>
+      <view class="recording-stop-btn" bindtap="toggleVoiceInput">停止</view>
+    </view>
+  </view>
+
+  <!-- 对话列表侧边栏 -->
+  <view class="conversation-sidebar {{showConversationList ? 'show' : ''}}" bindtap="hideConversationList">
+    <view class="sidebar-content" catchtap="stopPropagation">
+      <view class="sidebar-header">
+        <text class="sidebar-title">历史对话</text>
+        <view class="sidebar-new-btn" bindtap="createNewConversation">
+          <text>✏️ 新建</text>
+        </view>
+        <view class="sidebar-close" bindtap="hideConversationList">×</view>
+      </view>
+      <view class="sidebar-body">
+        <view
+          class="conversation-item {{item.id === currentConversationId ? 'active' : ''}}"
+          wx:for="{{conversations}}"
+          wx:key="id"
+          bindtap="switchConversation"
+          data-id="{{item.id}}"
+        >
+          <view class="conversation-info">
+            <text class="conversation-title">{{item.title || '新对话'}}</text>
+            <text class="conversation-preview" wx:if="{{item.lastMessage}}">{{item.lastMessage}}</text>
+            <text class="conversation-time">{{item.updateTime}}</text>
+          </view>
+          <view class="conversation-delete" catchtap="deleteConversation" data-id="{{item.id}}">🗑️</view>
+        </view>
+        <view class="empty-conversations" wx:if="{{conversations.length === 0}}">
+          <text class="empty-icon">💬</text>
+          <text class="empty-text">暂无对话记录</text>
+          <text class="empty-hint">点击"新建"开始对话</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

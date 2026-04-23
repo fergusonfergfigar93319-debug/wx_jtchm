@@ -1,0 +1,156 @@
+<!-- pages/test-design/test-design.wxml -->
+<view class="test-container page-enter">
+  <!-- 顶部标题 -->
+  <view class="test-header">
+    <view class="test-title">设计系统测试页面</view>
+    <view class="test-subtitle">2025+ 现代设计系统展示</view>
+  </view>
+
+  <!-- 设计系统展示 -->
+  <view class="design-system-section">
+    <!-- 颜色系统 -->
+    <view class="section-title">
+      <view class="section-title-icon">🎨</view>
+      <view class="section-title-text">颜色系统</view>
+    </view>
+    
+    <view class="color-grid">
+      <view class="color-item primary-color">
+        <view class="color-sample" style="background: var(--color-primary);"></view>
+        <view class="color-name">主色 - 活力绿</view>
+        <view class="color-value">#34D399</view>
+      </view>
+      
+      <view class="color-item secondary-color">
+        <view class="color-sample" style="background: var(--color-secondary);"></view>
+        <view class="color-name">辅色 - 科技蓝</view>
+        <view class="color-value">#60A5FA</view>
+      </view>
+      
+      <view class="color-item accent-color">
+        <view class="color-sample" style="background: var(--color-accent);"></view>
+        <view class="color-name">强调色 - 浅紫</view>
+        <view class="color-value">#A78BFA</view>
+      </view>
+      
+      <view class="color-item warning-color">
+        <view class="color-sample" style="background: var(--color-warning);"></view>
+        <view class="color-name">警告色 - 暖橙</view>
+        <view class="color-value">#FB923C</view>
+      </view>
+    </view>
+
+    <!-- 卡片系统 -->
+    <view class="section-title">
+      <view class="section-title-icon">🃏</view>
+      <view class="section-title-text">卡片系统</view>
+    </view>
+    
+    <view class="card-system">
+      <view class="card card-primary animate-scale-in-bounce">
+        <view class="card-header">
+          <view class="card-title">主要卡片</view>
+          <view class="card-badge">NEW</view>
+        </view>
+        <view class="card-content">
+          <view class="card-text">这是一个主要卡片示例，展示了现代卡片设计。</view>
+        </view>
+        <view class="card-footer">
+          <view class="card-action">点击查看</view>
+        </view>
+      </view>
+      
+      <view class="card card-secondary animate-scale-in-bounce delay-200">
+        <view class="card-header">
+          <view class="card-title">次要卡片</view>
+          <view class="card-badge secondary">HOT</view>
+        </view>
+        <view class="card-content">
+          <view class="card-text">这是一个次要卡片示例，展示了不同的卡片样式。</view>
+        </view>
+        <view class="card-footer">
+          <view class="card-action">点击查看</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 按钮系统 -->
+    <view class="section-title">
+      <view class="section-title-icon">🔘</view>
+      <view class="section-title-text">按钮系统</view>
+    </view>
+    
+    <view class="button-system">
+      <view class="button-row">
+        <button class="btn-primary animate-fade-in-up">主要按钮</button>
+        <button class="btn-secondary animate-fade-in-up delay-100">次要按钮</button>
+      </view>
+      
+      <view class="button-row">
+        <button class="btn-warning animate-fade-in-up delay-200">警告按钮</button>
+        <button class="btn-outline animate-fade-in-up delay-300">轮廓按钮</button>
+      </view>
+    </view>
+
+    <!-- 动画系统 -->
+    <view class="section-title">
+      <view class="section-title-icon">✨</view>
+      <view class="section-title-text">动画系统</view>
+    </view>
+    
+    <view class="animation-system">
+      <view class="animation-grid">
+        <view class="animation-item animate-pulse">
+          <view class="animation-icon">💓</view>
+          <view class="animation-name">脉动</view>
+        </view>
+        
+        <view class="animation-item animate-bounce">
+          <view class="animation-icon">🏀</view>
+          <view class="animation-name">弹跳</view>
+        </view>
+        
+        <view class="animation-item animate-float">
+          <view class="animation-icon">☁️</view>
+          <view class="animation-name">浮动</view>
+        </view>
+        
+        <view class="animation-item animate-spin">
+          <view class="animation-icon">🌀</view>
+          <view class="animation-name">旋转</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 标签系统 -->
+    <view class="section-title">
+      <view class="section-title-icon">🏷️</view>
+      <view class="section-title-text">标签系统</view>
+    </view>
+    
+    <view class="tag-system">
+      <view class="tag tag-primary">主要标签</view>
+      <view class="tag tag-secondary">次要标签</view>
+      <view class="tag tag-warning">警告标签</view>
+      <view class="tag tag-success">成功标签</view>
+      <view class="tag tag-info">信息标签</view>
+    </view>
+
+    <!-- 加载状态 -->
+    <view class="section-title">
+      <view class="section-title-icon">⏳</view>
+      <view class="section-title-text">加载状态</view>
+    </view>
+    
+    <view class="loading-system">
+      <view class="loading-spinner-large"></view>
+      <view class="loading-text">加载中...</view>
+    </view>
+  </view>
+
+  <!-- 底部信息 -->
+  <view class="test-footer">
+    <view class="footer-text">设计系统测试完成</view>
+    <view class="footer-hint">所有组件均使用2025+现代设计规范</view>
+  </view>
+</view>

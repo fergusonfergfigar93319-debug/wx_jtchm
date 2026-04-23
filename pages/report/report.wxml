@@ -1,0 +1,537 @@
+<!--pages/report/report.wxml-->
+<view class="container page-container">
+  <!-- 顶部统计卡片 -->
+  <view class="summary-cards">
+    <view class="summary-card consumed-card">
+      <view class="summary-icon">🔥</view>
+      <view class="summary-content">
+        <text class="summary-label">今日摄入</text>
+        <text class="summary-value">{{dailyData.consumed || 0}}</text>
+        <text class="summary-unit">kcal</text>
+      </view>
+      <view class="summary-progress">
+        <view class="progress-circle" style="background: conic-gradient(#34c759 {{progressPercent * 3.6}}deg, #e0e0e0 {{progressPercent * 3.6}}deg 360deg);"></view>
+        <text class="progress-text">{{progressPercent}}%</text>
+      </view>
+    </view>
+    
+    <view class="summary-card target-card">
+      <view class="summary-icon">🎯</view>
+      <view class="summary-content">
+        <text class="summary-label">目标摄入</text>
+        <text class="summary-value">{{dailyData.target || 2000}}</text>
+        <text class="summary-unit">kcal</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 日历条 -->
+  <view class="calendar-wrapper">
+    <view class="calendar-header">
+      <text class="calendar-title">📅 选择日期</text>
+      <view class="view-switch">
+        <text class="switch-item pressable {{viewMode === 'day' ? 'active' : ''}}" bindtap="switchView" data-mode="day" hover-class="press-hover" hover-stay-time="80">日</text>
+        <text class="switch-item pressable {{viewMode === 'week' ? 'active' : ''}}" bindtap="switchView" data-mode="week" hover-class="press-hover" hover-stay-time="80">周</text>
+        <text class="switch-item pressable {{viewMode === 'month' ? 'active' : ''}}" bindtap="switchView" data-mode="month" hover-class="press-hover" hover-stay-time="80">月</text>
+      </view>
+    </view>
+    <scroll-view class="calendar-bar" scroll-x="true" scroll-left="{{scrollLeft}}">
+      <view class="calendar-list">
+        <view 
+          class="calendar-item pressable {{selectedDate === item.date ? 'active' : ''}} {{item.isToday ? 'today' : ''}} {{item.status}} {{item.weekend ? 'weekend' : ''}}"
+          wx:for="{{calendarDays}}"
+          wx:for-index="calIdx"
+          wx:key="calIdx"
+          bindtap="selectDate"
+          data-date="{{item.date}}"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <view class="date-wrapper">
+            <text class="date-text">{{item.day}}</text>
+            <text class="week-text">{{item.week}}</text>
+          </view>
+          <view class="status-indicator">
+            <view class="status-dot"></view>
+            <view wx:if="{{item.isToday}}" class="today-badge">今</view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 核心数据 - 日报视图 -->
+  <view class="data-section" wx:if="{{viewMode === 'day'}}">
+    <!-- 饮水（与首页联动） -->
+    <view
+      class="water-intake-card pressable"
+      bindtap="goToWaterRecord"
+      hover-class="press-hover"
+      hover-stay-time="80"
+    >
+      <view class="water-intake-header">
+        <view class="water-intake-title-wrap">
+          <text class="water-intake-icon">💧</text>
+          <text class="water-intake-title">饮水记录</text>
+        </view>
+        <view class="water-intake-badge">
+          <text class="water-intake-num">{{todayWater}}</text>
+          <text class="water-intake-div">/</text>
+          <text class="water-intake-total">{{waterGoal}}</text>
+          <text class="water-intake-unit">ml</text>
+        </view>
+      </view>
+      <view class="water-intake-progress-bar">
+        <view class="water-intake-progress-bg">
+          <view class="water-intake-progress-fill" style="width: {{waterGoal > 0 ? (todayWater / waterGoal * 100) : 0}}%;"></view>
+        </view>
+      </view>
+      <view class="water-intake-footer">
+        <view class="water-intake-btn-hint">查看饮水记录</view>
+        <text class="water-intake-tip-inline" wx:if="{{selectedDate !== waterDateToday}}">含饮食估算水分</text>
+      </view>
+    </view>
+
+    <!-- 卡路里对比 -->
+    <view class="chart-card">
+      <view class="chart-header">
+        <view class="chart-title-wrapper">
+          <text class="chart-icon">📊</text>
+          <text class="chart-title">卡路里摄入</text>
+        </view>
+        <view class="chart-subtitle">今日 vs 目标</view>
+      </view>
+      <view class="chart-container">
+        <canvas 
+          canvas-id="calorieChart" 
+          class="chart-canvas"
+          width="{{canvasWidth}}"
+          height="{{canvasHeight}}"
+          style="width: {{canvasWidth}}px; height: {{canvasHeight}}px;"
+        ></canvas>
+      </view>
+      <view class="chart-legend">
+        <view class="legend-item">
+          <view class="legend-color consumed-color"></view>
+          <text class="legend-label">已摄入</text>
+          <text class="legend-value">{{dailyData.consumed || 0}} kcal</text>
+        </view>
+        <view class="legend-divider"></view>
+        <view class="legend-item">
+          <view class="legend-color target-color"></view>
+          <text class="legend-label">目标</text>
+          <text class="legend-value">{{dailyData.target || 2000}} kcal</text>
+        </view>
+        <view class="legend-divider"></view>
+        <view class="legend-item">
+          <view class="legend-color remaining-color"></view>
+          <text class="legend-label">剩余</text>
+          <text class="legend-value">{{remainingCalories}} kcal</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 三大营养素 -->
+    <view class="chart-card">
+      <view class="chart-header">
+        <view class="chart-title-wrapper">
+          <text class="chart-icon">🥗</text>
+          <text class="chart-title">营养素分布</text>
+        </view>
+        <view class="nutrient-header-row">
+          <view class="chart-subtitle">碳水 / 蛋白质 / 脂肪</view>
+          <view class="nutrient-scope-switch" aria-label="营养素统计口径">
+            <text class="scope-item pressable {{nutrientScope === 'day' ? 'active' : ''}}" bindtap="switchNutrientScope" data-scope="day" hover-class="press-hover" hover-stay-time="80">本日</text>
+            <text class="scope-item pressable {{nutrientScope === '7d' ? 'active' : ''}}" bindtap="switchNutrientScope" data-scope="7d" hover-class="press-hover" hover-stay-time="80">近7天</text>
+            <text class="scope-item pressable {{nutrientScope === '30d' ? 'active' : ''}}" bindtap="switchNutrientScope" data-scope="30d" hover-class="press-hover" hover-stay-time="80">近30天</text>
+          </view>
+        </view>
+        <view class="nutrient-chart-legend">
+          <view class="nutrient-legend-item"><view class="nutrient-legend-dot carb-dot"></view><text>碳水</text></view>
+          <view class="nutrient-legend-item"><view class="nutrient-legend-dot protein-dot"></view><text>蛋白质</text></view>
+          <view class="nutrient-legend-item"><view class="nutrient-legend-dot fat-dot"></view><text>脂肪</text></view>
+        </view>
+      </view>
+      <view class="chart-container nutrient-chart-container">
+        <canvas 
+          canvas-id="nutrientChart" 
+          class="chart-canvas"
+          width="{{canvasNutrientWidth}}"
+          height="{{canvasNutrientHeight}}"
+          style="width: {{canvasNutrientWidth}}px; height: {{canvasNutrientHeight}}px;"
+        ></canvas>
+      </view>
+      <view class="nutrient-stats">
+        <view class="nutrient-stat-item pressable {{selectedNutrientType === 'carb' ? 'active' : ''}}" bindtap="onNutrientTap" data-type="carb" hover-class="press-hover" hover-stay-time="80">
+          <view class="stat-icon carb-icon">🌾</view>
+          <view class="stat-content">
+            <text class="stat-label">碳水</text>
+            <text class="stat-value">{{nutrientDisplay.carb || 0}}g</text>
+            <text class="stat-percent">{{nutrientPercents.carb}}%</text>
+          </view>
+        </view>
+        <view class="nutrient-stat-item pressable {{selectedNutrientType === 'protein' ? 'active' : ''}}" bindtap="onNutrientTap" data-type="protein" hover-class="press-hover" hover-stay-time="80">
+          <view class="stat-icon protein-icon">🥩</view>
+          <view class="stat-content">
+            <text class="stat-label">蛋白质</text>
+            <text class="stat-value">{{nutrientDisplay.protein || 0}}g</text>
+            <text class="stat-percent">{{nutrientPercents.protein}}%</text>
+          </view>
+        </view>
+        <view class="nutrient-stat-item pressable {{selectedNutrientType === 'fat' ? 'active' : ''}}" bindtap="onNutrientTap" data-type="fat" hover-class="press-hover" hover-stay-time="80">
+          <view class="stat-icon fat-icon">🥑</view>
+          <view class="stat-content">
+            <text class="stat-label">脂肪</text>
+            <text class="stat-value">{{nutrientDisplay.fat || 0}}g</text>
+            <text class="stat-percent">{{nutrientPercents.fat}}%</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 健康管理总览：运动 / 碳足迹 / 补救 / 挑战 -->
+    <view class="health-summary-section">
+      <view class="health-summary-header">
+        <text class="health-summary-title">健康管理总览</text>
+        <text class="health-summary-subtitle">运动 · 碳足迹 · 补救 · 挑战</text>
+      </view>
+      <view class="health-summary-grid">
+        <view class="health-summary-card pressable" bindtap="goToWorkoutPage" hover-class="press-hover" hover-stay-time="80">
+          <view class="health-icon-circle workout-icon">🏃</view>
+          <view class="health-card-main">
+            <text class="health-card-label">今日运动</text>
+            <text class="health-card-value">{{todayWorkoutStats.totalCalories || 0}} kcal</text>
+          </view>
+          <text class="health-card-extra">{{todayWorkoutStats.totalDistance || 0}} km · {{todayWorkoutStats.workoutCount || 0}} 次</text>
+        </view>
+        <view class="health-summary-card pressable" bindtap="goToCarbonTracker" hover-class="press-hover" hover-stay-time="80">
+          <view class="health-icon-circle carbon-icon">🌍</view>
+          <view class="health-card-main">
+            <text class="health-card-label">今日碳足迹</text>
+            <text class="health-card-value">{{todayCarbonBrief.total || 0}} kg CO₂e</text>
+          </view>
+          <text class="health-card-extra">查看趋势与环保成就</text>
+        </view>
+        <view class="health-summary-card pressable" bindtap="goToRemedyPage" hover-class="press-hover" hover-stay-time="80">
+          <view class="health-icon-circle remedy-icon">🩹</view>
+          <view class="health-card-main">
+            <text class="health-card-label">健康补救</text>
+            <text class="health-card-value">饮食失衡后怎么补救</text>
+          </view>
+          <text class="health-card-extra">熬夜 / 暴食 / 宿醉等场景</text>
+        </view>
+        <view class="health-summary-card pressable" bindtap="goToChallengePage" hover-class="press-hover" hover-stay-time="80">
+          <view class="health-icon-circle challenge-icon">🥇</view>
+          <view class="health-card-main">
+            <text class="health-card-label">健康挑战</text>
+            <text class="health-card-value">参与打卡赢勋章</text>
+          </view>
+          <text class="health-card-extra" bindtap="goToAchievementsPage" catchtap="goToAchievementsPage">查看荣誉墙 ›</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- AI 营养师小结（日报优先展示） -->
+  <view class="ai-section" wx:if="{{viewMode === 'day' && aiSummary}}">
+    <view class="ai-header">
+      <view class="ai-title-wrap">
+        <text class="ai-icon">🤖</text>
+        <text class="ai-title">AI 营养师 · 今日小结</text>
+      </view>
+      <text class="ai-date">{{selectedDate}}</text>
+    </view>
+    <view class="ai-body">
+      <text class="ai-main">{{aiSummary.overview || aiSummary.summary || aiSummary}}</text>
+      <view wx:if="{{aiSummary.suggestions && aiSummary.suggestions.length}}" class="ai-suggest-list">
+        <view
+          class="ai-suggest-item"
+          wx:for="{{aiSummary.suggestions}}"
+          wx:key="index"
+        >
+          <text class="dot">•</text>
+          <text class="text">{{item}}</text>
+        </view>
+      </view>
+      <view wx:if="{{healthWarnings && healthWarnings.length}}" class="ai-warning">
+        <text class="ai-warning-title">⚠️ 今日需要注意：</text>
+        <view
+          class="ai-warning-item"
+          wx:for="{{healthWarnings}}"
+          wx:key="id"
+        >
+          <text>{{item.message || item}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="ai-footer">
+      <text class="ai-footer-text">建议仅供参考，如有基础疾病请遵医嘱。</text>
+      <text class="ai-link pressable" bindtap="goToAIChat" hover-class="press-hover" hover-stay-time="80">向 AI 营养师继续提问 ›</text>
+    </view>
+  </view>
+
+  <!-- 时间轴 - 日报视图 -->
+  <view class="timeline-section" wx:if="{{viewMode === 'day'}}">
+    <view class="section-header">
+      <view class="section-title-wrapper">
+        <text class="section-icon">⏰</text>
+        <text class="section-title">今日时间轴</text>
+      </view>
+      <text class="section-count">共 {{timeline.length}} 条记录</text>
+    </view>
+    
+    <!-- 按餐次分组显示 -->
+    <view wx:if="{{groupedTimeline.length > 0}}" class="timeline-groups">
+      <view 
+        class="meal-group"
+        wx:for="{{groupedTimeline}}"
+        wx:key="mealType"
+      >
+        <!-- 餐次标题栏 -->
+        <view class="meal-group-header">
+          <view class="meal-group-title-wrapper">
+            <view class="meal-group-dot {{item.mealType}}"></view>
+            <text class="meal-group-label">{{item.label}}</text>
+            <text class="meal-group-count">({{item.items.length}}项)</text>
+          </view>
+          <view class="meal-group-total">
+            <text class="meal-group-total-label">总计</text>
+            <text class="meal-group-total-value">{{item.totalCalories}} kcal</text>
+          </view>
+        </view>
+        
+        <!-- 该餐次的记录列表 -->
+        <view class="timeline">
+          <view 
+            class="timeline-item pressable"
+            wx:for="{{item.items}}"
+            wx:for-item="record"
+            wx:key="id"
+            bindtap="editIntake"
+            data-id="{{record.id}}"
+            bindlongpress="changeMealType"
+            data-meal-type="{{record.meal_type}}"
+            hover-class="press-hover"
+            hover-stay-time="80"
+          >
+            <view class="timeline-line"></view>
+            <view class="timeline-dot {{record.meal_type}}"></view>
+            <view class="timeline-content-wrapper">
+              <view class="timeline-header">
+                <view class="timeline-time-wrapper">
+                  <text class="timeline-time">{{record.meal_time}}</text>
+                  <text class="meal-type-hint">长按可修改餐次</text>
+                </view>
+                <view class="timeline-cal-badge">
+                  <text class="cal-icon">🔥</text>
+                  <text class="cal-value">{{record.calories}} kcal</text>
+                </view>
+              </view>
+              <view class="timeline-name">{{record.food_name}}</view>
+              <view wx:if="{{record.portion}}" class="timeline-portion">分量: {{record.portion}}</view>
+              <view wx:if="{{record.protein != null || record.fat != null || record.carbs != null}}" class="timeline-nutrients">
+                <text wx:if="{{record.protein != null}}">蛋白质 {{record.protein}}g</text>
+                <text wx:if="{{record.fat != null}}">脂肪 {{record.fat}}g</text>
+                <text wx:if="{{record.carbs != null}}">碳水 {{record.carbs}}g</text>
+              </view>
+              <view wx:if="{{record.note}}" class="timeline-note">备注: {{record.note}}</view>
+            </view>
+            <view class="timeline-action">
+              <text class="action-icon">›</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 空状态 -->
+    <view wx:if="{{timeline.length === 0}}" class="empty-timeline">
+      <view class="empty-icon">📝</view>
+      <text class="empty-text">今天还没有记录饮食</text>
+      <text class="empty-hint">快去记录你的第一餐吧！</text>
+      <button class="btn-primary mt-20" bindtap="goToAdd">添加记录</button>
+    </view>
+  </view>
+
+  <!-- 周报视图 -->
+  <view wx:if="{{viewMode === 'week'}}" class="weekly-section">
+    <!-- 周报统计卡片 -->
+    <view class="weekly-stats">
+      <view class="weekly-header">
+        <text class="weekly-title">📊 本周统计</text>
+        <text class="weekly-date">{{weekStartDate}} 至 {{weekEndDate}}</text>
+      </view>
+      
+      <view class="weekly-summary">
+        <view class="weekly-stat-item">
+          <text class="stat-label">总摄入</text>
+          <text class="stat-value">{{weeklyData.total_consumed || 0}}</text>
+          <text class="stat-unit">kcal</text>
+        </view>
+        <view class="weekly-stat-item">
+          <text class="stat-label">日均摄入</text>
+          <text class="stat-value">{{weeklyData.avg_daily_consumed || 0}}</text>
+          <text class="stat-unit">kcal</text>
+        </view>
+      </view>
+
+      <!-- 极值榜单 -->
+      <view class="extreme-list">
+        <view class="extreme-item max-item" wx:if="{{weeklyData.max_calorie_item}}">
+          <view class="extreme-icon">🔥</view>
+          <view class="extreme-content">
+            <text class="extreme-label">热量最高</text>
+            <text class="extreme-name">{{weeklyData.max_calorie_item.food_name}}</text>
+            <text class="extreme-value">{{weeklyData.max_calorie_item.calories}} kcal</text>
+          </view>
+        </view>
+        
+        <view class="extreme-item min-item" wx:if="{{weeklyData.min_calorie_item}}">
+          <view class="extreme-icon">🥗</view>
+          <view class="extreme-content">
+            <text class="extreme-label">热量最低</text>
+            <text class="extreme-name">{{weeklyData.min_calorie_item.food_name}}</text>
+            <text class="extreme-value">{{weeklyData.min_calorie_item.calories}} kcal</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 历史趋势图表 -->
+    <view class="chart-card">
+      <view class="chart-header">
+        <view class="chart-title-wrapper">
+          <text class="chart-icon">📈</text>
+          <text class="chart-title">最近7天趋势</text>
+        </view>
+      </view>
+      <view class="chart-container trend-chart-container">
+        <canvas 
+          canvas-id="trendChart" 
+          class="chart-canvas"
+        ></canvas>
+      </view>
+    </view>
+
+    <!-- 本周时间轴 -->
+    <view class="timeline-section">
+      <view class="section-header">
+        <view class="section-title-wrapper">
+          <text class="section-icon">⏰</text>
+          <text class="section-title">本周记录</text>
+        </view>
+        <text class="section-count">共 {{timeline.length}} 条记录</text>
+      </view>
+      <view class="timeline">
+        <view 
+          class="timeline-item pressable"
+          wx:for="{{timeline}}"
+          wx:key="id"
+          bindtap="editIntake"
+          data-id="{{item.id}}"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <view class="timeline-line"></view>
+          <view class="timeline-dot {{item.meal_type}}"></view>
+          <view class="timeline-content-wrapper">
+            <view class="timeline-header">
+              <view class="timeline-time-wrapper">
+                <text class="timeline-date">{{item.date}}</text>
+                <text class="timeline-time">{{item.meal_time}}</text>
+                <text class="meal-type-label">{{mealTypeLabels[item.meal_type] || '其他'}}</text>
+              </view>
+              <view class="timeline-cal-badge">
+                <text class="cal-icon">🔥</text>
+                <text class="cal-value">{{item.calories}} kcal</text>
+              </view>
+            </view>
+            <view class="timeline-name">{{item.food_name}}</view>
+          </view>
+          <view class="timeline-action">
+            <text class="action-icon">›</text>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{timeline.length === 0}}" class="empty-timeline">
+        <view class="empty-icon">📝</view>
+        <text class="empty-text">本周还没有记录</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 月报视图 -->
+  <view wx:if="{{viewMode === 'month'}}" class="monthly-section">
+    <!-- 历史趋势图表 -->
+    <view class="chart-card">
+      <view class="chart-header">
+        <view class="chart-title-wrapper">
+          <text class="chart-icon">📈</text>
+          <text class="chart-title">最近7天趋势</text>
+        </view>
+      </view>
+      <view class="chart-container trend-chart-container">
+        <canvas 
+          canvas-id="trendChart" 
+          class="chart-canvas"
+        ></canvas>
+      </view>
+    </view>
+
+    <!-- 月报日历 -->
+    <view class="monthly-calendar">
+      <view class="calendar-header">
+        <text class="calendar-title">📅 本月概览</text>
+      </view>
+      <view class="calendar-legend">
+        <view class="legend-item">
+          <view class="legend-dot perfect"></view>
+          <text>达标</text>
+        </view>
+        <view class="legend-item">
+          <view class="legend-dot exceeded"></view>
+          <text>超标</text>
+        </view>
+        <view class="legend-item">
+          <view class="legend-dot insufficient"></view>
+          <text>不足</text>
+        </view>
+        <view class="legend-item">
+          <view class="legend-dot none"></view>
+          <text>无记录</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 营养素详情弹层（点击碳水/蛋白质/脂肪） -->
+  <view class="modal nutrient-modal {{showNutrientDetail ? 'show' : ''}}" catchtap="closeNutrientDetail">
+    <view class="modal-content nutrient-modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">{{nutrientDetail.title || '营养素详情'}}</text>
+        <text class="modal-close" bindtap="closeNutrientDetail">✕</text>
+      </view>
+      <view class="modal-body">
+        <view class="nutrient-detail-summary">
+          <view class="nutrient-detail-pill">{{nutrientDetail.scopeLabel}}</view>
+          <view class="nutrient-detail-metrics">
+            <text class="nutrient-detail-gram">{{nutrientDetail.grams}}g</text>
+            <text class="nutrient-detail-percent">{{nutrientDetail.percent}}%</text>
+            <text class="nutrient-detail-kcal">≈ {{nutrientDetail.kcal}} kcal</text>
+          </view>
+        </view>
+        <view class="nutrient-detail-range">
+          <text class="range-label">建议区间</text>
+          <text class="range-value">{{nutrientDetail.rangeText}}</text>
+        </view>
+        <view class="nutrient-detail-tip">
+          <text class="tip-title">{{nutrientDetail.levelLabel}}</text>
+          <text class="tip-text">{{nutrientDetail.tip}}</text>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-secondary" bindtap="closeNutrientDetail">知道了</button>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,104 @@
+<!--pages/remedy-symptom/remedy-symptom.wxml - 症状专门分析建议页 -->
+<view class="container">
+  <!-- 症状头部 -->
+  <view class="symptom-header">
+    <view class="symptom-icon-wrap">
+      <text class="symptom-icon">{{symptomIcon}}</text>
+    </view>
+    <view class="symptom-title">{{symptomName}}</view>
+    <view class="symptom-desc" wx:if="{{symptomDesc}}">{{symptomDesc}}</view>
+  </view>
+
+  <!-- 症状分析 -->
+  <view class="block analysis-block">
+    <view class="block-title">📋 症状分析</view>
+    <view class="analysis-summary">{{analysis.summary}}</view>
+    <view class="severity-hint" wx:if="{{analysis.severityHint}}">
+      <text class="severity-label">程度与就医提示</text>
+      <text class="severity-text">{{analysis.severityHint}}</text>
+    </view>
+  </view>
+
+  <!-- 生活建议 -->
+  <view class="block advice-block">
+    <view class="block-title">💡 生活建议</view>
+    <view class="advice-list">
+      <view class="advice-item" wx:for="{{analysis.advice}}" wx:for-index="advIdx" wx:key="advIdx">
+        <text class="advice-dot">•</text>
+        <text class="advice-text">{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 推荐补救方案 -->
+  <view class="block remedy-block">
+    <view class="block-title">💊 推荐补救方案</view>
+    <view wx:if="{{loading}}" class="loading-wrap">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">正在加载方案...</text>
+    </view>
+    <view wx:elif="{{remedies.length === 0}}" class="empty-remedy">
+      <text class="empty-icon">🥗</text>
+      <text class="empty-text">暂无该症状的补救方案</text>
+    </view>
+    <view wx:else class="remedy-list">
+      <view
+        class="remedy-card"
+        wx:for="{{remedies}}"
+        wx:key="id"
+        data-remedy="{{item}}"
+        hover-class="remedy-card-hover"
+        hover-stay-time="80"
+      >
+        <view class="remedy-header">
+          <view class="remedy-icon">{{item.icon}}</view>
+          <view class="remedy-info">
+            <view class="remedy-name">{{item.name}}</view>
+            <view class="remedy-desc">{{item.desc}}</view>
+          </view>
+          <view class="remedy-calories" wx:if="{{item.calories}}">{{item.calories}}kcal</view>
+        </view>
+        <view class="remedy-recipe">
+          <view class="recipe-row">
+            <text class="recipe-label">做法</text>
+            <view class="copy-btn" bindtap="copyRecipe" data-remedy="{{item}}">📋 复制</view>
+          </view>
+          <text class="recipe-text">{{item.recipe || '做法整理中，请点击「查看详情」查看步骤。'}}</text>
+        </view>
+        <view class="remedy-actions">
+          <button class="btn-secondary" bindtap="viewDetail" data-remedy="{{item}}">查看详情</button>
+          <button class="btn-primary" bindtap="addToPlan" data-remedy="{{item}}">加入计划</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 详情弹窗 -->
+  <view wx:if="{{showDetail && selectedRemedy}}" class="modal show" catchtap="closeDetail">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <view class="modal-title">{{selectedRemedy.name}}</view>
+        <text class="modal-close" bindtap="closeDetail">✕</text>
+      </view>
+      <scroll-view class="modal-body" scroll-y>
+        <view class="detail-desc">{{selectedRemedy.desc}}</view>
+        <view class="detail-section" wx:if="{{selectedRemedy.detailedSteps && selectedRemedy.detailedSteps.length}}">
+          <view class="detail-label">做法步骤</view>
+          <view class="step-item" wx:for="{{selectedRemedy.detailedSteps}}" wx:for-item="step" wx:key="*this">{{step}}</view>
+        </view>
+        <view class="detail-section" wx:if="{{selectedRemedy.recipe}}">
+          <view class="detail-label">精简做法</view>
+          <view class="detail-recipe-inline">{{selectedRemedy.recipe}}</view>
+        </view>
+        <view class="detail-section" wx:if="{{selectedRemedy.tips && selectedRemedy.tips.length}}">
+          <view class="detail-label">注意事项</view>
+          <view class="tip-item" wx:for="{{selectedRemedy.tips}}" wx:for-item="tip" wx:for-index="tipIdx" wx:key="tipIdx">• {{tip}}</view>
+        </view>
+      </scroll-view>
+      <view class="modal-footer">
+        <view class="footer-copy" bindtap="copyRecipe" data-remedy="{{selectedRemedy}}">📋 复制做法</view>
+        <button class="btn-primary" bindtap="addToPlan" data-remedy="{{selectedRemedy}}">加入计划</button>
+      </view>
+    </view>
+  </view>
+</view>

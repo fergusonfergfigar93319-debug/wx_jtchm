@@ -1,0 +1,181 @@
+<!--pages/group-order/group-order.wxml-->
+<view class="container">
+  <scroll-view class="content" scroll-y="true">
+    <!-- 商家信息 -->
+    <view class="header card">
+      <view class="restaurant-info">
+        <text class="restaurant-name">{{restaurantName}}</text>
+        <text class="restaurant-subtitle">拼单热量计算</text>
+      </view>
+    </view>
+
+    <!-- 分配模式选择 -->
+    <view class="distribution-mode card">
+      <view class="mode-title">分配方式</view>
+      <view class="mode-options">
+        <view 
+          class="mode-option {{distributionMode === 'per_person' ? 'active' : ''}}"
+          bindtap="switchDistributionMode"
+          data-mode="per_person"
+        >
+          <text class="mode-icon">👥</text>
+          <text class="mode-label">按人头平均</text>
+          <text class="mode-desc">总热量平均分配</text>
+        </view>
+        <view 
+          class="mode-option {{distributionMode === 'per_dish' ? 'active' : ''}}"
+          bindtap="switchDistributionMode"
+          data-mode="per_dish"
+        >
+          <text class="mode-icon">🍽️</text>
+          <text class="mode-label">按菜品分配</text>
+          <text class="mode-desc">每人选择自己的</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 拼单成员 -->
+    <view class="members-section card">
+      <view class="section-header">
+        <view class="section-title">拼单成员（{{members.length}}人）</view>
+        <button class="btn-add" bindtap="showAddMember">添加成员</button>
+      </view>
+      <view class="members-list">
+        <view class="member-item" wx:for="{{members}}" wx:key="id">
+          <view class="member-info">
+            <text class="member-name">{{item.name}}</text>
+            <view class="member-stats">
+              <text class="member-calories">🔥 {{item.calories}} kcal</text>
+              <text class="member-price" wx:if="{{item.price > 0}}">¥{{item.price}}</text>
+            </view>
+            <view class="member-dishes" wx:if="{{item.dishes && item.dishes.length > 0}}">
+              <text class="dish-tag" wx:for="{{item.dishes}}" wx:key="id" wx:for-item="dish">
+                {{dish.name}} x{{dish.portion}}
+              </text>
+            </view>
+          </view>
+          <text class="delete-btn" bindtap="deleteMember" data-id="{{item.id}}">✕</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 已选菜品 -->
+    <view class="dishes-section card">
+      <view class="section-header">
+        <view class="section-title">已选菜品（{{dishes.length}}个）</view>
+        <button class="btn-add" bindtap="showAddDish">添加菜品</button>
+      </view>
+      <view class="dishes-empty" wx:if="{{dishes.length === 0}}">
+        <text class="dishes-empty-icon">🥗</text>
+        <text class="dishes-empty-text">还没有添加菜品</text>
+        <text class="dishes-empty-hint">点击上方「添加菜品」从商家菜单选择</text>
+      </view>
+      <view class="dishes-list" wx:else>
+        <view class="dish-item" wx:for="{{dishes}}" wx:key="id">
+          <view class="dish-info">
+            <text class="dish-name">{{item.name}}</text>
+            <view class="dish-stats">
+              <text class="dish-calories">🔥 {{(item.calories || item.estimated_calories || 0) * (item.quantity || 1)}} kcal</text>
+              <text class="dish-price" wx:if="{{item.price}}">¥{{(item.price || 0) * (item.quantity || 1)}}</text>
+            </view>
+          </view>
+          <view class="dish-actions">
+            <view class="quantity-control">
+              <text class="quantity-btn" bindtap="adjustDishQuantity" data-id="{{item.id}}" data-type="minus">-</text>
+              <text class="quantity-value">{{item.quantity || 1}}</text>
+              <text class="quantity-btn" bindtap="adjustDishQuantity" data-id="{{item.id}}" data-type="add">+</text>
+            </view>
+            <text class="delete-btn" bindtap="deleteDish" data-id="{{item.id}}">✕</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 总计 -->
+    <view class="summary-section card">
+      <view class="summary-title">拼单总计</view>
+      <view class="summary-stats">
+        <view class="summary-item">
+          <text class="summary-label">总热量</text>
+          <text class="summary-value calories">{{totalCalories}} kcal</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">总价格</text>
+          <text class="summary-value price">¥{{totalPrice}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">人均热量</text>
+          <text class="summary-value avg">{{avgCaloriesPerPerson}} kcal</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作栏 -->
+  <view class="action-bar">
+    <button class="btn-primary" bindtap="recordGroupOrder">
+      <text>记录拼单</text>
+    </button>
+  </view>
+
+  <!-- 添加成员弹窗 -->
+  <view class="modal {{showAddMemberModal ? 'show' : ''}}" catchtap="closeAddMemberModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <view class="modal-title">添加成员</view>
+        <text class="modal-close" bindtap="closeAddMemberModal">✕</text>
+      </view>
+      <view class="modal-body">
+        <input 
+          class="modal-input"
+          placeholder="输入成员名称"
+          value="{{newMemberName}}"
+          bindinput="onMemberNameInput"
+          confirm-type="done"
+          bindconfirm="confirmAddMember"
+        />
+      </view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="closeAddMemberModal">取消</button>
+        <button class="btn-primary" bindtap="confirmAddMember">确定</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加菜品弹窗 -->
+  <view class="modal {{showAddDishModal ? 'show' : ''}}" catchtap="closeAddDishModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <view class="modal-title">选择菜品</view>
+        <text class="modal-close" bindtap="closeAddDishModal">✕</text>
+      </view>
+      <scroll-view class="modal-body dish-list" scroll-y="true">
+        <view class="modal-empty" wx:if="{{!availableDishes || availableDishes.length === 0}}">
+          <text>暂无商家菜品数据，请稍后再试或从商家页进入本页</text>
+        </view>
+        <block wx:else>
+          <view 
+            class="dish-option {{selectedDish && selectedDish.id === item.id ? 'selected' : ''}}"
+            wx:for="{{availableDishes}}"
+            wx:key="id"
+            bindtap="selectDish"
+            data-dish="{{item}}"
+          >
+            <view class="dish-option-info">
+              <text class="dish-option-name">{{item.name}}</text>
+              <view class="dish-option-meta">
+                <text class="dish-option-cal">🔥 {{item.calories || item.estimated_calories || 0}} kcal</text>
+                <text class="dish-option-price" wx:if="{{item.price}}">¥{{item.price}}</text>
+              </view>
+            </view>
+            <text class="dish-option-check" wx:if="{{selectedDish && selectedDish.id === item.id}}">✓</text>
+          </view>
+        </block>
+      </scroll-view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="closeAddDishModal">取消</button>
+        <button class="btn-primary" bindtap="confirmAddDish">确定</button>
+      </view>
+    </view>
+  </view>
+</view>

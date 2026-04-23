@@ -1,0 +1,621 @@
+<!--pages/fridge/fridge.wxml - 与首页统一设计 -->
+<view class="page-fridge page-container {{reduceMotion ? 'reduce-motion' : ''}}">
+  <!-- 顶部栏（与首页一致） -->
+  <view class="header">
+    <view class="status-bar">
+      <view class="status-text"></view>
+      <text class="status-text">{{timeText}}</text>
+      <text class="status-text">100%</text>
+    </view>
+    <view class="top-row">
+      <view class="header-title-wrap">
+        <text class="header-title">我的冰箱</text>
+      </view>
+      <view
+        class="header-icon-wrap pressable"
+        bindtap="recognizeIngredient"
+        hover-class="press-hover"
+        hover-stay-time="80"
+      >
+        <text>📷</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 问候/标题区（与首页 greeting-section 一致） -->
+  <view class="greeting-section">
+    <text class="greeting-text">{{fridgeGreeting}}</text>
+    <text class="greeting-icon">🧊</text>
+    <text class="greeting-date">{{currentDate}}</text>
+  </view>
+
+  <!-- 统计信息（与首页今日概览卡片一致） -->
+  <view class="stats-bar">
+    <view class="stat-item pressable" bindtap="switchCategory" data-category="all" hover-class="press-hover" hover-stay-time="80">
+      <text class="stat-value">{{totalCount}}</text>
+      <text class="stat-label">总食材</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item pressable" bindtap="switchCategory" data-category="fresh" hover-class="press-hover" hover-stay-time="80">
+      <text class="stat-value">{{freshCount}}</text>
+      <text class="stat-label">新鲜</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item stat-item-expiring pressable" bindtap="showExpiringItems" hover-class="press-hover" hover-stay-time="80">
+      <text class="stat-value {{expiringCount > 0 ? 'warning' : ''}}">{{expiringCount}}</text>
+      <text class="stat-label">即将过期</text>
+    </view>
+  </view>
+
+  <!-- 大扫除模式入口 -->
+  <view class="cleanup-mode pressable" wx:if="{{expiringCount > 0}}" bindtap="enterCleanupMode" hover-class="press-hover" hover-stay-time="80">
+    <view class="cleanup-mode-content">
+      <view class="cleanup-icon">🧹</view>
+      <view class="cleanup-info">
+        <text class="cleanup-title">临期食材大扫除</text>
+        <text class="cleanup-desc">发现 {{expiringCount}} 个即将过期的食材，一键生成菜谱清库存</text>
+      </view>
+      <text class="cleanup-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 应季食材：两行紧凑卡片（标题行 + 时令/预览单行） -->
+  <view class="seasonal-section">
+    <view class="seasonal-header pressable" bindtap="openSeasonalPage" hover-class="press-hover" hover-stay-time="80">
+      <view class="seasonal-header-icon-wrap">
+        <text class="seasonal-icon">🌸</text>
+      </view>
+      <view class="seasonal-header-body">
+        <view class="seasonal-title-row">
+          <text class="seasonal-title">应季食材推荐</text>
+          <view class="seasonal-arrow-wrap">
+            <text class="seasonal-arrow {{showSeasonal ? 'expanded' : ''}}">›</text>
+          </view>
+        </view>
+        <text class="seasonal-meta-line">
+          <text class="seasonal-meta">{{currentMonth}}月</text>
+          <text class="seasonal-meta" wx:if="{{userRegionName}}"> · {{userRegionName}}</text>
+          <text class="seasonal-meta" wx:if="{{currentSeason}}"> · {{currentSeason}}</text>
+          <text class="seasonal-preview-inline" wx:if="{{!showSeasonal && seasonalPreviewText}}"> · {{seasonalPreviewText}}</text>
+        </text>
+      </view>
+    </view>
+    <view class="seasonal-content {{showSeasonal ? 'show' : ''}}" wx:if="{{seasonalItems.length > 0}}">
+      <view class="seasonal-items">
+        <view 
+          class="seasonal-item {{item.added ? 'added' : ''}}"
+          wx:for="{{seasonalItems}}"
+          wx:key="name"
+          data-item="{{item}}"
+        >
+          <view class="seasonal-item-main" bindtap="onSeasonalItemTap">
+            <text class="seasonal-item-icon">{{item.icon}}</text>
+            <view class="seasonal-item-info">
+              <view class="seasonal-item-title-row">
+                <text class="seasonal-item-name">{{item.name}}</text>
+                <text wx:if="{{item.added}}" class="seasonal-status-badge">已在冰箱 {{item.amount_in_fridge || 1}} 份</text>
+                <text wx:else class="seasonal-status-badge subtle">推荐少量购买</text>
+              </view>
+              <text class="seasonal-item-desc" wx:if="{{item.desc}}">{{item.desc}}</text>
+              <view class="seasonal-item-tags" wx:if="{{item.tags && item.tags.length}}">
+                <text class="seasonal-tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="seasonal-item-actions">
+            <view class="seasonal-action-btn primary pressable" bindtap="addSeasonalItem" data-item="{{item}}" hover-class="press-hover" hover-stay-time="80">
+              {{item.added ? '补货 1 份' : '加到冰箱'}}
+            </view>
+            <view class="seasonal-action-btn secondary pressable" bindtap="cookSeasonalFromList" data-item="{{item}}" hover-class="press-hover" hover-stay-time="80">
+              用它做菜
+            </view>
+            <view class="seasonal-action-btn ghost pressable" bindtap="dislikeSeasonalItem" data-item="{{item}}" hover-class="press-hover" hover-stay-time="80">
+              不感兴趣
+            </view>
+          </view>
+          <view class="seasonal-item-badge" wx:if="{{item.added}}">
+            <text>✓</text>
+          </view>
+        </view>
+      </view>
+      <view class="seasonal-knowledge" wx:if="{{currentSeasonTip}}">
+        <text class="knowledge-label">📌 本月时令</text>
+        <text class="knowledge-text">{{currentSeasonTip}}</text>
+      </view>
+      <view class="seasonal-tip">
+        <text class="tip-icon">💡</text>
+        <text class="tip-text">应季食材新鲜营养，价格实惠，点击卡片查看功效、用法并一键加到冰箱或用它来搜菜</text>
+      </view>
+    </view>
+    <view class="seasonal-empty" wx:else>
+      <text class="empty-text">暂无应季食材推荐</text>
+    </view>
+  </view>
+
+  <!-- 搜索框和排序 -->
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <text class="search-icon">🔍</text>
+      <input 
+        class="search-input"
+        placeholder="搜索食材名称、子分类..."
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        bindfocus="onSearchFocus"
+        bindblur="onSearchBlur"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+      <view wx:if="{{searchKeyword}}" class="search-clear pressable" bindtap="clearSearch" hover-class="press-hover" hover-stay-time="80">✕</view>
+      <view class="sort-btn pressable" bindtap="toggleSortMenu" hover-class="press-hover" hover-stay-time="80">
+        <text class="sort-icon">⇅</text>
+        <text class="sort-text">排序</text>
+      </view>
+    </view>
+    <!-- 排序菜单 -->
+    <view wx:if="{{showSortMenu}}" class="sort-menu">
+      <view 
+        class="sort-option {{sortType === 'time_desc' ? 'active' : ''}}"
+        bindtap="switchSortType"
+        data-sort="time_desc"
+      >
+        <text>📅 最新入库</text>
+      </view>
+      <view 
+        class="sort-option {{sortType === 'time_asc' ? 'active' : ''}}"
+        bindtap="switchSortType"
+        data-sort="time_asc"
+      >
+        <text>📅 最早入库</text>
+      </view>
+      <view 
+        class="sort-option {{sortType === 'name_asc' ? 'active' : ''}}"
+        bindtap="switchSortType"
+        data-sort="name_asc"
+      >
+        <text>🔤 名称A-Z</text>
+      </view>
+      <view 
+        class="sort-option {{sortType === 'name_desc' ? 'active' : ''}}"
+        bindtap="switchSortType"
+        data-sort="name_desc"
+      >
+        <text>🔤 名称Z-A</text>
+      </view>
+      <view 
+        class="sort-option {{sortType === 'freshness' ? 'active' : ''}}"
+        bindtap="switchSortType"
+        data-sort="freshness"
+      >
+        <text>⭐ 新鲜度优先</text>
+      </view>
+    </view>
+    <!-- 搜索联想 -->
+    <view wx:if="{{showSuggestions && searchSuggestions.length > 0}}" class="search-suggestions">
+      <view 
+        class="suggestion-item"
+        wx:for="{{searchSuggestions}}"
+        wx:key="*this"
+        bindtap="selectSuggestion"
+        data-item="{{item}}"
+      >
+        <text class="suggestion-icon">➕</text>
+        <text class="suggestion-text">{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快速添加布局已移除：保持功能，交互统一改为使用右下角悬浮“+”按钮或搜索联想添加 -->
+
+  <!-- 新增食材动画提示 -->
+  <view wx:if="{{showAddSuccess}}" class="add-success-toast">
+    <view class="add-success-inner">
+      <text class="add-success-icon">{{addSuccessIcon}}</text>
+      <view class="add-success-text-wrap">
+        <text class="add-success-title">已加入冰箱</text>
+        <text class="add-success-desc">{{addSuccessText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类和列表 -->
+  <view class="content">
+    <view class="category-sidebar">
+      <view class="category-sidebar-inner">
+        <view 
+          class="category-item pressable {{currentCategory === item.value ? 'active' : ''}}"
+          wx:for="{{categories}}"
+          wx:key="value"
+          bindtap="switchCategory"
+          data-category="{{item.value}}"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <text class="category-item-icon">{{item.icon}}</text>
+          <text class="category-item-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <scroll-view class="fridge-list {{editMode ? 'fridge-list--batch-mode' : ''}}" scroll-y="true">
+      <!-- 列表头：当前分类 + 数量 + 筛选/排序标签 -->
+      <view wx:if="{{totalCount > 0}}" class="fridge-list-header">
+        <view class="fridge-list-title-row">
+          <view class="fridge-list-title-block">
+            <text class="fridge-list-title">{{currentCategoryLabel}}</text>
+            <text class="fridge-list-count-inline">共 {{filteredItems.length}} 项</text>
+          </view>
+          <text class="info-pill info-pill--sort" bindtap="toggleSortMenu">排序 · {{sortTypeLabel}}</text>
+        </view>
+        <view class="fridge-list-tags" wx:if="{{currentFilterTag}}">
+          <text class="info-pill info-pill--em">{{currentFilterTag}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{filteredItems.length > 0}}">
+        <view 
+          class="fridge-section"
+          wx:for="{{sectionedItems}}"
+          wx:key="key"
+        >
+          <view class="fridge-section-header" wx:if="{{sectionedItems.length > 1 || item.key !== 'fresh'}}">
+            <text class="fridge-section-title">{{item.title}}</text>
+            <text class="fridge-section-count">{{item.items.length}} 项</text>
+          </view>
+
+          <view 
+            class="fridge-item-wrapper"
+            wx:for="{{item.items}}"
+            wx:key="id"
+          >
+            <view 
+              class="fridge-item {{item.freshness === 'expiring' ? 'expiring' : item.freshness === 'expired' ? 'expired' : ''}} {{editMode && selectedItems.indexOf(item.id) > -1 ? 'selected' : ''}}"
+              style="transform: translateX({{item.swipeX || 0}}rpx)"
+              bindtouchstart="onTouchStart"
+              bindtouchmove="onTouchMove"
+              bindtouchend="onTouchEnd"
+              data-index="{{item.flatIndex}}"
+            >
+              <view class="fridge-item-top">
+                <view wx:if="{{editMode}}" class="select-checkbox" bindtap="toggleSelectItem" data-id="{{item.id}}">
+                  <text class="checkbox-icon {{selectedItems.indexOf(item.id) > -1 ? 'checked' : ''}}">
+                    {{selectedItems.indexOf(item.id) > -1 ? '✓' : ''}}
+                  </text>
+                </view>
+                <view class="item-info">
+                  <view class="item-icon-wrapper {{item.category}} {{item.coverImage ? 'has-cover' : ''}}">
+                    <image wx:if="{{item.coverImage}}" class="item-cover-img" src="{{item.coverImage}}" mode="aspectFill" />
+                    <text wx:else class="item-icon">{{item.icon}}</text>
+                    <view wx:if="{{item.freshness === 'expiring'}}" class="freshness-badge warning">⚠️</view>
+                    <view wx:if="{{item.freshness === 'expired'}}" class="freshness-badge expired">❌</view>
+                  </view>
+                  <view class="item-details">
+                    <view class="item-name-row">
+                      <text class="item-name">{{item.name}}</text>
+                      <view wx:if="{{item.freshness === 'expiring'}}" class="expiring-tag">即将过期</view>
+                      <view wx:if="{{item.freshness === 'expired'}}" class="expired-tag">已过期</view>
+                    </view>
+                    <view class="item-amount-row">
+                      <text class="item-amount">{{item.amount === 0 || item.unit === '适量' ? '适量' : item.amount + item.unit}}</text>
+                      <text class="item-time">{{item.timeText}}</text>
+                    </view>
+                    <view class="item-category-row" wx:if="{{currentCategory === 'all' || item.sub_category}}">
+                      <text wx:if="{{currentCategory === 'all'}}" class="item-category-badge">{{item.categoryLabel}}</text>
+                      <text wx:if="{{item.sub_category}}" class="item-subcategory-badge">{{item.sub_category}}</text>
+                    </view>
+                    <view wx:if="{{item.freshness === 'expiring' || item.freshness === 'expired'}}" class="freshness-tip">
+                      <text class="tip-text">{{item.freshnessTip}}</text>
+                    </view>
+                  </view>
+                </view>
+              </view>
+              <view class="item-actions-row" catchtouchstart="preventSwipe" catchtouchmove="preventSwipe" catchtouchend="preventSwipe">
+                <view class="action-btn detail-btn pressable" data-id="{{item.id}}" data-action="detail" bindtouchstart="onActionTouchStart" bindtouchend="onActionTouchEnd" hover-class="press-hover" hover-stay-time="80">详情</view>
+                <view class="action-btn edit-btn pressable" data-id="{{item.id}}" data-action="edit" bindtouchstart="onActionTouchStart" bindtouchend="onActionTouchEnd" hover-class="press-hover" hover-stay-time="80">编辑</view>
+                <view class="action-btn delete-btn pressable" data-id="{{item.id}}" data-action="delete" bindtouchstart="onActionTouchStart" bindtouchend="onActionTouchEnd" hover-class="press-hover" hover-stay-time="80">删除</view>
+              </view>
+            </view>
+            <view class="swipe-actions">
+              <view class="swipe-action detail-action pressable" data-id="{{item.id}}" data-action="detail" bindtouchstart="onActionTouchStart" bindtouchend="onActionTouchEnd" hover-class="press-hover" hover-stay-time="80">详情</view>
+              <view class="swipe-action edit-action pressable" data-id="{{item.id}}" data-action="edit" bindtouchstart="onActionTouchStart" bindtouchend="onActionTouchEnd" hover-class="press-hover" hover-stay-time="80">编辑</view>
+              <view class="swipe-action delete-action pressable" data-id="{{item.id}}" data-action="delete" bindtouchstart="onActionTouchStart" bindtouchend="onActionTouchEnd" hover-class="press-hover" hover-stay-time="80">删除</view>
+            </view>
+          </view>
+        </view>
+        <view class="fridge-list-bottom" wx:if="{{filteredItems.length > 0}}">
+          <view class="fridge-list-bottom-card">
+            <text class="fridge-list-bottom-title">使用提示</text>
+            <text class="fridge-list-bottom-desc">向左滑动食材卡片可快速打开详情、编辑或删除；右下角「+」可拍照识别或手动添加。</text>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-state">
+        <view class="empty-icon">🧊</view>
+        <text class="empty-text">{{searchKeyword ? '没有找到相关食材' : '冰箱空空如也'}}</text>
+        <text class="empty-hint">{{searchKeyword ? '试试搜索其他关键词' : '点击右下角“+”添加食材，或使用上方搜索'}}</text>
+        <button wx:if="{{!searchKeyword}}" class="btn-primary mt-20" bindtap="showAddModal">添加第一个食材</button>
+        <button wx:else class="btn-secondary mt-20" bindtap="clearSearch">清除搜索</button>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 批量操作栏：固定在自定义 TabBar 之上（见 fridge.wxss bottom/z-index） -->
+  <view wx:if="{{editMode}}" class="batch-actions">
+    <view class="batch-row batch-row-info">
+      <text class="batch-count">已选 {{selectedItems.length}} 项</text>
+      <view class="batch-select-all pressable" bindtap="toggleSelectAll" hover-class="press-hover" hover-stay-time="80">
+        <text>{{selectedItems.length === filteredItems.length ? '取消全选' : '全选'}}</text>
+      </view>
+    </view>
+    <view class="batch-row batch-row-btns">
+      <button class="batch-btn batch-btn-cancel" bindtap="cancelBatch">取消</button>
+      <button class="batch-btn batch-btn-warn" bindtap="batchDeleteExpired" wx:if="{{expiringCount > 0}}">删除过期</button>
+      <button class="batch-btn batch-btn-primary" bindtap="batchDelete" disabled="{{selectedItems.length === 0}}">删除选中</button>
+    </view>
+  </view>
+
+  <!-- 食材详情弹窗 -->
+  <view class="modal {{showDetailModal ? 'show' : ''}}" catchtap="closeDetailModal">
+    <view class="modal-content detail-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">食材详情</text>
+        <text class="modal-close" bindtap="closeDetailModal">✕</text>
+      </view>
+      <view class="modal-body" wx:if="{{currentItem}}">
+        <view class="detail-cover-block" wx:if="{{currentItem.cover_image}}">
+          <image class="detail-cover-img" src="{{currentItem.cover_image}}" mode="aspectFill" />
+        </view>
+        <view class="detail-section">
+          <view class="detail-item">
+            <text class="detail-label">食材名称</text>
+            <text class="detail-value">{{currentItem.name}}</text>
+          </view>
+          <view class="detail-item">
+            <text class="detail-label">数量</text>
+            <text class="detail-value">{{currentItem.amount === 0 || currentItem.unit === '适量' ? '适量' : currentItem.amount + currentItem.unit}}</text>
+          </view>
+          <view class="detail-item" wx:if="{{currentItem.sub_category}}">
+            <text class="detail-label">子分类</text>
+            <text class="detail-value">{{currentItem.sub_category}}</text>
+          </view>
+          <view class="detail-item">
+            <text class="detail-label">分类</text>
+            <text class="detail-value">{{currentItem.categoryLabel}}</text>
+          </view>
+          <view class="detail-item">
+            <text class="detail-label">入库时间</text>
+            <text class="detail-value">{{currentItem.formattedDate}}</text>
+          </view>
+          <view class="detail-item">
+            <text class="detail-label">存放天数</text>
+            <text class="detail-value {{currentItem.freshness === 'expired' ? 'expired-text' : currentItem.freshness === 'expiring' ? 'expiring-text' : ''}}">{{currentItem.daysInFridge}}天</text>
+          </view>
+          <view class="detail-item" wx:if="{{currentItem.freshness === 'expiring' || currentItem.freshness === 'expired'}}">
+            <text class="detail-label">状态</text>
+            <text class="detail-value {{currentItem.freshness === 'expired' ? 'expired-text' : 'expiring-text'}}">
+              {{currentItem.freshness === 'expired' ? '⚠️ 已过期' : '⚠️ 即将过期'}}
+            </text>
+          </view>
+        </view>
+        <view class="detail-actions">
+          <button class="btn-secondary" bindtap="closeDetailModal">关闭</button>
+          <button class="btn-primary" bindtap="editFromDetail">编辑</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 悬浮按钮组 -->
+  <view class="fab-group">
+    <view wx:if="{{!editMode}}" class="fab main-fab pressable" bindtap="toggleFabMenu" hover-class="press-hover" hover-stay-time="80">
+      <text class="fab-icon">➕</text>
+    </view>
+    <view wx:if="{{fabMenuOpen}}" class="fab-menu">
+      <view class="fab-item pressable fab-item--integrated" bindtap="openIntegratedAddFlow" hover-class="press-hover" hover-stay-time="80">
+        <text class="fab-item-icon">📷</text>
+        <view class="fab-item-text-col">
+          <text class="fab-item-text">添加食材</text>
+          <text class="fab-item-sub">手动填写或拍照识别</text>
+        </view>
+      </view>
+      <view class="fab-item pressable" bindtap="goToCookWithFridge" hover-class="press-hover" hover-stay-time="80">
+        <text class="fab-item-icon">🍳</text>
+        <text class="fab-item-text">用冰箱里的菜做饭</text>
+      </view>
+      <view class="fab-item pressable" bindtap="enterEditMode" hover-class="press-hover" hover-stay-time="80">
+        <text class="fab-item-icon">📋</text>
+        <text class="fab-item-text">批量管理</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加食材弹窗 -->
+  <view class="modal {{showAddModal ? 'show' : ''}}" catchtap="closeAddModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">{{editingItemId ? '编辑食材' : '添加食材'}}</text>
+        <text class="modal-close" bindtap="closeAddModal">✕</text>
+      </view>
+      <view class="modal-body">
+        <view class="form-item">
+          <text class="form-label">食材照片（可选）</text>
+          <view class="cover-picker-row">
+            <view class="cover-thumb-wrap pressable" bindtap="chooseFridgeItemPhoto" hover-class="press-hover" hover-stay-time="80">
+              <image wx:if="{{newItemCoverImage}}" class="cover-thumb" src="{{newItemCoverImage}}" mode="aspectFill" />
+              <view wx:else class="cover-placeholder">
+                <text class="cover-ph-icon">📷</text>
+                <text class="cover-ph-text">拍照或相册</text>
+              </view>
+            </view>
+            <view class="cover-picker-side">
+              <text class="cover-hint">不设照片则使用分类默认图标</text>
+              <view wx:if="{{newItemCoverImage}}" class="cover-remove pressable" bindtap="clearFridgeItemPhoto" hover-class="press-hover" hover-stay-time="80">移除照片</view>
+            </view>
+          </view>
+        </view>
+        <view class="form-item">
+          <text class="form-label">食材名称</text>
+          <input 
+            class="form-input"
+            placeholder="请输入食材名称"
+            value="{{newItemName}}"
+            bindinput="onNewItemInput"
+            maxlength="20"
+          />
+        </view>
+        <view class="form-item">
+          <text class="form-label">数量与单位</text>
+          <view class="amount-input-group">
+            <input 
+              class="form-input amount-input"
+              type="digit"
+              placeholder="{{newItemUnit === '适量' ? '适量无需输入数量' : '请输入数量（如：1.5）'}}"
+              value="{{newItemAmount}}"
+              bindinput="onAmountInput"
+              disabled="{{newItemUnit === '适量'}}"
+            />
+            <view wx:if="{{newItemUnit === '适量'}}" class="amount-hint">
+              <text class="hint-text">💡 选择"适量"时无需输入具体数量</text>
+            </view>
+            <view class="unit-type-tabs">
+              <view 
+                class="unit-type-tab {{selectedUnitType === 'weight' ? 'active' : ''}}"
+                bindtap="selectUnitType"
+                data-type="weight"
+              >
+                重量
+              </view>
+              <view 
+                class="unit-type-tab {{selectedUnitType === 'count' ? 'active' : ''}}"
+                bindtap="selectUnitType"
+                data-type="count"
+              >
+                数量
+              </view>
+              <view 
+                class="unit-type-tab {{selectedUnitType === 'package' ? 'active' : ''}}"
+                bindtap="selectUnitType"
+                data-type="package"
+              >
+                包装
+              </view>
+              <view 
+                class="unit-type-tab {{selectedUnitType === 'volume' ? 'active' : ''}}"
+                bindtap="selectUnitType"
+                data-type="volume"
+              >
+                容量
+              </view>
+              <view 
+                class="unit-type-tab {{selectedUnitType === 'other' ? 'active' : ''}}"
+                bindtap="selectUnitType"
+                data-type="other"
+              >
+                其他
+              </view>
+            </view>
+            <view class="unit-selector">
+              <view 
+                class="unit-option {{newItemUnit === item.value ? 'active' : ''}}"
+                wx:for="{{unitOptions}}"
+                wx:key="value"
+                wx:if="{{item.type === selectedUnitType}}"
+                bindtap="selectUnit"
+                data-unit="{{item.value}}"
+              >
+                {{item.label}}
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="form-item">
+          <text class="form-label">分类</text>
+          <view class="category-selector">
+            <view 
+              class="category-option {{newItemCategory === item.value ? 'active' : ''}}"
+              wx:for="{{categories}}"
+              wx:key="value"
+              wx:if="{{item.value !== 'all'}}"
+              bindtap="selectCategory"
+              data-category="{{item.value}}"
+            >
+              <text class="category-icon">{{getCategoryIcon(item.value)}}</text>
+              <text class="category-name">{{item.label}}</text>
+            </view>
+          </view>
+          <!-- 子分类选择 -->
+          <view wx:if="{{showSubCategorySelector && currentSubCategories.length > 0}}" class="subcategory-selector">
+            <text class="form-label subcategory-label">子分类（可选）</text>
+            <view class="subcategory-tags">
+              <view 
+                class="subcategory-tag {{newItemSubCategory === subCat ? 'active' : ''}}"
+                wx:for="{{currentSubCategories}}"
+                wx:key="*this"
+                bindtap="selectSubCategory"
+                data-subcategory="{{subCat}}"
+              >
+                {{subCat}}
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-secondary" bindtap="closeAddModal">取消</button>
+        <button class="btn-primary" bindtap="confirmAddItem" disabled="{{!newItemName || !newItemCategory || (newItemUnit !== '适量' && (!newItemAmount || parseFloat(newItemAmount) <= 0))}}">{{editingItemId ? '保存' : '添加'}}</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 应季食材详情弹窗 -->
+  <view class="modal {{showSeasonalDetail ? 'show' : ''}}" catchtap="closeSeasonalDetail">
+    <view class="modal-content seasonal-detail-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">应季好物详情</text>
+        <text class="modal-close" bindtap="closeSeasonalDetail">✕</text>
+      </view>
+      <view class="modal-body" wx:if="{{seasonalDetailItem}}">
+        <view class="seasonal-detail-header">
+          <view class="seasonal-detail-icon-wrap">
+            <text class="seasonal-detail-icon">{{seasonalDetailItem.icon}}</text>
+          </view>
+          <view class="seasonal-detail-main">
+            <view class="seasonal-detail-name-row">
+              <text class="seasonal-detail-name">{{seasonalDetailItem.name}}</text>
+              <text class="seasonal-detail-badge">{{currentMonth}}月 · {{currentSeason || '当季'}}</text>
+            </view>
+            <text class="seasonal-detail-desc">{{seasonalDetailItem.desc || '应季新鲜，营养实惠'}}</text>
+            <view class="seasonal-detail-tags" wx:if="{{seasonalDetailItem.tags && seasonalDetailItem.tags.length}}">
+              <text class="seasonal-detail-tag" wx:for="{{seasonalDetailItem.tags}}" wx:key="*this">{{item}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-section-divider"></view>
+
+        <view class="detail-section">
+          <text class="detail-section-title">推荐吃法小提示</text>
+          <view class="detail-suggestions">
+            <text class="suggestion-text">
+              根据季节特点优先选择清蒸、清炒、凉拌等做法，少油少盐，更好保留 {{seasonalDetailItem.name}} 的应季营养。
+            </text>
+          </view>
+        </view>
+
+        <view class="detail-section">
+          <text class="detail-section-title">小贴士</text>
+          <view class="detail-suggestions">
+            <text class="suggestion-text">
+              可将 {{seasonalDetailItem.name}} 与冰箱中其他食材搭配，点击“用它来搜菜”自动跳转到智能搜餐，帮你组合当季菜谱。
+            </text>
+          </view>
+        </view>
+
+        <view class="detail-actions seasonal-detail-actions">
+          <button class="btn-secondary" bindtap="cookSeasonalItem">用它来搜菜</button>
+          <button class="btn-primary" bindtap="addSeasonalFromDetail" disabled="{{seasonalDetailItem.added}}">{{seasonalDetailItem.added ? '已在冰箱中' : '一键加到冰箱'}}</button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

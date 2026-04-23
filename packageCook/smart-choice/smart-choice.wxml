@@ -1,0 +1,411 @@
+<!--pages/smart-choice/smart-choice.wxml-->
+<view class="container page-container smart-choice-root">
+  <!-- 顶部状态栏（精简版） -->
+  <view class="header">
+    <view class="header-top">
+      <view class="header-title">智能决策助手</view>
+      <view class="header-actions">
+        <view class="advanced-toggle pressable" bindtap="toggleAdvanced" hover-class="press-hover" hover-stay-time="80">
+          <text class="advanced-toggle-icon">⚙️</text>
+          <text class="advanced-toggle-text">{{showAdvanced ? '收起' : '更多'}}</text>
+        </view>
+        <view class="action-btn pressable" bindtap="refreshRecommendations" hover-class="press-hover" hover-stay-time="80">
+          <text class="action-icon">🔄</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 核心状态行：剩余热量 + 餐段 + 模式（始终可见） -->
+    <view class="status-bar">
+      <view class="status-item status-item-remaining">
+        <text class="status-label">剩余热量</text>
+        <text class="status-value remaining-num" style="color: {{currentState.remaining < 300 ? '#c62828' : '#2e7d32'}}">
+          {{currentState.remaining}} kcal
+        </text>
+      </view>
+      <view class="status-item pressable" bindtap="toggleMealType" hover-class="press-hover" hover-stay-time="80">
+        <text class="status-label">餐段 ›</text>
+        <text class="status-value">{{currentMealTypeName}}</text>
+      </view>
+      <view class="status-item pressable" bindtap="toggleFilter" hover-class="press-hover" hover-stay-time="80">
+        <text class="status-label">模式 ›</text>
+        <text class="status-value">{{currentFilterModeName}}</text>
+      </view>
+    </view>
+
+    <!-- 折叠区：宏量 / 进度条 / 应季 / 备餐 -->
+    <view class="advanced-section {{showAdvanced ? 'open' : ''}}">
+      <!-- 今日摄入进度 -->
+      <view class="intake-progress">
+        <view class="progress-header">
+          <text class="progress-label">今日已摄入</text>
+          <text class="progress-value">{{currentState.intake_actual}} / {{currentState.daily_limit}} kcal</text>
+        </view>
+        <view class="progress-track">
+          <view
+            class="progress-fill {{intakePercent >= 100 ? 'over' : ''}}"
+            style="width: {{intakePercent > 100 ? 100 : intakePercent}}%"
+          ></view>
+        </view>
+        <view class="macros-brief" wx:if="{{currentState.macros}}">
+          <text class="macro-item">碳 {{currentState.macros.carbg || 0}}g</text>
+          <text class="macro-item">蛋 {{currentState.macros.proteing || 0}}g</text>
+          <text class="macro-item">脂 {{currentState.macros.fatg || 0}}g</text>
+        </view>
+      </view>
+
+      <!-- 从应季食材「自己做」进入：提示聚焦食材/菜名 -->
+      <view class="seasonal-boost-banner" wx:if="{{seasonalBoost.active}}">
+        <text class="seasonal-boost-icon">🌱</text>
+        <view class="seasonal-boost-text-wrap">
+          <text class="seasonal-boost-title">已为你聚焦食材「{{seasonalBoost.ingredient}}」</text>
+          <text class="seasonal-boost-sub" wx:if="{{seasonalBoost.dishHint}}">推荐做法关键词：{{seasonalBoost.dishHint}}</text>
+          <text class="seasonal-boost-sub" wx:else>优先展示相关菜谱；可先「加到冰箱」再在「匹配优先」里用库存。</text>
+        </view>
+      </view>
+
+      <!-- 备餐模式开关 -->
+      <view class="meal-prep-toggle">
+        <view class="toggle-content">
+          <text class="toggle-icon">📦</text>
+          <text class="toggle-label">备餐模式</text>
+          <text class="toggle-desc">推荐耐储存菜谱</text>
+        </view>
+        <switch checked="{{mealPrepMode}}" bindchange="onMealPrepToggle" color="#4CAF50"/>
+      </view>
+    </view>
+  </view>
+
+  <view class="page-main">
+  <!-- 推荐卡片区域 -->
+  <view class="cards-container" wx:if="{{recommendations.length > 0}}">
+    <!-- 首次进入滑动引导提示 -->
+    <view class="swipe-hint {{showSwipeHint ? 'show' : ''}}">
+      <text class="swipe-hint-text">← 左右滑动查看更多推荐 →</text>
+    </view>
+    <swiper
+      class="recommendation-swiper"
+      current="{{currentIndex}}"
+      bindchange="swipeCard"
+      circular="{{true}}"
+      indicator-dots="{{false}}"
+      duration="{{300}}"
+      next-margin="48rpx"
+    >
+      <swiper-item wx:for="{{recommendations}}" wx:key="id" class="swiper-item">
+        <view class="recommendation-card" bindtap="onCardBodyTap" data-index="{{index}}">
+          <!-- 卡片头部：推荐理由 + 多维评分 -->
+          <view class="card-header">
+            <view class="card-badge">
+              <text class="badge-icon">{{currentFilterModeIcon}}</text>
+              <text class="badge-text">{{item.reason}}</text>
+            </view>
+            <view class="health-score-wrap pressable" catchtap="showScoreDetail" data-index="{{index}}" hover-class="press-hover" hover-stay-time="80">
+              <view class="health-score-ring" style="border-color: {{item.healthScore >= 80 ? '#34c759' : item.healthScore >= 60 ? '#ffc107' : '#ff5252'}}">
+                <text class="health-score-num">{{item.healthScore}}</text>
+              </view>
+              <view class="health-score-meta">
+                <text class="health-score-label">{{item.healthLabel || '一般'}}</text>
+                <view class="health-score-reasons" wx:if="{{item.healthReasons && item.healthReasons.length > 0}}">
+                  <text class="health-reason-chip" wx:for="{{item.healthReasons}}" wx:key="*this" wx:for-item="r">{{r}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          <!-- 推荐理由多标签 -->
+          <view class="reason-tags-row" wx:if="{{item.reasonTags && item.reasonTags.length > 0}}">
+            <text class="reason-tag pressable" wx:for="{{item.reasonTags}}" wx:key="*this" wx:for-item="tag" catchtap="showReasonDetail" data-tag="{{tag}}" data-index="{{index}}" hover-class="press-hover" hover-stay-time="80">{{tag}}</text>
+          </view>
+
+          <!-- 多维度评分条（热量/蛋白/碳水/脂肪） -->
+          <view class="score-bars" wx:if="{{item.scoreDims}}">
+            <view class="score-bar-row" wx:for="{{item.scoreDims}}" wx:key="label" wx:for-item="dim">
+              <text class="score-bar-label">{{dim.label}}</text>
+              <view class="score-bar-track">
+                <view class="score-bar-fill {{dim.level}}" style="width: {{dim.pct}}%"></view>
+              </view>
+              <text class="score-bar-val">{{dim.val}}</text>
+            </view>
+          </view>
+          
+          <!-- 食物图片 -->
+          <view class="card-image-wrapper">
+            <image 
+              wx:if="{{item.image && !item.imageFailed}}"
+              class="card-image" 
+              src="{{item.image}}" 
+              mode="aspectFill"
+              lazy-load="{{true}}"
+              binderror="onCardImageError"
+              data-index="{{index}}"
+            ></image>
+            <view wx:else class="card-image-placeholder">
+              <text class="placeholder-icon">🍽️</text>
+              <text class="placeholder-text">暂无图片</text>
+            </view>
+            <view class="image-overlay">
+              <view class="calories-badge">
+                <text class="calories-icon">🔥</text>
+                <text class="calories-value">{{item.calories || 0}} kcal</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 食物信息 -->
+          <view class="card-content">
+            <view class="food-name">{{item.name}}</view>
+            <view class="store-name" wx:if="{{item.store_name || item.restaurant_name}}">{{item.store_name || item.restaurant_name}}</view>
+            
+            <!-- 标签 -->
+            <view class="food-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+              <view class="tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">
+                {{tag}}
+              </view>
+            </view>
+            
+            <!-- 备餐提示 -->
+            <view class="meal-prep-badge" wx:if="{{item.meal_prep_suitable}}">
+              <text class="meal-prep-icon">📦</text>
+              <text class="meal-prep-text">{{item.meal_prep_tip || '适合备餐'}}</text>
+            </view>
+            
+            <!-- 营养信息 -->
+            <view class="nutrition-info" wx:if="{{item.nutrition}}">
+              <view class="nutrition-item">
+                <text class="nutrition-label">碳水</text>
+                <text class="nutrition-value">{{item.nutrition.carb || 0}}g</text>
+              </view>
+              <view class="nutrition-item">
+                <text class="nutrition-label">蛋白质</text>
+                <text class="nutrition-value">{{item.nutrition.protein || 0}}g</text>
+              </view>
+              <view class="nutrition-item">
+                <text class="nutrition-label">脂肪</text>
+                <text class="nutrition-value">{{item.nutrition.fat || 0}}g</text>
+              </view>
+            </view>
+            
+            <!-- 其他信息：评分与点赞 -->
+            <view class="food-meta">
+              <view class="meta-item" wx:if="{{item.rating > 0}}">
+                <text class="meta-icon">⭐</text>
+                <text class="meta-text">{{item.rating}}</text>
+              </view>
+              <view class="meta-item" wx:if="{{item.likes > 0}}">
+                <text class="meta-icon">❤️</text>
+                <text class="meta-text">{{item.likes}}</text>
+              </view>
+              <view class="meta-item" wx:if="{{item.distance}}">
+                <text class="meta-icon">📍</text>
+                <text class="meta-text">{{item.distance}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </swiper-item>
+    </swiper>
+    
+    <!-- 指示器 -->
+    <view class="card-indicators">
+      <view 
+        class="indicator {{index === currentIndex ? 'active' : ''}}"
+        wx:for="{{recommendations}}"
+        wx:key="id"
+        wx:for-index="index"
+        bindtap="goToIndex"
+        data-index="{{index}}"
+      ></view>
+    </view>
+  </view>
+
+  <!-- 加载状态：骨架屏 -->
+  <view class="skeleton-wrapper" wx:if="{{loading}}">
+    <skeleton loading="{{true}}" items="{{skeletonItems}}"></skeleton>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-container" wx:if="{{!loading && recommendations.length === 0 && !loadError}}">
+    <text class="empty-icon">🤔</text>
+    <text class="empty-text">暂无推荐</text>
+    <text class="empty-desc">切换餐段或模式试试</text>
+    <button class="empty-btn" bindtap="refreshRecommendations">重新推荐</button>
+  </view>
+
+  <!-- 加载失败 -->
+  <view class="error-container" wx:if="{{!loading && loadError}}">
+    <text class="error-icon">😅</text>
+    <text class="error-text">加载失败</text>
+    <text class="error-desc">{{loadErrorMsg || '网络异常，请重试'}}</text>
+    <button class="empty-btn" bindtap="retryLoad">重试</button>
+  </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="action-bar" wx:if="{{recommendations.length > 0}}">
+    <button class="action-btn-skip pressable" bindtap="skipCurrent" hover-class="press-hover" hover-stay-time="80">
+      <text class="btn-icon">⏭️</text>
+    </button>
+    <button class="action-btn-compare pressable {{compareMode ? 'active' : ''}}" bindtap="toggleCompare" hover-class="press-hover" hover-stay-time="80">
+      <text class="btn-icon">⚖️</text>
+      <text class="btn-text">对比</text>
+    </button>
+    <button class="action-btn-secondary pressable" bindtap="viewDetail" hover-class="press-hover" hover-stay-time="80">
+      <text class="btn-icon">ℹ️</text>
+      <text class="btn-text">详情</text>
+    </button>
+    <button
+      class="action-btn-primary pressable {{confirmLoading ? 'disabled' : ''}}"
+      bindtap="onConfirmTap"
+      hover-class="{{confirmLoading ? '' : 'press-hover'}}"
+      hover-stay-time="80"
+      disabled="{{confirmLoading}}"
+    >
+      <text class="btn-icon" wx:if="{{!confirmLoading}}">✅</text>
+      <text class="btn-icon loading" wx:if="{{confirmLoading}}">⏳</text>
+      <text class="btn-text">{{confirmLoading ? '记录中...' : '就选这个！'}}</text>
+    </button>
+  </view>
+
+  <!-- 对比面板 -->
+  <view class="compare-panel {{compareMode && recommendations.length >= 2 ? 'show' : ''}}" catchtap="toggleCompare">
+    <view class="panel-content compare-content" catchtap="stopPropagation">
+      <view class="panel-title">营养对比</view>
+      <view class="compare-table" wx:if="{{compareItems.length >= 2}}">
+        <!-- 表头 -->
+        <view class="compare-row compare-header">
+          <view class="compare-cell compare-label-cell"></view>
+          <view class="compare-cell pressable {{compareActiveIdx === 0 ? 'compare-active' : ''}}" bindtap="selectCompareItem" data-idx="0">
+            <text class="compare-food-name">{{compareItems[0].name}}</text>
+            <text class="compare-food-cal">{{compareItems[0].calories}} kcal</text>
+          </view>
+          <view class="compare-cell pressable {{compareActiveIdx === 1 ? 'compare-active' : ''}}" bindtap="selectCompareItem" data-idx="1">
+            <text class="compare-food-name">{{compareItems[1].name}}</text>
+            <text class="compare-food-cal">{{compareItems[1].calories}} kcal</text>
+          </view>
+        </view>
+        <!-- 数据行 -->
+        <view class="compare-row" wx:for="{{compareDims}}" wx:key="key" wx:for-item="dim">
+          <view class="compare-cell compare-label-cell">
+            <text class="compare-dim-label">{{dim.label}}</text>
+          </view>
+          <view class="compare-cell {{dim.winner === 0 ? 'compare-winner' : ''}}">
+            <text class="compare-val">{{dim.vals[0]}}</text>
+            <text class="compare-win-icon" wx:if="{{dim.winner === 0}}">👑</text>
+          </view>
+          <view class="compare-cell {{dim.winner === 1 ? 'compare-winner' : ''}}">
+            <text class="compare-val">{{dim.vals[1]}}</text>
+            <text class="compare-win-icon" wx:if="{{dim.winner === 1}}">👑</text>
+          </view>
+        </view>
+      </view>
+      <view class="compare-actions">
+        <button class="compare-pick-btn pressable" bindtap="pickFromCompare" data-idx="{{compareActiveIdx}}" hover-class="press-hover" hover-stay-time="80">
+          选择 {{compareActiveIdx === 0 ? compareItems[0].name : compareItems[1].name}}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 份量调整面板 -->
+  <view class="portion-panel {{showPortionPanel ? 'show' : ''}}" catchtap="closePortionPanel">
+    <view class="panel-content" catchtap="stopPropagation">
+      <view class="panel-title">调整份量</view>
+      <view class="portion-food-name">{{pendingItem.name}}</view>
+      <view class="portion-options">
+        <view
+          class="portion-option pressable {{portionMultiplier === item.val ? 'selected' : ''}}"
+          wx:for="{{portionOptions}}"
+          wx:key="val"
+          wx:for-item="item"
+          bindtap="selectPortion"
+          data-val="{{item.val}}"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <text class="portion-label">{{item.label}}</text>
+          <text class="portion-cal">{{item.cal}} kcal</text>
+        </view>
+      </view>
+      <view class="portion-summary">
+        <text class="portion-summary-text">将记录 <text class="portion-cal-highlight">{{portionCalories}}</text> kcal</text>
+      </view>
+      <view class="portion-actions">
+        <button class="portion-plan-btn pressable" bindtap="addToPlan" hover-class="press-hover" hover-stay-time="80">
+          <text>📅 加入今日计划</text>
+        </button>
+        <button class="portion-confirm-btn pressable" bindtap="confirmWithPortion" hover-class="press-hover" hover-stay-time="80">
+          <text>✅ 立即记录</text>
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 推荐理由详情面板 -->
+  <view class="reason-panel {{showReasonPanel ? 'show' : ''}}" catchtap="closeReasonPanel">
+    <view class="panel-content" catchtap="stopPropagation">
+      <view class="panel-title">为什么推荐这个？</view>
+      <view class="reason-detail-food">{{reasonDetailItem.name}}</view>
+      <view class="reason-detail-list">
+        <view class="reason-detail-row" wx:for="{{reasonDetailLines}}" wx:key="*this" wx:for-item="line">
+          <text class="reason-detail-dot">•</text>
+          <text class="reason-detail-text">{{line}}</text>
+        </view>
+      </view>
+      <view class="reason-goal-section" wx:if="{{reasonGoalLines.length > 0}}">
+        <text class="reason-goal-title">与你今日目标的关系</text>
+        <view class="reason-goal-row" wx:for="{{reasonGoalLines}}" wx:key="*this" wx:for-item="line">
+          <text class="reason-goal-icon">{{line.icon}}</text>
+          <text class="reason-goal-text">{{line.text}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 筛选模式面板 -->
+  <view class="filter-panel {{showFilter ? 'show' : ''}}" catchtap="toggleFilter">
+    <view class="panel-content" catchtap="stopPropagation">
+      <view class="panel-title">选择推荐模式</view>
+      <view class="panel-options">
+        <view 
+          class="panel-option {{filterMode === item.id ? 'selected' : ''}}"
+          wx:for="{{filterModes}}"
+          wx:key="id"
+          wx:for-item="item"
+          bindtap="selectFilterMode"
+          data-mode="{{item.id}}"
+        >
+          <text class="option-icon">{{item.icon}}</text>
+          <view class="option-info">
+            <text class="option-name">{{item.name}}</text>
+            <text class="option-desc">{{item.desc}}</text>
+          </view>
+          <text class="option-check" wx:if="{{filterMode === item.id}}">✓</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 餐段选择面板 -->
+  <view class="meal-type-panel {{showMealType ? 'show' : ''}}" catchtap="toggleMealType">
+    <view class="panel-content" catchtap="stopPropagation">
+      <view class="panel-title">选择餐段</view>
+      <view class="panel-options">
+        <view 
+          class="panel-option {{currentState.mealType === item.id ? 'selected' : ''}}"
+          wx:for="{{mealTypes}}"
+          wx:key="id"
+          wx:for-item="item"
+          bindtap="selectMealType"
+          data-type="{{item.id}}"
+        >
+          <text class="option-icon">{{item.icon}}</text>
+          <view class="option-info">
+            <text class="option-name">{{item.name}}</text>
+            <text class="option-desc">{{item.time}}</text>
+          </view>
+          <text class="option-check" wx:if="{{currentState.mealType === item.id}}">✓</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

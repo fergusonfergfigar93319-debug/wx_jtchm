@@ -1,0 +1,105 @@
+<!--pages/community-post/community-post.wxml - 论坛式帖子详情与讨论 -->
+<view class="post-page">
+  <block wx:if="{{post}}">
+    <!-- 帖子主体 -->
+    <view class="post-card">
+      <view class="post-header">
+        <view class="post-user-wrap" bindtap="goToUserProfile" data-userid="{{post.user.id}}">
+          <image class="user-avatar" src="{{post.user.avatar || '/images/default-avatar.png'}}" mode="aspectFill"></image>
+          <view class="user-info">
+            <text class="user-name">{{post.user.nickname}}</text>
+            <text class="post-time">{{post.created_at}}</text>
+          </view>
+        </view>
+        <view class="post-type-badge type-{{post.type}}">
+          <text wx:if="{{post.type === 'recipe'}}">● 菜谱</text>
+          <text wx:if="{{post.type === 'restaurant'}}">● 商家</text>
+          <text wx:if="{{post.type === 'meal'}}">● 饮食</text>
+          <text wx:if="{{post.type === 'sport'}}">● 运动</text>
+        </view>
+      </view>
+
+      <view class="post-body">
+        <text class="post-text">{{post.content}}</text>
+        <view class="post-media post-media-multi" wx:if="{{post.images && post.images.length}}">
+          <image wx:for="{{post.images}}" wx:key="*this" class="post-image" src="{{item}}" mode="widthFix"></image>
+        </view>
+        <view class="post-media" wx:elif="{{post.image}}">
+          <image class="post-image" src="{{post.image}}" mode="widthFix"></image>
+        </view>
+        <view class="related-card" wx:if="{{post.related_item}}" bindtap="goToRelated" data-post="{{post}}">
+          <image class="related-image" src="{{post.related_item.image}}" mode="aspectFill"></image>
+          <view class="related-info">
+            <text class="related-name">{{post.related_item.name}}</text>
+            <view class="related-meta">
+              <text wx:if="{{post.type === 'recipe'}}">🔥 {{post.related_item.calories}} 卡</text>
+              <text wx:if="{{post.type === 'restaurant'}}">⭐ {{post.related_item.rating}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="post-sport-card" wx:if="{{post.type === 'sport' && post.sport_info}}">
+          <text class="post-sport-type">{{post.sport_info.type_name || '运动'}}</text>
+          <view class="post-sport-meta">
+            <text wx:if="{{post.sport_info.duration}}">⏱ {{post.sport_info.duration}}分钟</text>
+            <text wx:if="{{post.sport_info.distance}}">📏 {{post.sport_info.distance}}km</text>
+            <text wx:if="{{post.sport_info.calories}}">🔥 {{post.sport_info.calories}}千卡</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="post-actions">
+        <view class="action-item {{post.is_liked ? 'liked' : ''}}" bindtap="toggleLike">
+          <text class="action-icon">{{post.is_liked ? '❤️' : '🤍'}}</text>
+          <text class="action-count">{{post.like_count || 0}}</text>
+        </view>
+        <view class="action-item">
+          <text class="action-icon">💬</text>
+          <text class="action-count">{{comments.length}}</text>
+        </view>
+        <button class="action-item share-btn" open-type="share">
+          <text class="action-icon">📤</text>
+          <text class="action-text">分享</text>
+        </button>
+      </view>
+    </view>
+
+    <!-- 讨论区标题 -->
+    <view class="section-title">
+      <text>全部评论 ({{comments.length}})</text>
+    </view>
+
+    <!-- 评论列表 -->
+    <view class="comments-list">
+      <view class="comment-item" wx:for="{{comments}}" wx:key="id">
+        <image class="comment-avatar" src="{{item.user.avatar}}" mode="aspectFill"></image>
+        <view class="comment-body">
+          <view class="comment-head">
+            <text class="comment-user">{{item.user.nickname}}</text>
+            <text class="comment-time">{{item.created_at}}</text>
+          </view>
+          <text class="comment-text">{{item.content}}</text>
+        </view>
+      </view>
+      <view class="empty-comments" wx:if="{{comments.length === 0 && !loading}}">
+        <text>暂无评论，来抢沙发吧～</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 加载中 -->
+  <view class="loading-wrap" wx:if="{{!post && loading}}">
+    <text>加载中...</text>
+  </view>
+  <view class="error-wrap" wx:if="{{!post && !loading && error}}">
+    <text>{{error}}</text>
+    <button class="retry-btn" bindtap="loadPost">重试</button>
+  </view>
+
+  <!-- 底部回复框（论坛式固定输入） -->
+  <view class="reply-bar" wx:if="{{post}}">
+    <input class="reply-input" placeholder="说点什么..." value="{{replyText}}" bindinput="onReplyInput" focus="{{focusReply}}" confirm-type="send" bindconfirm="submitReply" />
+    <button class="reply-submit" bindtap="submitReply" disabled="{{!replyText.trim() || submitting}}">
+      {{submitting ? '发送中...' : '发送'}}
+    </button>
+  </view>
+</view>

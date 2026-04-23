@@ -1,0 +1,274 @@
+<!--pages/cook-detail/cook-detail.wxml-->
+<view class="container page-container">
+  <scroll-view class="content" scroll-y="true">
+    <!-- 顶部大图 -->
+    <view class="header-image-wrapper">
+      <image class="header-image" src="{{recipe.image}}" mode="aspectFill" lazy-load binderror="onHeaderImageError"></image>
+      <view class="image-overlay"></view>
+    </view>
+    
+    <!-- 菜名和标签 -->
+    <view class="header-info card">
+      <view class="recipe-title">{{recipe.name}}</view>
+      <view class="recipe-tags">
+        <text class="tag" wx:for="{{recipe.tags}}" wx:key="*this">{{item}}</text>
+        <text class="tag">🔥 {{recipe.calories}} kcal</text>
+        <text class="tag">{{recipe.difficulty || '简单'}}</text>
+        <text wx:if="{{recipe.cooking_time}}" class="tag">⏱ {{recipe.cooking_time}}分钟</text>
+      </view>
+    </view>
+
+    <!-- 营养信息 -->
+    <view class="nutrition-section card" wx:if="{{nutritionInfo}}">
+      <view class="section-title">营养信息（每100g）</view>
+      <view class="nutrition-grid">
+        <view class="nutrition-item">
+          <view class="nutrition-value">{{nutritionInfo.carb || 0}}g</view>
+          <view class="nutrition-label">碳水</view>
+        </view>
+        <view class="nutrition-item">
+          <view class="nutrition-value">{{nutritionInfo.protein || 0}}g</view>
+          <view class="nutrition-label">蛋白质</view>
+        </view>
+        <view class="nutrition-item">
+          <view class="nutrition-value">{{nutritionInfo.fat || 0}}g</view>
+          <view class="nutrition-label">脂肪</view>
+        </view>
+        <view class="nutrition-item">
+          <view class="nutrition-value">{{nutritionInfo.fiber || 0}}g</view>
+          <view class="nutrition-label">纤维</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 成本估算对比 -->
+    <view class="cost-section card" wx:if="{{showCostComparison}}">
+      <view class="section-title">💰 成本对比</view>
+      <view class="cost-comparison">
+        <view class="cost-item home-cost">
+          <view class="cost-label">自己做</view>
+          <view class="cost-value">¥{{estimatedCost}}</view>
+          <view class="cost-desc">物料成本</view>
+        </view>
+        <view class="cost-arrow">→</view>
+        <view class="cost-item takeout-cost">
+          <view class="cost-label">同款外卖</view>
+          <view class="cost-value">¥{{estimatedTakeoutPrice}}</view>
+          <view class="cost-desc">预估价格</view>
+        </view>
+      </view>
+      <view class="saved-amount" wx:if="{{savedAmount > 0}}">
+        <text class="saved-icon">💵</text>
+        <text class="saved-text">省了 ¥{{savedAmount}}</text>
+        <text class="saved-desc">（约节省 {{savedPercent}}%）</text>
+      </view>
+    </view>
+
+    <!-- 小贴士 -->
+    <view class="tips-section card" wx:if="{{recipe.tips && recipe.tips.length > 0}}">
+      <view class="section-title">💡 小贴士</view>
+      <view class="tips-list">
+        <view class="tip-item" wx:for="{{recipe.tips}}" wx:key="index">
+          <text class="tip-icon">💡</text>
+          <text class="tip-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 食材清单（与购物清单联动） -->
+    <view class="ingredients-section card">
+      <view class="section-title">
+        所需食材
+        <view class="shopping-actions" wx:if="{{showShoppingListBtn}}">
+          <text class="section-action" wx:if="{{missingIngredients.length > 0}}" bindtap="addToShoppingList">
+            加入缺的
+          </text>
+          <text class="section-action action-all" bindtap="addAllIngredientsToShoppingList">加入全部</text>
+          <text class="match-score-badge">匹配{{matchScore}}%</text>
+        </view>
+      </view>
+      <view class="match-score-tip" wx:if="{{showShoppingListBtn && missingIngredients.length > 0}}">
+        <text class="tip-icon">💡</text>
+        <text class="tip-text">缺少 {{missingIngredients.length}} 个食材，可「加入缺的」补货，或「加入全部」按菜谱采买</text>
+      </view>
+      <view class="ingredients-list">
+        <view 
+          class="ingredient-item {{item.in_fridge ? 'in-fridge' : 'missing'}}"
+          wx:for="{{ingredients}}"
+          wx:key="name"
+        >
+          <text class="ingredient-icon">{{item.in_fridge ? '✅' : '🛒'}}</text>
+          <view class="ingredient-info">
+            <view class="ingredient-main">
+              <text class="ingredient-name">{{item.name}}</text>
+              <text class="ingredient-amount">{{item.amount}}</text>
+            </view>
+            <!-- 替代建议 -->
+            <view class="substitute-section" wx:if="{{item.substitutes && item.substitutes.length > 0}}">
+              <text class="substitute-label">💡 替代建议：</text>
+              <view class="substitute-list">
+                <view class="substitute-item" wx:for="{{item.substitutes}}" wx:key="name" wx:for-item="sub">
+                  <text class="substitute-name">{{sub.name}}</text>
+                  <text class="substitute-impact">（{{sub.impact}}）</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 做法步骤 -->
+    <view class="steps-section card">
+      <view class="section-title">
+        制作步骤
+        <view class="voice-assistant-toggle" bindtap="toggleVoiceAssistant">
+          <text class="voice-icon">{{voiceAssistantEnabled ? '🔊' : '🔇'}}</text>
+          <text class="voice-label">{{voiceAssistantEnabled ? '语音助手' : '开启语音'}}</text>
+        </view>
+      </view>
+
+      <!-- 进度条 -->
+      <view class="steps-progress" wx:if="{{steps.length > 0}}">
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{completedStepsCount / steps.length * 100}}%"></view>
+        </view>
+        <text class="progress-text">已完成 {{completedStepsCount}}/{{steps.length}} 步</text>
+      </view>
+      
+      <!-- 语音助手控制栏 -->
+      <view class="voice-controls" wx:if="{{voiceAssistantEnabled}}">
+        <view class="voice-control-item" bindtap="prevStep">
+          <text class="control-icon">⏮️</text>
+          <text class="control-label">上一步</text>
+        </view>
+        <view class="voice-control-item" bindtap="repeatStep">
+          <text class="control-icon">🔁</text>
+          <text class="control-label">重复</text>
+        </view>
+        <view class="voice-control-item" bindtap="nextStep">
+          <text class="control-icon">⏭️</text>
+          <text class="control-label">下一步</text>
+        </view>
+      </view>
+
+      <!-- 倒计时提示 -->
+      <view class="timer-running" wx:if="{{timerRunning}}">
+        <text class="timer-display">⏱ {{timerMinutes}}:{{timerSecondsStr}}</text>
+        <text class="timer-stop" bindtap="stopTimer">停止</text>
+      </view>
+      
+      <view class="steps-list">
+        <view 
+          class="step-item {{(voiceAssistantEnabled && currentStepIndex === idx) ? 'current-step' : ''}} {{item.completed ? 'step-done' : ''}}"
+          wx:for="{{steps}}"
+          wx:key="index"
+          wx:for-index="idx"
+        >
+          <view class="step-left" bindtap="toggleStepComplete" data-index="{{idx}}">
+            <view class="step-checkbox {{item.completed ? 'checked' : ''}}">
+              <text wx:if="{{item.completed}}" class="check-icon">✓</text>
+            </view>
+            <view class="step-number">{{idx + 1}}</view>
+          </view>
+          <view class="step-body" bindtap="jumpToStep" data-index="{{idx}}">
+            <view class="step-content">
+              <text class="step-text">{{item.text}}</text>
+              <view class="step-meta">
+                <text class="step-time" wx:if="{{item.time}}">⏱ {{item.time}}分钟</text>
+                <view class="step-expand-btn {{expandedStepIndex === idx ? 'expanded' : ''}}" catchtap="toggleStepExpand" data-index="{{idx}}" wx:if="{{item.detail}}">
+                  <text>{{expandedStepIndex === idx ? '收起详情' : '查看详情'}}</text>
+                </view>
+              </view>
+              <view class="step-detail" wx:if="{{item.detail && expandedStepIndex === idx}}">
+                <text class="detail-text">{{item.detail}}</text>
+                <text class="detail-tips" wx:if="{{item.tips}}">💡 {{item.tips}}</text>
+              </view>
+              <view class="step-timer-btn" wx:if="{{item.time && !timerRunning}}" catchtap="startStepTimer" data-index="{{idx}}">
+                <text class="timer-icon">⏱️</text>
+                <text class="timer-text">开启{{item.time}}分钟倒计时</text>
+              </view>
+            </view>
+            <text class="step-play-icon" wx:if="{{voiceAssistantEnabled && currentStepIndex === idx && isPlaying}}">🔊</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 相关推荐 -->
+    <view class="related-section card" wx:if="{{relatedRecipes && relatedRecipes.length > 0}}">
+      <view class="section-title">相关推荐</view>
+      <scroll-view class="related-scroll" scroll-x="true">
+        <view class="related-list">
+          <view 
+            class="related-item"
+            wx:for="{{relatedRecipes}}"
+            wx:key="id"
+            bindtap="goToRelatedDetail"
+            data-id="{{item.id}}"
+          >
+            <image class="related-image" src="{{item.image}}" mode="aspectFill"></image>
+            <view class="related-name">{{item.name}}</view>
+            <view class="related-cal">🔥 {{item.calories}} kcal</view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作栏（视觉精简 + 强调主操作） -->
+  <view class="action-bar">
+    <view class="action-left">
+      <view class="action-pill favorite {{isFavorite ? 'active' : ''}}" bindtap="toggleFavorite">
+        <text class="action-pill-icon">{{isFavorite ? '❤️' : '🤍'}}</text>
+        <text class="action-pill-text">收藏</text>
+      </view>
+      <view class="action-pill" bindtap="shareToCommunity">
+        <text class="action-pill-icon">👥</text>
+        <text class="action-pill-text">分享</text>
+      </view>
+      <view class="action-pill danger" bindtap="blockRecipe">
+        <text class="action-pill-icon">🚫</text>
+        <text class="action-pill-text">不再推荐</text>
+      </view>
+    </view>
+    <button class="btn-primary action-confirm" bindtap="confirmEat">确认开吃</button>
+  </view>
+
+  <!-- 分量选择弹窗 -->
+  <view class="modal {{showPortionModal ? 'show' : ''}}" catchtap="closePortionModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">选择分量</view>
+      <view class="portion-options">
+        <view 
+          class="portion-item {{selectedPortion === item.value ? 'active' : ''}}"
+          wx:for="{{portionOptions}}"
+          wx:key="value"
+          bindtap="selectPortion"
+          data-value="{{item.value}}"
+        >
+          <text class="portion-label">{{item.label}}</text>
+          <text class="portion-cal">{{item.cal}} kcal</text>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="closePortionModal">取消</button>
+        <button class="btn-primary" bindtap="confirmPortion">确认</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 扣除冰箱确认弹窗 -->
+  <view class="modal {{showDeductModal ? 'show' : ''}}" catchtap="closeDeductModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">扣除冰箱食材？</view>
+      <view class="deduct-list">
+        <text wx:for="{{fridgeIngredients}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="skipDeduct">跳过</button>
+        <button class="btn-primary" bindtap="confirmDeduct">确认扣除</button>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "智能决策助手",
+  "navigationBarBackgroundColor": "#34c759",
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "skeleton": "/components/skeleton/skeleton"
+  }
+}

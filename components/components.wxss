@@ -1,0 +1,285 @@
+/* ========== 2025 组件样式库 ========== */
+
+/* ========== 导航栏 2.0 - 玻璃拟态效果 ========== */
+.navigation-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 88rpx;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 0 32rpx; /* 空间呼吸感 */
+}
+
+.navigation-bar-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+/* 深色模式导航栏 */
+.dark-mode .navigation-bar {
+  background: rgba(31, 41, 55, 0.8);
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .navigation-bar-title {
+  color: #F9FAFB;
+}
+
+/* ========== 智能表单组件 ========== */
+.form-container {
+  padding: 32rpx; /* 空间呼吸感 */
+  margin: 48rpx auto; /* 空间呼吸感：1:1.5 比例 */
+}
+
+.form-group {
+  margin-bottom: 48rpx; /* 空间呼吸感 */
+}
+
+.form-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.form-input {
+  width: 100%;
+  min-height: 88rpx;
+  padding: 26rpx 32rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #E5E7EB;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  color: #1F2937;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+
+.form-input:focus {
+  background: #FFFFFF;
+  border-color: #2563EB;
+  box-shadow: 
+    0 4rpx 12rpx rgba(37, 99, 235, 0.1),
+    inset 0 0 0 2rpx rgba(37, 99, 235, 0.05);
+  transform: scale(1.01);
+}
+
+.form-input-error {
+  border-color: #EF4444;
+}
+
+.form-error-message {
+  font-size: 24rpx;
+  color: #EF4444;
+  margin-top: 8rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.form-success-message {
+  font-size: 24rpx;
+  color: #10B981;
+  margin-top: 8rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+/* AI 预填充提示 */
+.form-suggestion {
+  margin-top: 12rpx;
+  padding: 16rpx;
+  background: #EFF6FF;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-suggestion-text {
+  flex: 1;
+}
+
+.form-suggestion-btn {
+  padding: 8rpx 16rpx;
+  background: #2563EB;
+  color: #FFFFFF;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+  border: none;
+}
+
+/* ========== 动态骨架屏 ========== */
+.skeleton-container {
+  padding: 32rpx; /* 空间呼吸感 */
+  margin: 48rpx auto; /* 空间呼吸感 */
+}
+
+.skeleton-rect {
+  background: linear-gradient(90deg, 
+    #F3F4F6 0%, 
+    #E5E7EB 25%, 
+    #F3F4F6 50%, 
+    #E5E7EB 75%, 
+    #F3F4F6 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 8rpx;
+  height: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+.skeleton-circle {
+  background: linear-gradient(90deg, 
+    #F3F4F6 0%, 
+    #E5E7EB 25%, 
+    #F3F4F6 50%, 
+    #E5E7EB 75%, 
+    #F3F4F6 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 50%;
+  width: 120rpx;
+  height: 120rpx;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24rpx; /* 空间呼吸感 */
+  margin-top: 24rpx;
+}
+
+/* SVG 路径动画骨架（替代旋转图标） */
+.skeleton-svg {
+  width: 100%;
+  height: 200rpx;
+  background: #F3F4F6;
+  border-radius: 12rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-svg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(37, 99, 235, 0.1) 50%, 
+    transparent 100%
+  );
+  animation: skeletonPath 2s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes skeletonPath {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ========== 容器组件 - 空间呼吸感 ========== */
+.container {
+  padding: 32rpx; /* 内容区域内边距 */
+  margin: 48rpx auto; /* 外边距（1:1.5 比例） */
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.container-spacious {
+  padding: 48rpx; /* 更宽松的内边距 */
+  margin: 64rpx auto; /* 更宽松的外边距 */
+}
+
+.container-compact {
+  padding: 24rpx; /* 紧凑模式 */
+  margin: 32rpx auto;
+}
+
+/* ========== 间距工具类（空间呼吸感） ========== */
+/* 元素间距：最小 24rpx */
+.gap-24 { gap: 24rpx; }
+.gap-32 { gap: 32rpx; }
+.gap-48 { gap: 48rpx; }
+
+/* 内边距：32rpx 起 */
+.p-32 { padding: 32rpx; }
+.p-48 { padding: 48rpx; }
+.p-64 { padding: 64rpx; }
+
+/* 外边距：48rpx 起 */
+.m-48 { margin: 48rpx; }
+.m-64 { margin: 64rpx; }
+
+/* 左右边距：32rpx */
+.px-32 { padding-left: 32rpx; padding-right: 32rpx; }
+.mx-32 { margin-left: 32rpx; margin-right: 32rpx; }
+
+/* ========== 深色模式支持 ========== */
+.dark-mode .form-input {
+  background: #1F2937;
+  border-color: #374151;
+  color: #F9FAFB;
+}
+
+.dark-mode .form-input:focus {
+  border-color: #60A5FA;
+  box-shadow: 
+    0 4rpx 12rpx rgba(96, 165, 250, 0.15),
+    inset 0 0 0 2rpx rgba(96, 165, 250, 0.1);
+}
+
+.dark-mode .form-label {
+  color: #F9FAFB;
+}
+
+.dark-mode .form-suggestion {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60A5FA;
+}
+
+.dark-mode .skeleton-rect,
+.dark-mode .skeleton-circle,
+.dark-mode .skeleton-svg {
+  background: #374151;
+}
+
+.dark-mode .skeleton-rect::before,
+.dark-mode .skeleton-circle::before {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(96, 165, 250, 0.15) 50%, 
+    transparent 100%
+  );
+}

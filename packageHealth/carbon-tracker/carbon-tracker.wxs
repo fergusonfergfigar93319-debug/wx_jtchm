@@ -1,0 +1,27 @@
+// pages/carbon-tracker/carbon-tracker.wxs
+// 格式化时间
+function formatDuration(seconds) {
+  if (!seconds) return '0:00'
+  var hours = Math.floor(seconds / 3600)
+  var minutes = Math.floor((seconds % 3600) / 60)
+  var secs = seconds % 60
+  
+  if (hours > 0) {
+    return hours + ':' + (minutes < 10 ? '0' : '') + minutes + ':' + (secs < 10 ? '0' : '') + secs
+  }
+  return minutes + ':' + (secs < 10 ? '0' : '') + secs
+}
+
+// 格式化距离
+function formatDistance(meters) {
+  if (!meters) return '0m'
+  if (meters < 1000) {
+    return Math.round(meters) + 'm'
+  }
+  return (meters / 1000).toFixed(2) + 'km'
+}
+
+module.exports = {
+  formatDuration: formatDuration,
+  formatDistance: formatDistance
+}

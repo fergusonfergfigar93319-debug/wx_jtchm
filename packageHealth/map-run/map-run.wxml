@@ -1,0 +1,169 @@
+<!--pages/map-run/map-run.wxml-->
+<wxs module="utils" src="./map-run.wxs"></wxs>
+<view class="container">
+  <!-- 地图区域 -->
+  <view class="map-container">
+    <map
+      id="workoutMap"
+      class="workout-map"
+      latitude="{{latitude}}"
+      longitude="{{longitude}}"
+      scale="{{scale}}"
+      markers="{{markers}}"
+      polyline="{{polyline}}"
+      show-location="{{true}}"
+      enable-zoom="{{true}}"
+      enable-scroll="{{true}}"
+      enable-rotate="{{false}}"
+      bindtap="onMapTap"
+      bindmarkertap="onMarkerTap"
+    ></map>
+    
+    <!-- 运动类型选择（未开始运动时显示） -->
+    <view class="workout-type-selector" wx:if="{{!isRunning}}">
+      <view class="type-title">选择运动类型</view>
+      <view class="type-options">
+        <view
+          class="type-option {{currentWorkout.type === item.value ? 'active' : ''}}"
+          wx:for="{{workoutTypes}}"
+          wx:key="value"
+          bindtap="changeWorkoutType"
+          data-type="{{item.value}}"
+        >
+          <text class="type-icon">{{item.icon}}</text>
+          <text class="type-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 运动数据面板 -->
+  <view class="data-panel">
+    <!-- 实时数据 -->
+    <view class="real-time-data" wx:if="{{isRunning || isPaused}}">
+      <view class="data-row">
+        <view class="data-item">
+          <text class="data-value">{{utils.formatDistance(currentWorkout.distance)}}</text>
+          <text class="data-label">距离</text>
+        </view>
+        <view class="data-item">
+          <text class="data-value">{{utils.formatDuration(currentWorkout.duration)}}</text>
+          <text class="data-label">时间</text>
+        </view>
+        <view class="data-item">
+          <text class="data-value">{{currentWorkout.speed.toFixed(1)}}</text>
+          <text class="data-label">速度(km/h)</text>
+        </view>
+      </view>
+      <view class="data-row">
+        <view class="data-item">
+          <text class="data-value">{{currentWorkout.pace.toFixed(1)}}</text>
+          <text class="data-label">配速(分钟/km)</text>
+        </view>
+        <view class="data-item highlight">
+          <text class="data-value highlight-value">{{currentWorkout.calories.toFixed(0)}}</text>
+          <text class="data-label">消耗(kcal)</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日统计（未运动时显示） -->
+    <view class="today-stats" wx:if="{{!isRunning && !isPaused}}">
+      <view class="stats-title">今日运动</view>
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value">{{utils.formatDistance(todayStats.totalDistance)}}</text>
+          <text class="stat-label">总距离</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{utils.formatDuration(todayStats.totalDuration)}}</text>
+          <text class="stat-label">总时长</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{todayStats.totalCalories.toFixed(0)}}</text>
+          <text class="stat-label">总消耗</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{todayStats.workoutCount}}</text>
+          <text class="stat-label">运动次数</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 控制按钮 -->
+  <view class="control-panel">
+    <view class="control-buttons">
+      <!-- 开始按钮 -->
+      <button
+        class="control-btn start-btn"
+        wx:if="{{!isRunning}}"
+        bindtap="startWorkout"
+      >
+        <text class="btn-icon">▶</text>
+        <text class="btn-text">开始运动</text>
+      </button>
+
+      <!-- 暂停/继续按钮 -->
+      <button
+        class="control-btn pause-btn"
+        wx:if="{{isRunning && !isPaused}}"
+        bindtap="pauseWorkout"
+      >
+        <text class="btn-icon">⏸</text>
+        <text class="btn-text">暂停</text>
+      </button>
+
+      <button
+        class="control-btn resume-btn"
+        wx:if="{{isRunning && isPaused}}"
+        bindtap="resumeWorkout"
+      >
+        <text class="btn-icon">▶</text>
+        <text class="btn-text">继续</text>
+      </button>
+
+      <!-- 结束按钮 -->
+      <button
+        class="control-btn stop-btn"
+        wx:if="{{isRunning}}"
+        bindtap="stopWorkout"
+      >
+        <text class="btn-icon">⏹</text>
+        <text class="btn-text">结束</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 运动历史 -->
+  <view class="history-section" wx:if="{{!isRunning && !isPaused}}">
+    <view class="section-title">运动历史</view>
+    <view class="history-list">
+      <view
+        class="history-item"
+        wx:for="{{workoutHistory}}"
+        wx:key="id"
+        bindtap="viewHistoryDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="history-icon">{{item.type === 'running' ? '🏃' : item.type === 'walking' ? '🚶' : '🚴'}}</view>
+        <view class="history-content">
+          <view class="history-header">
+            <text class="history-type">{{item.type === 'running' ? '跑步' : item.type === 'walking' ? '步行' : '骑行'}}</text>
+            <text class="history-date">{{item.date}}</text>
+          </view>
+          <view class="history-stats">
+            <text class="history-stat">{{utils.formatDistance(item.distance)}}</text>
+            <text class="history-stat">{{utils.formatDuration(item.duration)}}</text>
+            <text class="history-stat highlight">{{item.calories.toFixed(0)}}kcal</text>
+          </view>
+        </view>
+        <text class="history-arrow">></text>
+      </view>
+      <view class="empty-history" wx:if="{{workoutHistory.length === 0}}">
+        <text class="empty-text">暂无运动记录</text>
+        <text class="empty-hint">开始你的第一次运动吧！</text>
+      </view>
+    </view>
+  </view>
+</view>

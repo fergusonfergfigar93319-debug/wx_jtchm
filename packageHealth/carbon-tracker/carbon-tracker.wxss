@@ -1,0 +1,374 @@
+/* pages/carbon-tracker/carbon-tracker.wxss - 与首页统一风格 */
+.container {
+  min-height: 100vh;
+  background: var(--color-bg-page);
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  animation: pageFadeIn 0.4s ease-out;
+}
+
+/* 顶部标题栏：与全局设计统一的绿色头部 */
+.page-header {
+  padding: 40rpx 32rpx 16rpx;
+  padding-top: calc(40rpx + env(safe-area-inset-top));
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 40%, #22c55e 100%);
+  color: #fff;
+  border-bottom-left-radius: 32rpx;
+  border-bottom-right-radius: 32rpx;
+  box-shadow: 0 12rpx 24rpx rgba(34, 197, 94, 0.35);
+}
+
+.page-header-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.page-subtitle {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+.page-level-tag {
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1rpx solid rgba(255, 255, 255, 0.5);
+}
+
+.page-level-tag.low {
+  background: rgba(22, 163, 74, 0.9);
+}
+
+.page-level-tag.medium {
+  background: rgba(234, 179, 8, 0.9);
+}
+
+.page-level-tag.high {
+  background: rgba(239, 68, 68, 0.9);
+}
+
+.page-level-text {
+  color: #fff;
+}
+
+/* 顶部统计区域 */
+.summary-section {
+  padding: 16rpx 24rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-top: -20rpx;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+}
+
+.summary-grid .week-card .value-number,
+.summary-grid .week-card .week-total {
+  font-size: 28rpx;
+}
+
+.summary-grid .week-card .week-value {
+  margin: 12rpx 0;
+}
+
+.summary-grid .workout-summary-card.compact .card-header {
+  margin-bottom: 12rpx;
+}
+
+.summary-grid .workout-summary-card.compact .stats-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.summary-grid .workout-summary-card.compact .stat-value {
+  font-size: 26rpx;
+}
+
+.summary-grid .workout-summary-card.compact .stat-label {
+  font-size: 20rpx;
+}
+
+.carbon-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+}
+
+.main-card {
+  background: #fff;
+}
+
+.week-card {
+  background: #fff;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-5);
+}
+
+.card-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.carbon-level {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.carbon-level.low {
+  background: #34c759;
+  color: #fff;
+}
+
+.carbon-level.medium {
+  background: #ffc107;
+  color: #333;
+}
+
+.carbon-level.high {
+  background: #ff5252;
+  color: #fff;
+}
+
+.carbon-value {
+  text-align: center;
+  margin: var(--space-5) 0;
+}
+
+.value-number {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.value-unit {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-left: var(--space-2);
+}
+
+.carbon-breakdown {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 30rpx;
+  padding-top: 30rpx;
+  border-top: 1rpx solid rgba(0, 0, 0, 0.1);
+}
+
+.breakdown-item {
+  text-align: center;
+}
+
+.breakdown-label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  margin-bottom: 8rpx;
+}
+
+.breakdown-value {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.carbon-offset {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20rpx;
+  padding: 16rpx 20rpx;
+  background: rgba(52, 199, 89, 0.12);
+  border-radius: 16rpx;
+  border-left: 4rpx solid #34c759;
+}
+
+.offset-label {
+  font-size: 26rpx;
+  color: #34c759;
+  font-weight: 600;
+}
+
+.offset-value {
+  font-size: 28rpx;
+  color: #34c759;
+  font-weight: 700;
+}
+
+.week-value {
+  text-align: center;
+  margin: 20rpx 0;
+}
+
+.week-total {
+  display: block;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  margin-top: 10rpx;
+}
+
+/* 今日运动统计卡片 - 与参考图一致：上排蓝底（总距离/总时长），下排灰底（消耗/碳抵消） */
+.workout-summary-card {
+  background: #fff;
+}
+
+.workout-hint {
+  font-size: 22rpx;
+  color: #666;
+  font-weight: 400;
+  margin-left: 8rpx;
+}
+
+.workout-summary-card .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.workout-summary-card .stat-item {
+  text-align: center;
+  padding: 20rpx 12rpx;
+  border-radius: 16rpx;
+  background: #f0f7ff;
+}
+
+.workout-summary-card .stat-item.highlight {
+  background: #f5f5f5;
+}
+
+.workout-summary-card .stat-item.muted {
+  background: #f5f5f5;
+}
+
+.workout-summary-card .stat-item.muted .stat-value {
+  color: #333;
+}
+
+.workout-summary-card .stat-value {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1e88e5;
+}
+
+.workout-summary-card .stat-item.highlight .stat-value {
+  color: #34c759;
+}
+
+.workout-summary-card .stat-label {
+  font-size: 20rpx;
+  color: #666;
+  margin-top: 4rpx;
+}
+
+/* 运动区域 */
+.workout-section {
+  margin: 0 24rpx 24rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+}
+
+.map-wrapper {
+  width: 100%;
+  height: 440rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.08);
+}
+
+.map-locate-btn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 24rpx;
+  background: rgba(52, 199, 89, 0.12);
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: #34c759;
+  font-weight: 600;
+  transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+}
+
+.map-locate-btn:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+.locate-icon {
+  font-size: 28rpx;
+}
+
+.trend {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.trend.up {
+  color: #ff5252;
+}
+
+.trend.down {
+  color: #34c759;
+}
+
+.trend.stable {
+  color: var(--color-text-tertiary);
+}
+
+/* 视图切换 */
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 20rpx;
+}
+
+/* 运动相关样式 */
+.workout-map {
+  width: 100%;
+  height: 440rpx;
+}
+
+.workout-section .section-header {
+  margin-bottom: 16rpx;
+}
+
+/* 动画 */
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
