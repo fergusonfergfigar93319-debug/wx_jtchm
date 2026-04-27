@@ -1,12 +1,8 @@
 <!--pages/fridge/fridge.wxml - 与首页统一设计 -->
 <view class="page-fridge page-container {{reduceMotion ? 'reduce-motion' : ''}}">
+  <custom-nav-bar title="我的冰箱" isScrolled="{{navScrolled}}" />
   <!-- 顶部栏（与首页一致） -->
   <view class="header">
-    <view class="status-bar">
-      <view class="status-text"></view>
-      <text class="status-text">{{timeText}}</text>
-      <text class="status-text">100%</text>
-    </view>
     <view class="top-row">
       <view class="header-title-wrap">
         <text class="header-title">我的冰箱</text>
@@ -237,7 +233,11 @@
       </view>
     </view>
 
-    <scroll-view class="fridge-list {{editMode ? 'fridge-list--batch-mode' : ''}}" scroll-y="true">
+    <scroll-view
+      class="fridge-list {{editMode ? 'fridge-list--batch-mode' : ''}}"
+      scroll-y="true"
+      bindscroll="onFridgeListScroll"
+    >
       <!-- 列表头：当前分类 + 数量 + 筛选/排序标签 -->
       <view wx:if="{{totalCount > 0}}" class="fridge-list-header">
         <view class="fridge-list-title-row">

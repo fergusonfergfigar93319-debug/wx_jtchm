@@ -27,6 +27,7 @@ Page({
     },
     
     progressPercent: 0,
+    progressPercentInt: 0,
     progressDeg: 0,
     progressColor: '#4CD9A1',
     remainingCalories: 2000,
@@ -133,7 +134,9 @@ Page({
     smartChoiceMealTypeName: '午餐',
 
     // 兼容/性能：轻量模式
-    liteMode: false
+    liteMode: false,
+    /** 自定义顶栏：scroll-view 内滚动驱动毛玻璃 */
+    navScrolled: false
   },
 
   onLoad() {
@@ -163,6 +166,14 @@ Page({
 
   onUnload() {
     this.clearTipTimer()
+  },
+
+  onMainScroll(e) {
+    const top = (e.detail && e.detail.scrollTop) || 0
+    const next = top > 20
+    if (next !== this.data.navScrolled) {
+      this.setData({ navScrolled: next })
+    }
   },
 
   startTipAutoSwitch() {
@@ -325,6 +336,8 @@ Page({
       const proteinPercent = totalMacros > 0 ? Math.round((macros.proteing / totalMacros) * 100) : 30
       const fatPercent = totalMacros > 0 ? Math.round((macros.fatg / totalMacros) * 100) : 25
 
+      const progressPercentInt = Math.max(0, Math.min(100, Math.round(Number(progressPercent) || 0)))
+
       this.setData({
         dailySummary: {
           intake_actual: intakeActual,
@@ -335,6 +348,7 @@ Page({
           healthLevelText: healthLevelText
         },
         progressPercent,
+        progressPercentInt,
         progressDeg,
         progressColor,
         remainingCalories,
@@ -444,7 +458,12 @@ Page({
   },
 
   goToAIChat() {
+    util.vibrate('light')
     wx.navigateTo({ url: '/packageAI/ai-chat/ai-chat' })
+  },
+
+  onHubAiTap() {
+    this.goToAIChat()
   },
 
   goToWorkout() {

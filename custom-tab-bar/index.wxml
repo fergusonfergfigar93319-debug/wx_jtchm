@@ -1,61 +1,75 @@
 <view class="tabbar-wrapper">
-  <view
-    class="tabbar-item {{selected === 0 ? 'active' : ''}}"
-    data-index="0"
-    data-path="pages/index/index"
-    bindtap="onTabTap"
-    hover-class="tabbar-item-hover"
-    hover-stay-time="70"
-  >
-    <view class="tabbar-icon-wrap">
-      <image class="tabbar-icon-layer {{selected !== 0 ? 'is-on' : ''}}" src="/images/tabbar/home.png" mode="aspectFit" />
-      <image class="tabbar-icon-layer {{selected === 0 ? 'is-on' : ''}}" src="/images/tabbar/home-active.png" mode="aspectFit" />
+  <view class="tabbar-row">
+    <view
+      class="tabbar-item {{selected === 0 ? 'active' : ''}}"
+      data-index="0"
+      data-path="pages/index/index"
+      bindtap="onTabTap"
+      hover-class="tabbar-item-hover"
+      hover-stay-time="70"
+    >
+      <view class="tabbar-icon-wrap">
+        <image class="tabbar-icon-layer {{selected !== 0 ? 'is-on' : ''}}" src="/images/tabbar/home.png" mode="aspectFit" />
+        <image class="tabbar-icon-layer {{selected === 0 ? 'is-on' : ''}}" src="/images/tabbar/home-active.png" mode="aspectFit" />
+      </view>
+      <text class="tabbar-text">首页</text>
     </view>
-    <text class="tabbar-text">首页</text>
-  </view>
 
-  <view
-    class="tabbar-item {{selected === 1 ? 'active' : ''}}"
-    data-index="1"
-    data-path="pages/fridge/fridge"
-    bindtap="onTabTap"
-    hover-class="tabbar-item-hover"
-    hover-stay-time="70"
-  >
-    <view class="tabbar-icon-wrap">
-      <image class="tabbar-icon-layer {{selected !== 1 ? 'is-on' : ''}}" src="/images/tabbar/fridge.png" mode="aspectFit" />
-      <image class="tabbar-icon-layer {{selected === 1 ? 'is-on' : ''}}" src="/images/tabbar/fridge-active.png" mode="aspectFit" />
+    <view
+      class="tabbar-item {{selected === 1 ? 'active' : ''}}"
+      data-index="1"
+      data-path="pages/fridge/fridge"
+      bindtap="onTabTap"
+      hover-class="tabbar-item-hover"
+      hover-stay-time="70"
+    >
+      <view class="tabbar-icon-wrap">
+        <image class="tabbar-icon-layer {{selected !== 1 ? 'is-on' : ''}}" src="/images/tabbar/fridge.png" mode="aspectFit" />
+        <image class="tabbar-icon-layer {{selected === 1 ? 'is-on' : ''}}" src="/images/tabbar/fridge-active.png" mode="aspectFit" />
+      </view>
+      <text class="tabbar-text">冰箱</text>
     </view>
-    <text class="tabbar-text">冰箱</text>
-  </view>
 
-  <view
-    class="tabbar-item {{selected === 2 ? 'active' : ''}}"
-    data-index="2"
-    data-path="pages/report/report"
-    bindtap="onTabTap"
-    hover-class="tabbar-item-hover"
-    hover-stay-time="70"
-  >
-    <view class="tabbar-icon-wrap">
-      <image class="tabbar-icon-layer {{selected !== 2 ? 'is-on' : ''}}" src="/images/tabbar/report.png" mode="aspectFit" />
-      <image class="tabbar-icon-layer {{selected === 2 ? 'is-on' : ''}}" src="/images/tabbar/report-active.png" mode="aspectFit" />
+    <view class="tabbar-center-slot">
+      <view
+        class="tabbar-fab"
+        bindtap="onCenterTap"
+        hover-class="tabbar-fab-hover"
+        hover-stay-time="70"
+      >
+        <text class="tabbar-fab-emoji">🤖</text>
+      </view>
+      <text class="tabbar-fab-label">AI</text>
     </view>
-    <text class="tabbar-text">健康管理</text>
-  </view>
 
-  <view
-    class="tabbar-item tabbar-item-profile {{selected === 3 ? 'active' : ''}}"
-    data-index="3"
-    data-path="pages/profile/profile"
-    bindtap="onTabTap"
-    hover-class="tabbar-item-hover"
-    hover-stay-time="70"
-  >
-    <view class="tabbar-icon-wrap">
-      <image class="tabbar-icon-layer {{selected !== 3 ? 'is-on' : ''}}" src="/images/tabbar/profile.png" mode="aspectFit" />
-      <image class="tabbar-icon-layer {{selected === 3 ? 'is-on' : ''}}" src="/images/tabbar/profile-active.png" mode="aspectFit" />
+    <view
+      class="tabbar-item {{selected === 2 ? 'active' : ''}}"
+      data-index="2"
+      data-path="pages/report/report"
+      bindtap="onTabTap"
+      hover-class="tabbar-item-hover"
+      hover-stay-time="70"
+    >
+      <view class="tabbar-icon-wrap">
+        <image class="tabbar-icon-layer {{selected !== 2 ? 'is-on' : ''}}" src="/images/tabbar/report.png" mode="aspectFit" />
+        <image class="tabbar-icon-layer {{selected === 2 ? 'is-on' : ''}}" src="/images/tabbar/report-active.png" mode="aspectFit" />
+      </view>
+      <text class="tabbar-text">健康管理</text>
     </view>
-    <text class="tabbar-text">我的</text>
+
+    <view
+      class="tabbar-item tabbar-item-profile {{selected === 3 ? 'active' : ''}}"
+      data-index="3"
+      data-path="pages/profile/profile"
+      bindtap="onTabTap"
+      hover-class="tabbar-item-hover"
+      hover-stay-time="70"
+    >
+      <view class="tabbar-icon-wrap">
+        <image class="tabbar-icon-layer {{selected !== 3 ? 'is-on' : ''}}" src="/images/tabbar/profile.png" mode="aspectFit" />
+        <image class="tabbar-icon-layer {{selected === 3 ? 'is-on' : ''}}" src="/images/tabbar/profile-active.png" mode="aspectFit" />
+      </view>
+      <text class="tabbar-text">我的</text>
+    </view>
   </view>
 </view>

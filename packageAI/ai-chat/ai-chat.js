@@ -1,12 +1,16 @@
 // pages/ai-chat/ai-chat.js
 const api = require('../../utils/api.js')
 const util = require('../../utils/util.js')
+const { getSolarTermName } = require('../../utils/solar-term.js')
 
 Page({
   data: {
     messages: [], // 消息列表
+    welcomeSubtitle: '', // 欢迎区个性化副文案
     inputText: '', // 输入框内容
     isThinking: false, // AI是否在思考
+    isStreaming: false, // AI 回复打字机输出中
+    isDeepThinkDelay: false, // 深度思考：前置文案与正文之间的间隔
     scrollIntoView: '', // 滚动到指定消息
     isRecording: false, // 是否正在录音
     recordingTime: 0, // 录音时长
@@ -75,10 +79,11 @@ Page({
     pendingAttachments: [], // 待发送附件列表（图片/文档）
 
     // 兼容/性能：轻量模式（HarmonyOS/低性能设备默认开启）
-    liteMode: false
+    liteMode: false,
+    showDeepThinkLottie: false
   },
 
-  onLoad() {
+  onLoad(options) {
     try {
       const app = getApp()
       this.setData({ liteMode: !!(app && app.globalData && app.globalData.liteMode) })
@@ -86,6 +91,20 @@ Page({
     this.loadUserData()
     this.loadConversations()
     this.loadCurrentConversation()
+
+    const raw =
+      (options && (options.prompt || options.q || options.prefill)) || ''
+    const prompt = raw ? decodeURIComponent(String(raw)) : ''
+    if (prompt) {
+      this.setData({ inputText: prompt })
+      wx.nextTick(() => {
+        setTimeout(() => {
+          if (!this.data.isThinking && !this.data.isStreaming && !this.data.isDeepThinkDelay) {
+            this.sendMessage()
+          }
+        }, 220)
+      })
+    }
   },
 
   onShow() {
@@ -98,6 +117,210 @@ Page({
     if (this.data.recordingTimer) {
       clearInterval(this.data.recordingTimer)
     }
+    this.clearTypewriter()
+    if (this._deepThinkTimer) {
+      clearTimeout(this._deepThinkTimer)
+      this._deepThinkTimer = null
+    }
+    this.clearPreludeStep()
+    try {
+      if (this._deepThinkLottieAnim) {
+        try {
+          this._deepThinkLottieAnim.destroy()
+        } catch (e2) {}
+        this._deepThinkLottieAnim = null
+      }
+    } catch (e) {}
+    try {
+      this.setData({ isDeepThinkDelay: false, showDeepThinkLottie: false })
+    } catch (e) {}
+    if (this._speechAudio) {
+      try {
+        this._speechAudio.stop()
+        this._speechAudio.destroy()
+      } catch (e) {}
+      this._speechAudio = null
+    }
+  },
+
+  safeVibrate() {
+    try {
+      wx.vibrateShort({ type: 'light' })
+    } catch (e) {}
+  },
+
+  clearTypewriter() {
+    if (this._typewriterTimer) {
+      clearInterval(this._typewriterTimer)
+      this._typewriterTimer = null
+    }
+  },
+
+  clearPreludeStep() {
+    if (this._preludeStepTimer) {
+      clearInterval(this._preludeStepTimer)
+      this._preludeStepTimer = null
+    }
+  },
+
+  /** 持久化前去掉仅用于入场动效的字段 */
+  messagesForPersistence() {
+    return (this.data.messages || []).map((m) => {
+      const o = { ...m }
+      delete o.enterAnim
+      return o
+    })
+  },
+
+  /** 气泡入场动画结束后移除标记，避免反复触发 */
+  scheduleEnterAnimClear(messageId) {
+    const id = messageId
+    setTimeout(() => {
+      const idx = this.data.messages.findIndex(m => m.id === id)
+      if (idx < 0) return
+      this.setData({ [`messages[${idx}].enterAnim`]: false })
+    }, 480)
+  },
+
+  getSeasonalCareSnippet() {
+    try {
+      const app = getApp()
+      const c = app && app.globalData && app.globalData.fridgeSeasonalCache
+      const term = getSolarTermName(new Date())
+      if (term === '谷雨') {
+        return `今天是谷雨，记得多喝水；AI 建议试试清淡的春季食谱，可去「应季食材」逛逛～`
+      }
+      if (term === '清明') {
+        return `清明前后宜清淡少油腻，多吃时令蔬菜，身体更舒服～`
+      }
+      if (c && c.currentSeasonTip) {
+        const tip = String(c.currentSeasonTip).trim()
+        if (tip.length >= 8) {
+          return tip.length > 44 ? `${tip.slice(0, 44)}…` : tip
+        }
+      }
+      if (c && c.currentSeason) {
+        return `正值${c.currentSeason}，搭配应季食材，营养更省心。`
+      }
+      if (term) {
+        return `临近「${term}」，饮食不妨温和、时令一些～`
+      }
+    } catch (e) {}
+    return ''
+  },
+
+  mealContextToMealType(mealContext) {
+    if (mealContext === 'breakfast') return 'breakfast'
+    if (mealContext === 'lunch') return 'lunch'
+    if (mealContext === 'afternoon') return 'afternoon_tea'
+    if (mealContext === 'dinner') return 'dinner'
+    if (mealContext === 'night') return 'snack'
+    return 'lunch'
+  },
+
+  /** 仪表盘一键带入饮食记录页（新建） */
+  applyNutrition(e) {
+    const msgId = parseInt(e.currentTarget.dataset.msgId, 10)
+    if (!msgId) return
+    const msg = (this.data.messages || []).find(m => m.id === msgId)
+    if (!msg || !msg.nutritionCards || !msg.nutritionCards.length) return
+    this.safeVibrate()
+    const meal = this.getMealContext()
+    const mealType = this.mealContextToMealType(meal.mealContext)
+    const params = {
+      from: 'ai-chat',
+      action: 'prefill',
+      meal_type: mealType,
+      food: encodeURIComponent('AI营养建议')
+    }
+    msg.nutritionCards.forEach((c) => {
+      if (c.label === '热量') params.calories = String(c.value)
+      if (c.label === '蛋白质') params.protein = String(c.value)
+      if (c.label === '脂肪') params.fat = String(c.value)
+      if (c.label === '碳水') params.carbs = String(c.value)
+    })
+    const qs = Object.keys(params)
+      .map((k) => `${k}=${encodeURIComponent(String(params[k]))}`)
+      .join('&')
+    wx.navigateTo({
+      url: `/packageHealth/intake-edit/index?${qs}`
+    })
+  },
+
+  /** 解析 [Kcal: 500]、[碳水: 120g] 等占位符，生成仪表盘数据并净化正文 */
+  parseNutritionPlaceholders(raw) {
+    if (!raw || typeof raw !== 'string') {
+      return { cleanText: raw || '', cards: [] }
+    }
+    const cards = []
+    let clean = raw
+    const patterns = [
+      { re: /\[Kcal:\s*([\d.]+)\s*\]/gi, label: '热量', unit: 'kcal' },
+      { re: /\[碳水:\s*([\d.]+)\s*g?\s*\]/gi, label: '碳水', unit: 'g' },
+      { re: /\[蛋白质:\s*([\d.]+)\s*g?\s*\]/gi, label: '蛋白质', unit: 'g' },
+      { re: /\[脂肪:\s*([\d.]+)\s*g?\s*\]/gi, label: '脂肪', unit: 'g' }
+    ]
+    patterns.forEach(({ re, label, unit }) => {
+      clean = clean.replace(re, (_, n) => {
+        const v = String(n).trim()
+        cards.push({ label, value: v, unit })
+        return ''
+      })
+    })
+    clean = clean.replace(/\n{3,}/g, '\n\n').trim()
+    return { cleanText: clean, cards }
+  },
+
+  /** 打字机逐字输出；结束时 isTyping 置 false 并保存会话 */
+  typewriterRender(fullText, messageIndex, options = {}) {
+    const { onDone } = options
+    this.clearTypewriter()
+    const text = fullText == null ? '' : String(fullText)
+    let i = 0
+    this.setData({ isStreaming: true })
+    const step = () => {
+      const current = text.slice(0, i)
+      const patch = {
+        [`messages[${messageIndex}].text`]: current,
+        [`messages[${messageIndex}].isTyping`]: i < text.length,
+        scrollIntoView: `msg-${this.data.messages[messageIndex].id}`
+      }
+      this.setData(patch)
+      if (i < text.length) {
+        i++
+        this._typewriterTimer = setTimeout(step, this.data.liteMode ? 12 : 30)
+      } else {
+        this._typewriterTimer = null
+        this.setData({
+          [`messages[${messageIndex}].isTyping`]: false,
+          isStreaming: false
+        })
+        if (typeof onDone === 'function') onDone()
+        this.saveCurrentConversation()
+        setTimeout(() => this.scrollToBottom(), 80)
+      }
+    }
+    this.safeVibrate()
+    step()
+  },
+
+  computeWelcomeSubtitle(profile, consumed) {
+    const p = profile
+    const nick = (p && (p.nickname || p.nickName || p.name)) ? (p.nickname || p.nickName || p.name) : '朋友'
+    const meal = this.getMealContext()
+    const c = consumed != null ? consumed : 0
+    const goalLabel = p && p.goal_type === 'lose' ? '减脂' : p && p.goal_type === 'gain' ? '增肌' : '饮食'
+    if (meal.mealContext === 'lunch' && c < 80) {
+      return `嘿，${nick}，看你今天还没打卡午餐，需要我根据你的${goalLabel}目标推荐一下吗？`
+    }
+    if (meal.mealContext === 'dinner' && c < 200) {
+      return `嘿，${nick}，晚餐想吃得更健康？说说口味我帮你搭配。`
+    }
+    const care = this.getSeasonalCareSnippet()
+    if (care) {
+      return `嘿，${nick}，${care}`
+    }
+    return `嘿，${nick}，今天想聊营养、菜谱还是运动恢复？随时问我。`
   },
 
   // 加载用户数据
@@ -120,7 +343,8 @@ Page({
         todayRemainingLabel: remaining >= 0 ? '剩余' : '超出',
         todayRemainingClass: remaining >= 0 ? 'positive' : 'negative',
         todayProgressPct: pct,
-        todayProgressOver: remaining < 0
+        todayProgressOver: remaining < 0,
+        welcomeSubtitle: this.computeWelcomeSubtitle(profile, consumed)
       })
     } catch (e) {
       console.warn('加载用户数据失败', e)
@@ -255,7 +479,7 @@ Page({
         return {
           ...c,
           title,
-          messages: this.data.messages,
+          messages: this.messagesForPersistence(),
           updateTime: this.formatConversationTime(new Date()),
           lastMessage: lastMessageText
         }
@@ -324,7 +548,9 @@ Page({
     const pending = this.data.pendingAttachments || []
     const hasAttachments = pending.length > 0
     if (!text && !hasAttachments) return
-    if (this.data.isThinking) return
+    if (this.data.isThinking || this.data.isStreaming || this.data.isDeepThinkDelay) return
+
+    this.safeVibrate()
 
     const now = Date.now()
     const timeStr = this.formatTime(new Date())
@@ -335,6 +561,7 @@ Page({
       type: 'user',
       text: text || (hasAttachments ? '[图片/附件]' : ''),
       time: timeStr,
+      enterAnim: true,
       attachments: pending.map(a => ({
         kind: a.kind,
         name: a.name,
@@ -344,6 +571,7 @@ Page({
     }
 
     const messages = [...this.data.messages, userMessage]
+    this.scheduleEnterAnimClear(now)
     this.setData({
       messages,
       inputText: '',
@@ -384,22 +612,91 @@ Page({
         }
       }
 
-      const aiMessage = {
-        id: now + 1,
-        type: 'ai',
-        text: result.answer || '抱歉，我暂时无法回答这个问题。',
-        time: timeStr,
-        confidence: result.confidence != null ? result.confidence : 0.9,
-        sources: result.sources || []
+      const rawAnswer = result.answer || '抱歉，我暂时无法回答这个问题。'
+      const { cleanText, cards } = this.parseNutritionPlaceholders(rawAnswer)
+
+      const pushAiAndTypewriter = (answerText, idOffset = 0) => {
+        const mid = now + 1 + idOffset
+        const aiMessage = {
+          id: mid,
+          type: 'ai',
+          text: this.data.liteMode ? answerText : '',
+          time: timeStr,
+          enterAnim: true,
+          confidence: result.confidence != null ? result.confidence : 0.9,
+          sources: result.sources || [],
+          nutritionCards: cards.length ? cards : undefined,
+          isTyping: !this.data.liteMode
+        }
+        this.scheduleEnterAnimClear(mid)
+        const updatedMessages = [...this.data.messages, aiMessage]
+        const messageIndex = updatedMessages.length - 1
+        this.setData({
+          messages: updatedMessages,
+          isThinking: false
+        })
+        if (this.data.liteMode) {
+          this.setData({
+            [`messages[${messageIndex}].isTyping`]: false,
+            isStreaming: false
+          })
+          this.saveCurrentConversation()
+          setTimeout(() => this.scrollToBottom(), 80)
+        } else {
+          this.typewriterRender(answerText, messageIndex)
+        }
       }
 
-      const updatedMessages = [...messages, aiMessage]
-      this.setData({
-        messages: updatedMessages,
-        isThinking: false
-      })
-      this.saveCurrentConversation()
-      setTimeout(() => this.scrollToBottom(), 100)
+      if (this.data.deepThinkMode && !this.data.liteMode) {
+        const preludeId = now + 1
+        const preludeSteps = [
+          '正在检索您的历史饮食习惯...',
+          '正在匹配营养模型...',
+          '正在生成定制方案...'
+        ]
+        const prelude = {
+          id: preludeId,
+          type: 'ai',
+          text: preludeSteps[0],
+          time: timeStr,
+          isPrelude: true,
+          preludeStep: 0,
+          enterAnim: true,
+          confidence: 0,
+          sources: []
+        }
+        this.scheduleEnterAnimClear(preludeId)
+        const withPrelude = [...this.data.messages, prelude]
+        this.clearPreludeStep()
+        this.setData({ messages: withPrelude, isThinking: false, isDeepThinkDelay: true })
+        this.saveCurrentConversation()
+        this.scrollToBottom()
+        let stepIdx = 0
+        this._preludeStepTimer = setInterval(() => {
+          stepIdx++
+          if (stepIdx >= preludeSteps.length) {
+            this.clearPreludeStep()
+            return
+          }
+          const mi = this.data.messages.findIndex(m => m.id === preludeId)
+          if (mi < 0) {
+            this.clearPreludeStep()
+            return
+          }
+          this.setData({
+            [`messages[${mi}].text`]: preludeSteps[stepIdx],
+            [`messages[${mi}].preludeStep`]: stepIdx
+          })
+        }, 1000)
+        this._deepThinkTimer = setTimeout(() => {
+          this._deepThinkTimer = null
+          this.clearPreludeStep()
+          this.setData({ isDeepThinkDelay: false })
+          pushAiAndTypewriter(cleanText, 1)
+        }, 3000)
+      } else {
+        pushAiAndTypewriter(cleanText, 0)
+      }
     } catch (e) {
       console.error('发送消息失败', e)
       const errorMessage = {
@@ -407,8 +704,10 @@ Page({
         type: 'ai',
         text: '抱歉，网络出现问题，请稍后重试。',
         time: timeStr,
+        enterAnim: true,
         confidence: 0
       }
+      this.scheduleEnterAnimClear(errorMessage.id)
       this.setData({
         messages: [...messages, errorMessage],
         isThinking: false
@@ -615,13 +914,80 @@ Page({
 
   // 切换深度思考模式
   toggleDeepThink() {
-    this.setData({
-      deepThinkMode: !this.data.deepThinkMode
-    })
-    util.showToast(
-      this.data.deepThinkMode ? '已开启深度思考模式' : '已关闭深度思考模式',
-      'success'
-    )
+    const next = !this.data.deepThinkMode
+    this.setData({ deepThinkMode: next })
+    this.safeVibrate()
+    if (next && !this.data.liteMode) {
+      this.setData({ showDeepThinkLottie: true }, () => {
+        setTimeout(() => this.playDeepThinkSpark(), 48)
+      })
+    } else {
+      this.setData({ showDeepThinkLottie: false })
+    }
+    util.showToast(next ? '已开启深度思考模式' : '已关闭深度思考模式', 'success')
+  },
+
+  /** 深度思考开关：约 1s 微动效（复用已适配小程序的 Lottie 资源） */
+  playDeepThinkSpark() {
+    if (this.data.liteMode) {
+      this.setData({ showDeepThinkLottie: false })
+      return
+    }
+    try {
+      const lottie = require('../../utils/lottie-miniprogram.js')
+      const animationData = require('../../assets/personal.js')
+      const query = wx.createSelectorQuery().in(this)
+      query.select('#deepThinkLottie').fields({ node: true, size: true }).exec((res) => {
+        const canvas = res && res[0] && res[0].node
+        if (!canvas || typeof lottie.loadAnimation !== 'function') {
+          this.setData({ showDeepThinkLottie: false })
+          return
+        }
+        try {
+          if (this._deepThinkLottieAnim) {
+            try {
+              this._deepThinkLottieAnim.destroy()
+            } catch (e) {}
+            this._deepThinkLottieAnim = null
+          }
+          const ctx = canvas.getContext('2d')
+          const sys = wx.getSystemInfoSync()
+          const dpr = sys.pixelRatio || 2
+          const w = res[0].width || 48
+          const h = res[0].height || 48
+          canvas.width = w * dpr
+          canvas.height = h * dpr
+          ctx.scale(dpr, dpr)
+          if (typeof lottie.setup === 'function') {
+            lottie.setup(canvas)
+          }
+          this._deepThinkLottieAnim = lottie.loadAnimation({
+            loop: false,
+            autoplay: true,
+            animationData,
+            renderer: 'canvas',
+            rendererSettings: {
+              context: ctx,
+              clearCanvas: true
+            }
+          })
+          setTimeout(() => {
+            try {
+              if (this._deepThinkLottieAnim) {
+                this._deepThinkLottieAnim.destroy()
+                this._deepThinkLottieAnim = null
+              }
+            } catch (e) {}
+            this.setData({ showDeepThinkLottie: false })
+          }, 1000)
+        } catch (err) {
+          console.warn('deepThink Lottie', err)
+          this.setData({ showDeepThinkLottie: false })
+        }
+      })
+    } catch (e) {
+      this.setData({ showDeepThinkLottie: false })
+    }
   },
 
   // 显示技能面板
@@ -777,11 +1143,47 @@ Page({
   // 快捷问题
   sendQuickQuestion(e) {
     const question = e.currentTarget.dataset.question
+    if (this.data.isThinking || this.data.isStreaming || this.data.isDeepThinkDelay) return
     this.setData({ inputText: question })
     // 自动发送
     setTimeout(() => {
       this.sendMessage()
     }, 100)
+  },
+
+  // 底部「快捷指令」气泡（文案与 data-query 对应）
+  sendQuickQuery(e) {
+    const query = e.currentTarget.dataset.query
+    if (!query || this.data.isThinking || this.data.isStreaming || this.data.isDeepThinkDelay) return
+    this.setData({ inputText: query }, () => {
+      this.sendMessage()
+    })
+  },
+
+  /** 朗读：若消息含 audioUrl 则播放；否则提示对接 TTS */
+  speakMessage(e) {
+    const id = e.currentTarget.dataset.id
+    const msg = (this.data.messages || []).find(m => m.id === id)
+    if (!msg || msg.type !== 'ai' || !msg.text || msg.isPrelude) return
+    this.safeVibrate()
+    if (msg.audioUrl) {
+      if (this._speechAudio) {
+        try {
+          this._speechAudio.stop()
+          this._speechAudio.destroy()
+        } catch (err) {}
+        this._speechAudio = null
+      }
+      const ctx = wx.createInnerAudioContext()
+      this._speechAudio = ctx
+      ctx.src = msg.audioUrl
+      ctx.onError(() => {
+        util.showToast('音频播放失败', 'none')
+      })
+      ctx.play()
+      return
+    }
+    util.showToast('可对接语音合成服务后使用 audioUrl 播放', 'none')
   },
 
   // 获取用餐场景

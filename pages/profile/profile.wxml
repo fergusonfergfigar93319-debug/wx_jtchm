@@ -1,5 +1,6 @@
 <!--pages/profile/profile.wxml - 参照首页的简约设计-->
 <view class="page-profile page-container">
+  <custom-nav-bar title="我的" isScrolled="{{navScrolled}}" />
   <!-- 加载状态 -->
   <view class="loading-mask" wx:if="{{loading}}">
     <view class="loading-content">
@@ -10,11 +11,6 @@
 
   <!-- 顶部栏（与首页风格统一，精简为标题 + 右侧入口） -->
   <view class="header">
-    <view class="status-bar">
-      <view class="status-text"></view>
-      <text class="status-text">{{timeText}}</text>
-      <text class="status-text">100%</text>
-    </view>
     <view class="top-row">
       <view class="header-title-wrap">
         <text class="header-title">我的</text>
@@ -48,87 +44,113 @@
     </view>
   </view>
 
-  <!-- 问候与日期（与首页结构统一，文案更偏个人） -->
-  <view class="greeting-section">
-    <text class="greeting-text">{{profileGreeting}}</text>
-    <text class="greeting-icon">🙂</text>
-    <text class="greeting-date">{{currentDate}}</text>
+  <view class="profile-main">
+  <!-- 身份区：毛玻璃名片（问候 + 日期 + 编辑） -->
+  <view class="user-hero-card" wx:if="{{!loading || userInfo.nickname}}">
+    <view class="user-hero-card-glow" aria-hidden="true"></view>
+    <view class="user-hero-inner">
+      <view class="avatar-ring hero-avatar-ring" catchtap="onAvatarTap" hover-class="press-hover" hover-stay-time="80">
+        <view class="avatar-wrapper">
+          <view class="avatar-lottie-elastic" wx:if="{{showAvatarLottie && userInfo.avatar}}">
+            <canvas type="2d" id="profileLottie" class="avatar-lottie"></canvas>
+          </view>
+          <image class="avatar" wx:if="{{userInfo.avatar}}" src="{{avatarSrc}}" mode="aspectFill"></image>
+          <view class="avatar avatar-placeholder" wx:else>
+            <text class="avatar-icon">👤</text>
+          </view>
+          <view class="avatar-badge">
+            <text class="avatar-badge-text">更新形象</text>
+          </view>
+        </view>
+      </view>
+      <view class="user-hero-text">
+        <view class="user-name-row">
+          <text class="user-name">{{userInfo.nickname || '美食探索家'}}</text>
+          <view class="goal-chip goal-chip--hero" wx:if="{{userInfo.goal_type}}">
+            <text class="goal-chip-icon">🎯</text>
+            <text wx:if="{{userInfo.goal_type === 'lose'}}">减脂</text>
+            <text wx:elif="{{userInfo.goal_type === 'gain'}}">增肌</text>
+            <text wx:else>维持</text>
+          </view>
+        </view>
+        <text class="user-greet">{{profileGreeting}}</text>
+        <text class="user-tagline">你吃过的每一顿饭，都藏着健康密码 🌟</text>
+        <text class="user-signature" wx:if="{{userInfo.signature}}">{{userInfo.signature}}</text>
+        <view class="user-medals user-medals--hero" wx:if="{{featuredBadges && featuredBadges.length}}">
+          <view class="user-medal" wx:for="{{featuredBadges}}" wx:key="id">
+            <text class="user-medal-icon">{{item.icon}}</text>
+          </view>
+        </view>
+        <view class="user-date-pill">{{currentDate}}</view>
+      </view>
+      <view class="user-edit-btn pressable" bindtap="editProfile" hover-class="press-hover" hover-stay-time="80">完善数字档案 ›</view>
+    </view>
   </view>
 
-  <!-- 个性名片：头像 + 目标 + 社交 + 打卡（BMI 仅在下方身体档案展示，避免重复） -->
-  <view class="profile-card personality-card card" wx:if="{{!loading || userInfo.nickname}}">
-    <view class="personality-card-glow"></view>
-    <view class="personality-card-body">
-      <view class="personality-top">
-        <view class="avatar-ring" catchtap="onAvatarTap" hover-class="press-hover" hover-stay-time="80">
-          <view class="avatar-wrapper">
-            <!-- 仅在有头像 URL 时渲染 Lottie：无头像时与默认占位同区域会线条叠在 👤 上 -->
-            <view class="avatar-lottie-elastic" wx:if="{{showAvatarLottie && userInfo.avatar}}">
-              <canvas
-                type="2d"
-                id="profileLottie"
-                class="avatar-lottie"
-              ></canvas>
-            </view>
-            <image class="avatar" wx:if="{{userInfo.avatar}}" src="{{avatarSrc}}" mode="aspectFill"></image>
-            <view class="avatar avatar-placeholder" wx:else>
-              <text class="avatar-icon">👤</text>
-            </view>
-            <view class="avatar-badge">
-              <text class="avatar-badge-text">换头像</text>
-            </view>
-          </view>
-        </view>
-        <view class="personality-main">
-          <view class="nickname-block">
-            <text class="nickname">{{userInfo.nickname || '健康达人'}}</text>
-            <view class="goal-chip" wx:if="{{userInfo.goal_type}}">
-              <text class="goal-chip-icon">🎯</text>
-              <text wx:if="{{userInfo.goal_type === 'lose'}}">减脂</text>
-              <text wx:elif="{{userInfo.goal_type === 'gain'}}">增肌</text>
-              <text wx:else>维持</text>
-            </view>
-          </view>
-          <text class="personality-tagline">记录每一餐，累积健康</text>
-          <view class="user-medals" wx:if="{{featuredBadges && featuredBadges.length}}">
-            <view class="user-medal" wx:for="{{featuredBadges}}" wx:key="id">
-              <text class="user-medal-icon">{{item.icon}}</text>
-            </view>
-          </view>
-          <view class="signature-block" wx:if="{{userInfo.signature}}">
-            <view class="signature-accent-bar" aria-hidden="true"></view>
-            <view class="signature-text">{{userInfo.signature}}</view>
-          </view>
-        </view>
-      </view>
+  <!-- 社交数据：紧凑横条 -->
+  <view class="social-row-compact" wx:if="{{!loading || userInfo.nickname}}">
+    <view class="social-pill pressable" catchtap="editProfile" hover-class="press-hover" hover-stay-time="80">
+      <text class="social-pill-num">{{userInfo.follow_count || 0}}</text>
+      <text class="social-pill-label">关注</text>
+    </view>
+    <view class="social-pill pressable" catchtap="goToFans" hover-class="press-hover" hover-stay-time="80">
+      <text class="social-pill-num">{{userInfo.fans_count || 0}}</text>
+      <text class="social-pill-label">粉丝</text>
+    </view>
+    <view class="social-pill pressable" catchtap="editProfile" hover-class="press-hover" hover-stay-time="80">
+      <text class="social-pill-num">{{userInfo.like_count || 0}}</text>
+      <text class="social-pill-label">获赞</text>
+    </view>
+  </view>
 
-      <view class="social-panel">
-        <view class="social-cell pressable" catchtap="editProfile" hover-class="press-hover" hover-stay-time="80">
-          <text class="social-stat-num">{{userInfo.follow_count || 0}}</text>
-          <text class="social-stat-label">关注</text>
-        </view>
-        <view class="social-divider"></view>
-        <view class="social-cell pressable" catchtap="goToFans" hover-class="press-hover" hover-stay-time="80">
-          <text class="social-stat-num">{{userInfo.fans_count || 0}}</text>
-          <text class="social-stat-label">粉丝</text>
-        </view>
-        <view class="social-divider"></view>
-        <view class="social-cell pressable" catchtap="editProfile" hover-class="press-hover" hover-stay-time="80">
-          <text class="social-stat-num">{{userInfo.like_count || 0}}</text>
-          <text class="social-stat-label">获赞</text>
-        </view>
+  <!-- Bento：今日营养 + 双格指标 -->
+  <view class="bento-grid" wx:if="{{!loading || userInfo.nickname}}">
+    <view class="bento-item bento-large">
+      <view class="bento-header">
+        <text class="bento-title">今日能量环</text>
+        <text class="bento-subtitle">已充能 {{todayConsumed}} / {{todayTarget}} kcal</text>
       </view>
-
-      <view class="streak-banner pressable" bindtap="editProfile" hover-class="press-hover" hover-stay-time="80">
-        <view class="streak-banner-left">
-          <text class="streak-emoji">📝</text>
-          <view class="streak-copy">
-            <text class="streak-title">坚持记录</text>
-            <text class="streak-sub">连续 {{streakDays}} 天 · 体测与 BMI 见下方</text>
+      <view class="rings-container">
+        <view class="bento-ring-unit">
+          <view class="bento-ring-disk bento-ring-carb" style="--progress: {{carbsPct}}"></view>
+          <view class="bento-ring-meta">
+            <text class="bento-ring-pct">{{carbsPct}}%</text>
+            <text class="bento-ring-name">碳水</text>
           </view>
         </view>
-        <text class="streak-chevron">›</text>
+        <view class="bento-ring-unit">
+          <view class="bento-ring-disk bento-ring-protein" style="--progress: {{proteinPct}}"></view>
+          <view class="bento-ring-meta">
+            <text class="bento-ring-pct">{{proteinPct}}%</text>
+            <text class="bento-ring-name">蛋白质</text>
+          </view>
+        </view>
+        <view class="bento-ring-unit">
+          <view class="bento-ring-disk bento-ring-fat" style="--progress: {{fatPct}}"></view>
+          <view class="bento-ring-meta">
+            <text class="bento-ring-pct">{{fatPct}}%</text>
+            <text class="bento-ring-name">脂肪</text>
+          </view>
+        </view>
       </view>
+    </view>
+
+    <view class="bento-item bento-square pressable" bindtap="editProfile" hover-class="press-hover" hover-stay-time="80">
+      <text class="bento-icon-label">BMI</text>
+      <view class="bento-value-row">
+        <text class="bento-value" wx:if="{{bmi > 0}}">{{bmi}}</text>
+        <text class="bento-value bento-value--muted" wx:else>--</text>
+      </view>
+      <text class="bento-foot">{{bmiStatusLabel}}</text>
+    </view>
+
+    <view class="bento-item bento-square bento-square--late pressable" bindtap="editProfile" hover-class="press-hover" hover-stay-time="80">
+      <text class="bento-icon-label">充满热爱的</text>
+      <view class="bento-value-row">
+        <text class="bento-value">{{streakDays}}</text>
+        <text class="bento-value-unit">天</text>
+      </view>
+      <text class="bento-foot">继续保持，你超棒的！</text>
     </view>
   </view>
 
@@ -137,7 +159,7 @@
     <view class="card-header" bindtap="editProfile">
       <view class="card-title-wrapper">
         <text class="card-icon card-icon-chart">📊</text>
-        <text class="card-title">身体档案</text>
+        <text class="card-title">身体数据舱</text>
       </view>
       <text class="card-arrow">›</text>
     </view>
@@ -160,14 +182,14 @@
         <view class="data-item-grid">
           <text class="data-icon">🎯</text>
           <view class="data-content">
-            <text class="data-label">目标体重</text>
+            <text class="data-label">理想形态</text>
             <text class="data-value">{{userInfo.target_weight || '--'}} kg</text>
           </view>
         </view>
         <view class="data-item-grid highlight">
           <text class="data-icon">🔥</text>
           <view class="data-content">
-            <text class="data-label">每日目标</text>
+            <text class="data-label">每日引力碑</text>
             <text class="data-value highlight-value">{{userInfo.daily_kcal_limit || '--'}} kcal</text>
           </view>
         </view>
@@ -232,8 +254,8 @@
     </view>
     <view class="empty-state weight-empty" wx:else>
       <text class="empty-icon">📊</text>
-      <text class="empty-text">暂无体重记录</text>
-      <text class="empty-hint">记录体重后可查看趋势</text>
+      <text class="empty-text">还没留下体重印记</text>
+      <text class="empty-hint">今天，要记录下自己的蜕变吗？</text>
     </view>
   </view>
 
@@ -242,7 +264,7 @@
     <view class="card-header">
       <view class="card-title-wrapper">
         <text class="card-icon">🎯</text>
-        <text class="card-title">我的目标</text>
+        <text class="card-title">未来进阶地图</text>
       </view>
     </view>
     <view class="goal-cards">
@@ -252,7 +274,7 @@
         data-goal="lose">
         <view class="goal-icon">🔥</view>
         <text class="goal-name">减脂</text>
-        <text class="goal-desc">控制热量摄入</text>
+        <text class="goal-desc">轻盈体态，控制摄入</text>
         <text class="goal-kcal" wx:if="{{userInfo.goal_type === 'lose'}}">{{goalKcal.lose}} kcal</text>
       </view>
       <view 
@@ -261,7 +283,7 @@
         data-goal="maintain">
         <view class="goal-icon">⚖️</view>
         <text class="goal-name">维持</text>
-        <text class="goal-desc">保持当前体重</text>
+        <text class="goal-desc">保持平衡，稳稳的幸福</text>
         <text class="goal-kcal" wx:if="{{userInfo.goal_type === 'maintain'}}">{{goalKcal.maintain}} kcal</text>
       </view>
       <view 
@@ -270,7 +292,7 @@
         data-goal="gain">
         <view class="goal-icon">💪</view>
         <text class="goal-name">增肌</text>
-        <text class="goal-desc">增加肌肉量</text>
+        <text class="goal-desc">强化力量，塑造线条</text>
         <text class="goal-kcal" wx:if="{{userInfo.goal_type === 'gain'}}">{{goalKcal.gain}} kcal</text>
       </view>
     </view>
@@ -280,40 +302,36 @@
     </view>
   </view>
 
-  <!-- 偏好设置（简约版） -->
-  <view class="section-card card">
-    <view class="card-header">
-      <view class="card-title-wrapper">
-        <text class="card-icon">❤️</text>
-        <text class="card-title">偏好设置</text>
+  <!-- 内嵌分组列表（偏好与提醒） -->
+  <view class="settings-group">
+    <view class="settings-item pressable" bindtap="editTaste" hover-class="press-hover" hover-stay-time="80">
+      <view class="settings-item-left">
+        <text class="settings-icon">🌶️</text>
+        <text class="settings-name">我的味蕾偏好</text>
+      </view>
+      <view class="settings-item-right">
+        <text class="settings-status">{{spicinessLabelText}}</text>
+        <text class="settings-arrow">›</text>
       </view>
     </view>
-    <view class="preference-list">
-      <view class="preference-item" bindtap="editAllergens">
-        <view class="preference-icon-wrapper">
-          <text class="preference-icon">⚠️</text>
-        </view>
-        <view class="preference-content">
-          <text class="preference-label">忌口管理</text>
-          <view class="preference-tags">
-            <text class="tag tag-warning" wx:for="{{allergens}}" wx:key="*this">{{item}}</text>
-            <text wx:if="{{allergens.length === 0}}" class="preference-empty">还未设置忌口，点击添加</text>
-          </view>
-        </view>
-        <text class="preference-arrow">›</text>
+    <view class="settings-item pressable" bindtap="editAllergens" hover-class="press-hover" hover-stay-time="80">
+      <view class="settings-item-left">
+        <text class="settings-icon">🚫</text>
+        <text class="settings-name">饮食避坑指南</text>
       </view>
-      <view class="preference-item" bindtap="editTaste">
-        <view class="preference-icon-wrapper">
-          <text class="preference-icon">🌶️</text>
-        </view>
-        <view class="preference-content">
-          <text class="preference-label">口味偏好</text>
-          <view class="preference-tags">
-            <text class="tag" wx:for="{{tastePreferences}}" wx:key="*this">{{item}}</text>
-            <text wx:if="{{tastePreferences.length === 0}}" class="preference-empty">还未设置口味偏好，点击添加</text>
-          </view>
-        </view>
-        <text class="preference-arrow">›</text>
+      <view class="settings-item-right">
+        <text class="settings-status">{{allergens.length ? allergens.length + ' 项' : '未设置'}}</text>
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+    <view class="settings-item pressable" bindtap="openReminderSettings" hover-class="press-hover" hover-stay-time="80">
+      <view class="settings-item-left">
+        <text class="settings-icon">🔔</text>
+        <text class="settings-name">贴心小闹钟</text>
+      </view>
+      <view class="settings-item-right">
+        <text class="settings-status">{{reminders.meal || reminders.log || reminders.weight ? '已开启' : '未开启'}}</text>
+        <text class="settings-arrow">›</text>
       </view>
     </view>
   </view>
@@ -323,7 +341,7 @@
     <view class="card-header">
       <view class="card-title-wrapper">
         <text class="card-icon">🔐</text>
-        <text class="card-title">账号与安全</text>
+        <text class="card-title">账号保险箱</text>
       </view>
     </view>
     <view class="account-actions">
@@ -334,8 +352,8 @@
         hover-stay-time="80"
       >
         <view class="account-row-main">
-          <text class="account-row-title">退出登录</text>
-          <text class="account-row-desc">通知服务器作废令牌并清空本机全部缓存</text>
+          <text class="account-row-title">安全登出</text>
+          <text class="account-row-desc">短暂离开，我会在下一餐等你回来</text>
         </view>
         <text class="account-row-arrow">›</text>
       </view>
@@ -347,12 +365,14 @@
         hover-stay-time="80"
       >
         <view class="account-row-main">
-          <text class="account-row-title">重新登录</text>
-          <text class="account-row-desc">仅清除本机登录信息，前往重新微信授权</text>
+          <text class="account-row-title">刷新连接</text>
+          <text class="account-row-desc">换个状态，重新与世界建立连接</text>
         </view>
         <text class="account-row-arrow">›</text>
       </view>
     </view>
+  </view>
+
   </view>
 
   <!-- 过敏源选择弹窗 -->

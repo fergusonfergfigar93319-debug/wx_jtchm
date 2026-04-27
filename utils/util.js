@@ -1157,6 +1157,16 @@ function getWaterGoalCups() {
   return DEFAULT_WATER_GOAL_CUPS
 }
 
+/**
+ * 全局轻触感反馈：Tab 切换、Bento 点击、发消息等可统一调用（失败静默）
+ * @param {'light' | 'medium' | 'heavy'} type
+ */
+function vibrate(type) {
+  try {
+    wx.vibrateShort({ type: type || 'light' })
+  } catch (e) {}
+}
+
 module.exports = {
   formatDate,
   normalizeExternalImageUrl,
@@ -1201,5 +1211,6 @@ module.exports = {
   getWaterEventsForDate,
   setWaterEventsForDate,
   addWaterEventForDate,
-  clearWaterEventsForDate
+  clearWaterEventsForDate,
+  vibrate
 }

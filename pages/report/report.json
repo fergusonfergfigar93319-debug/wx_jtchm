@@ -1,4 +1,7 @@
 {
-  "navigationBarTitleText": "健康管理",
-  "enablePullDownRefresh": true
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "custom-nav-bar": "/components/custom-nav-bar/custom-nav-bar"
+  }
 }

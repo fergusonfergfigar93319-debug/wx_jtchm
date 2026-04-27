@@ -1,4 +1,4 @@
-/* 不使用 @import tokens：组件 wxss 不能包含 tokens 中的 :root / 部分选择器，会触发告警 */
+/* 异形中凸 AI + 四 Tab；不 @import tokens（组件内部分选择器会告警） */
 .tabbar-wrapper {
   --tabbar-glass: rgba(255, 255, 255, 0.96);
   --duration-tap: 220ms;
@@ -6,43 +6,54 @@
   --tabbar-active: #0f9b7a;
   --tabbar-active-bg: rgba(15, 155, 122, 0.12);
   --tabbar-active-ring: rgba(15, 155, 122, 0.14);
+  --brand-glow: rgba(74, 222, 128, 0.4);
 
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 120rpx;
-  padding-bottom: env(safe-area-inset-bottom);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+  z-index: 999;
+  padding: 0 12rpx calc(6rpx + env(safe-area-inset-bottom));
+  padding-top: 28rpx;
   background: var(--tabbar-glass);
   box-shadow: 0 -1rpx 0 rgba(15, 23, 42, 0.06), 0 -16rpx 48rpx rgba(15, 23, 42, 0.04);
   border-top: 1rpx solid rgba(15, 23, 42, 0.06);
   backdrop-filter: blur(24rpx) saturate(120%);
   -webkit-backdrop-filter: blur(24rpx) saturate(120%);
-  z-index: 999;
+  box-sizing: border-box;
+}
+
+.tabbar-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-height: 100rpx;
+  padding: 0 4rpx 4rpx;
+  box-sizing: border-box;
 }
 
 .tabbar-item {
   flex: 1;
+  max-width: 22%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   color: #94a3b8;
   font-size: 22rpx;
   border-radius: 20rpx;
-  margin: 0 6rpx;
-  padding: 8rpx 0 4rpx;
-  transition:
-    transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)),
+  margin: 0 2rpx;
+  padding: 0 0 6rpx;
+  min-height: 100rpx;
+  box-sizing: border-box;
+  transition: transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1)),
     background-color 0.25s ease,
     color 0.25s ease;
 }
 
 .tabbar-item:active {
-  transform: scale(0.94);
+  transform: scale(0.97);
 }
 
 .tabbar-item-hover {
@@ -54,9 +65,7 @@
   font-weight: 600;
   background: var(--tabbar-active-bg, rgba(15, 155, 122, 0.12));
   border-radius: 24rpx;
-  box-shadow:
-    0 0 0 1rpx var(--tabbar-active-ring, rgba(15, 155, 122, 0.14)),
-    0 4rpx 20rpx rgba(15, 155, 122, 0.1);
+  box-shadow: 0 0 0 1rpx var(--tabbar-active-ring, rgba(15, 155, 122, 0.14)), 0 4rpx 20rpx rgba(15, 155, 122, 0.1);
 }
 
 .tabbar-item.active .tabbar-text {
@@ -64,7 +73,6 @@
   font-weight: 600;
 }
 
-/* 双图层：灰 / 绿 交叉淡化，切换 Tab 时更顺滑 */
 .tabbar-icon-wrap {
   position: relative;
   width: 52rpx;
@@ -92,14 +100,56 @@
   opacity: 1;
 }
 
-.tabbar-lottie-canvas {
-  width: 52rpx;
-  height: 52rpx;
-  margin-bottom: 4rpx;
-}
-
 .tabbar-text {
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: inherit;
   transition: color 0.22s ease;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
 }
+
+/* 中间槽：凸起圆形 AI */
+.tabbar-center-slot {
+  width: 120rpx;
+  flex: 0 0 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: -36rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.tabbar-fab {
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 100%);
+  border: 2rpx solid rgba(74, 222, 128, 0.35);
+  box-shadow: 0 0 20rpx var(--brand-glow), 0 12rpx 32rpx rgba(15, 23, 42, 0.08);
+  transition: transform var(--duration-tap, 220ms) var(--ease-tap, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.tabbar-fab-hover {
+  transform: scale(0.96);
+  opacity: 0.95;
+}
+
+.tabbar-fab-emoji {
+  font-size: 48rpx;
+  line-height: 1;
+}
+
+.tabbar-fab-label {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #64748b;
+  font-weight: 500;
+  line-height: 1.2;
+}
+

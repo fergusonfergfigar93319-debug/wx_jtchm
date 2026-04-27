@@ -481,9 +481,16 @@ const api = {
   },
 
   // ========== AI营养师相关 ==========
-  // 获取营养分析
-  async getNutritionAnalysis(date) {
-    return await request('/diet/ai-nutritionist/analyze/', 'POST', { date })
+  /**
+   * 营养分析 / 报告洞察
+   * @param {string|Object} dateOrPayload 兼容：仅日期字符串（日报），或 body 对象（可含 period、range_start、range_end、summary 等，供周/月报 LLM）
+   */
+  async getNutritionAnalysis(dateOrPayload) {
+    const body =
+      typeof dateOrPayload === 'string'
+        ? { date: dateOrPayload }
+        : { ...dateOrPayload }
+    return await request('/diet/ai-nutritionist/analyze/', 'POST', body)
   },
 
   // 获取实时建议

@@ -78,7 +78,7 @@
     "navigationBarBackgroundColor": "#FFFFFF",
     "navigationBarTitleText": "今天吃什么",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#F8FAFC",
+    "backgroundColor": "#F1F5F9",
     "enablePullDownRefresh": false
   },
   "tabBar": {

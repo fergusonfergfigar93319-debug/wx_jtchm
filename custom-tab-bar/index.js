@@ -5,7 +5,6 @@ Component({
 
   lifetimes: {
     attached() {
-      // 默认根据当前页面路径设置选中态（在组件刚创建时，可能还没有页面栈，需要做安全判断）
       const pages = getCurrentPages && getCurrentPages()
       if (pages && pages.length) {
         const current = pages[pages.length - 1]
@@ -17,7 +16,6 @@ Component({
   },
 
   methods: {
-    // 外部页面调用，手动设置当前选中 tab
     setSelected(index) {
       if (typeof index === 'number') {
         this.setData({ selected: index })
@@ -39,11 +37,15 @@ Component({
 
     onTabTap(e) {
       const { index, path } = e.currentTarget.dataset
+      if (index === undefined || !path) return
       if (this.data.selected === index) return
 
       wx.switchTab({ url: '/' + path })
       this.setData({ selected: index })
+    },
+
+    onCenterTap() {
+      wx.navigateTo({ url: '/packageAI/ai-chat/ai-chat' })
     }
   }
 })
-

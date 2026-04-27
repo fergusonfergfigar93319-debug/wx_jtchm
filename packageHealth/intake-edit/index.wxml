@@ -61,7 +61,7 @@
   </view>
 
   <view class="btn-wrap">
-    <button class="btn-primary btn-full" bindtap="onSave">保存</button>
-    <button class="btn-outline btn-full mt-16" bindtap="onDelete">删除此条记录</button>
+    <button class="btn-primary btn-full" bindtap="onSave">{{isCreateMode ? '提交记录' : '保存'}}</button>
+    <button wx:if="{{!isCreateMode}}" class="btn-outline btn-full mt-16" bindtap="onDelete">删除此条记录</button>
   </view>
 </view>

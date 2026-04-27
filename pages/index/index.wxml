@@ -1,13 +1,8 @@
 <!-- pages/index/index.wxml - 课程风格首页 -->
 <view class="page-index page-container {{liteMode ? 'lite' : ''}}">
-  <!-- 顶部栏 + 搜索 -->
+  <custom-nav-bar title="今天吃什么" isScrolled="{{navScrolled}}" />
+  <!-- 顶部栏 + 搜索（沉浸式顶栏下） -->
   <view class="header">
-    <view class="status-bar">
-      <view class="status-text"></view>
-      <text class="status-text">{{timeText}}</text>
-      <text class="status-text">100%</text>
-    </view>
-
     <view class="top-row">
       <view
         class="avatar pressable"
@@ -64,7 +59,44 @@
   </view>
 
   <!-- 主体内容滚动区 -->
-  <scroll-view class="main" scroll-y="true" enable-back-to-top="true">
+  <scroll-view
+    class="main"
+    scroll-y="true"
+    enable-back-to-top="true"
+    bindscroll="onMainScroll"
+    scroll-with-animation="true"
+  >
+    <!-- 枢纽区：今日摄入进度 + AI 快捷入口（Bento Dashboard，不重删原能力） -->
+    <view
+      class="index-hub bento-card glass-effect anim-slide-up"
+      wx:if="{{!liteMode}}"
+    >
+      <view class="index-hub-left">
+        <view
+          class="index-hub-ring"
+          style="background: conic-gradient(var(--color-brand, #4ADE80) {{progressDeg}}deg, #E2E8F0 0deg);"
+        >
+          <view class="index-hub-ring-inner">
+            <text class="index-hub-ring-pct">{{progressPercentInt}}%</text>
+            <text class="index-hub-ring-sub">今日摄入</text>
+          </view>
+        </view>
+      </view>
+      <view class="index-hub-right">
+        <text class="index-hub-greet">{{greetingText}}<text wx:if="{{userName}}">，{{userName}}</text></text>
+        <text class="index-hub-hint">问问 AI 今天怎么吃更均衡</text>
+        <view
+          class="index-hub-ai-btn pressable"
+          bindtap="onHubAiTap"
+          hover-class="press-hover"
+          hover-stay-time="80"
+        >
+          <text class="index-hub-ai-icon">🤖</text>
+          <text>跟 AI 聊聊</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 功能分类九宫格（可左右滑动多页） -->
     <view class="category-section">
       <scroll-view

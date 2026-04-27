@@ -13,6 +13,7 @@ const MEAL_TYPES = [
 Page({
   data: {
     id: null,
+    isCreateMode: false,
     mealTypeLabels: MEAL_TYPES,
     mealTypeIndex: 0,
     form: {
@@ -30,13 +31,41 @@ Page({
   },
 
   onLoad(options) {
+    const fromAi = options && (options.from === 'ai-chat' || options.action === 'prefill')
+    if (fromAi) {
+      const mealType = (options.meal_type && String(options.meal_type).trim()) || 'lunch'
+      const mealTypeIndex = Math.max(0, MEAL_TYPES.findIndex(m => m.value === mealType))
+      const idx = mealTypeIndex >= 0 ? mealTypeIndex : 2
+      const item = MEAL_TYPES[idx]
+      const foodRaw = options.food ? decodeURIComponent(String(options.food)) : ''
+      this.setData({
+        isCreateMode: true,
+        id: null,
+        mealTypeIndex: idx,
+        form: {
+          food_name: foodRaw || 'AI 建议记录',
+          meal_type: item.value,
+          meal_type_label: item.label,
+          calories: options.calories != null && options.calories !== '' ? String(options.calories) : '',
+          protein: options.protein != null && options.protein !== '' ? String(options.protein) : '',
+          fat: options.fat != null && options.fat !== '' ? String(options.fat) : '',
+          carbs: options.carbs != null && options.carbs !== '' ? String(options.carbs) : '',
+          amount: '',
+          amount_unit: '',
+          note: options.note ? decodeURIComponent(String(options.note)) : '来自 AI 对话仪表盘'
+        }
+      })
+      wx.setNavigationBarTitle({ title: '快速记录' })
+      return
+    }
+
     const id = options.id ? parseInt(options.id, 10) : null
     if (!id) {
       util.showToast('缺少记录ID')
       setTimeout(() => wx.navigateBack(), 1500)
       return
     }
-    this.setData({ id })
+    this.setData({ id, isCreateMode: false })
     this.loadDetail(id)
   },
 
@@ -106,7 +135,7 @@ Page({
   },
 
   async onSave() {
-    const { id, form } = this.data
+    const { id, form, isCreateMode } = this.data
     const calories = form.calories ? parseInt(form.calories, 10) : null
     const protein = form.protein ? parseInt(form.protein, 10) : null
     const fat = form.fat ? parseInt(form.fat, 10) : null
@@ -125,6 +154,22 @@ Page({
     }
     try {
       util.showLoading('保存中...')
+      if (isCreateMode) {
+        await api.logIntake({
+          source_type: 4,
+          food_name: form.food_name || '饮食记录',
+          meal_type: form.meal_type,
+          calories: calories != null ? calories : 0,
+          protein: protein != null ? protein : undefined,
+          fat: fat != null ? fat : undefined,
+          carb: carbs != null ? carbs : undefined,
+          portion: amount != null ? amount : 1
+        })
+        util.hideLoading()
+        util.showSuccess('已记录')
+        wx.navigateBack()
+        return
+      }
       await api.updateIntake(id, payload)
       util.hideLoading()
       util.showSuccess('已保存')
@@ -136,6 +181,7 @@ Page({
   },
 
   async onDelete() {
+    if (this.data.isCreateMode) return
     const that = this
     wx.showModal({
       title: '确认删除',

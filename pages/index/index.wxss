@@ -2,6 +2,9 @@
 
 .page-index {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
   background: linear-gradient(180deg, var(--neo-bg-0) 0%, #ffffff 72%);
 }
 
@@ -158,11 +161,6 @@
   transition: transform 0.15s ease-out, opacity 0.15s ease-out;
 }
 
-.press-hover {
-  transform: scale(0.95);
-  opacity: 0.9;
-}
-
 /* 问候与日期 */
 .greeting-section {
   padding: 12rpx 24rpx 16rpx;
@@ -189,14 +187,106 @@
   color: var(--color-text-tertiary);
 }
 
-/* 主体滚动区 */
-/* 可滚动区域：预留顶部栏与底部 tab，保证内容可完整滑动 */
+/* 主体滚动区：在自定义顶栏 + 本页头图之下占满剩余视口，避免与底部 Tab 顶死 */
 .main {
   flex: 1;
-  height: calc(100vh - 180rpx);
-  min-height: 400rpx;
+  min-height: 0;
+  height: 0;
   position: relative;
   z-index: 1;
+}
+
+/* 首页枢纽：Bento + 进度环 + AI 入口 */
+.index-hub {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 16rpx 24rpx 20rpx;
+  padding: 28rpx 24rpx;
+  gap: 24rpx;
+  overflow: hidden;
+  animation-delay: 0.06s;
+}
+
+.index-hub-left {
+  flex-shrink: 0;
+}
+
+.index-hub-ring {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 20rpx -6rpx rgba(0, 0, 0, 0.06);
+}
+
+.index-hub-ring-inner {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.9);
+}
+
+.index-hub-ring-pct {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.index-hub-ring-sub {
+  font-size: 20rpx;
+  color: var(--color-text-tertiary);
+  margin-top: 4rpx;
+}
+
+.index-hub-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.index-hub-greet {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.35;
+}
+
+.index-hub-hint {
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.index-hub-ai-btn {
+  margin-top: 8rpx;
+  align-self: flex-start;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10rpx;
+  padding: 16rpx 28rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, var(--color-brand, #4ade80) 0%, #34d399 100%);
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 16rpx rgba(74, 222, 128, 0.35);
+}
+
+.index-hub-ai-icon {
+  font-size: 30rpx;
+  line-height: 1;
 }
 
 /* 分类九宫格（对齐老版：高饱和纯色 squircle + 中心插画） */

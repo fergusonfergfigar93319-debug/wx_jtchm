@@ -68,7 +68,24 @@ Page({
     weeklyData: [], // 周报数据
     nutritionData: null, // 营养素分布数据
     showAvatarLottie: true,
-    avatarSrc: '' // 带头像缓存戳，保存后强制刷新 <image>
+    avatarSrc: '', // 带头像缓存戳，保存后强制刷新 <image>
+    // Bento 营养环：今日摄入相对「每日营养素目标」的完成度 0–100
+    todayConsumed: 0,
+    todayTarget: 2000,
+    carbsPct: 0,
+    proteinPct: 0,
+    fatPct: 0,
+    bmiStatusLabel: '健康',
+    spicinessLabelText: '不辣',
+    navScrolled: false
+  },
+
+  onPageScroll(e) {
+    const top = (e && e.scrollTop) || 0
+    const next = top > 20
+    if (next !== this.data.navScrolled) {
+      this.setData({ navScrolled: next })
+    }
   },
 
   onLoad() {
@@ -108,13 +125,15 @@ Page({
     let profileGreeting = '今天也要好好照顾自己'
     const hour = now.getHours()
     if (hour < 6) {
-      profileGreeting = '夜深了，注意休息'
-    } else if (hour < 12) {
-      profileGreeting = '早上好，记得吃早餐'
+      profileGreeting = '夜深了，今天的胃也该休息啦 🌙'
+    } else if (hour < 10) {
+      profileGreeting = '早安，给身体充个电吧 ☀️'
+    } else if (hour < 14) {
+      profileGreeting = '午安，好好享受美味时光 🍱'
     } else if (hour < 18) {
-      profileGreeting = '下午好，适当活动一下'
+      profileGreeting = '下午好，随时补充一点能量 🍵'
     } else {
-      profileGreeting = '晚上好，别忘了记录今天'
+      profileGreeting = '晚上好，今天过得开心吗 🌟'
     }
 
     this.setData({
@@ -251,6 +270,18 @@ Page({
       }
 
       const stats = await this.loadUserStats()
+
+      let dailySummary = null
+      try {
+        dailySummary = await api.getDailySummary()
+      } catch (e) {
+        console.log('个人中心：今日摘要暂不可用', e)
+      }
+      const bentoNutrition = this._bentoFromDailySummary(
+        dailySummary,
+        macrosTarget,
+        profile.daily_kcal_limit
+      )
       
       // 先设置基础数据，以便loadPersonalData中的loadBadges可以访问
       this.setData({
@@ -266,10 +297,12 @@ Page({
       this.setData({
         bmi: bmi > 0 ? bmi.toFixed(1) : '0.0',
         bmiStatus,
+        bmiStatusLabel: this.bmiStatusToLabel(bmiStatus),
         bmiPercent,
         allergens,
         tastePreferences,
         spicinessLevel,
+        spicinessLabelText: this.spicinessToLabel(spicinessLevel),
         selectedAllergens: [...allergens],
         selectedTastes: [...tastePreferences],
         streakDays,
@@ -278,7 +311,8 @@ Page({
         loading: false,
         refreshing: false,
         ...stats,
-        ...personalData
+        ...personalData,
+        ...bentoNutrition
       })
       
       // 延迟绘制体重图表，确保DOM已渲染
@@ -317,6 +351,67 @@ Page({
     if (bmi < 24) return 30 + ((bmi - 18.5) / (24 - 18.5)) * 50 // 正常区域占50%
     if (bmi < 28) return 80 + ((bmi - 24) / (28 - 24)) * 15 // 偏胖区域占15%
     return 95 + Math.min((bmi - 28) / 10, 0.05) * 100 // 肥胖区域
+  },
+
+  /** 今日摘要 → Bento 环形进度（与首页 loadDailySummary 字段兼容） */
+  _bentoFromDailySummary(summary, macrosTarget, profileDailyLimit) {
+    const fallback = {
+      todayConsumed: 0,
+      todayTarget: Math.round(parseFloat(profileDailyLimit) || 2000),
+      carbsPct: 0,
+      proteinPct: 0,
+      fatPct: 0
+    }
+    if (!summary || typeof summary !== 'object') {
+      return fallback
+    }
+    const intakeActual =
+      summary.intake_actual != null
+        ? summary.intake_actual
+        : summary.consumed != null
+          ? summary.consumed
+          : 0
+    const dailyLimit =
+      summary.daily_limit != null
+        ? summary.daily_limit
+        : summary.target != null
+          ? summary.target
+          : fallback.todayTarget
+    const macros = summary.macros || {
+      carbg: summary.carb || 0,
+      proteing: summary.protein || 0,
+      fatg: summary.fat || 0
+    }
+    const pct = (actual, target) => {
+      const a = Number(actual) || 0
+      const t = Number(target) || 0
+      if (t <= 0) return 0
+      return Math.min(100, Math.round((a / t) * 100))
+    }
+    const mt = macrosTarget || {}
+    return {
+      todayConsumed: Math.round(Number(intakeActual) || 0),
+      todayTarget: Math.round(Number(dailyLimit) || fallback.todayTarget),
+      carbsPct: mt.carb != null ? pct(macros.carbg, mt.carb) : 0,
+      proteinPct: mt.protein != null ? pct(macros.proteing, mt.protein) : 0,
+      fatPct: mt.fat != null ? pct(macros.fatg, mt.fat) : 0
+    }
+  },
+
+  bmiStatusToLabel(status) {
+    const map = {
+      low: '偏瘦',
+      normal: '健康',
+      high: '偏胖',
+      'very-high': '需关注'
+    }
+    return map[status] || '健康'
+  },
+
+  spicinessToLabel(level) {
+    const n = Number(level) || 0
+    const labels = ['不辣', '微辣', '中辣', '重辣', '特辣', '变态辣']
+    return labels[Math.min(n, labels.length - 1)] || '不辣'
   },
 
   // 计算坚持记录天数
@@ -474,6 +569,12 @@ Page({
         'userInfo.daily_kcal_limit': goalKcal,
         macrosTarget
       })
+      try {
+        const summary = await api.getDailySummary()
+        this.setData(this._bentoFromDailySummary(summary, macrosTarget, goalKcal))
+      } catch (e) {
+        /* ignore */
+      }
       
       util.showSuccess('目标设置成功')
     } catch (error) {
@@ -602,6 +703,7 @@ Page({
       this.setData({
         tastePreferences: [...this.data.selectedTastes],
         spicinessLevel: this.data.spicinessLevel,
+        spicinessLabelText: this.spicinessToLabel(this.data.spicinessLevel),
         showTasteModal: false
       })
       
@@ -647,10 +749,11 @@ Page({
   /** 个人中心 · 退出登录 */
   onLogoutTap() {
     wx.showModal({
-      title: '退出登录',
+      title: '安全登出',
       content:
-        '将通知服务器注销当前设备令牌，并清空本机全部数据。确定退出？',
-      confirmText: '退出',
+        '将安全注销当前设备并清空本地数据。要短暂离开休息一下吗？',
+      confirmText: '暂离',
+      cancelText: '留下',
       success: async (res) => {
         if (!res.confirm) return
         util.showLoading('退出中...')
@@ -678,10 +781,11 @@ Page({
    */
   onReloginTap() {
     wx.showModal({
-      title: '重新登录',
+      title: '刷新连接',
       content:
-        '将清除本机登录令牌并打开登录页，请重新完成微信授权（不会请求服务端注销，与「退出登录」不同）。',
-      confirmText: '去登录',
+        '将清除本机状态并重新回到授权大门，要换个状态重新出发吗？',
+      confirmText: '去刷新',
+      cancelText: '再看看',
       success: (res) => {
         if (!res.confirm) return
         auth.clearSession(getApp())
@@ -692,10 +796,10 @@ Page({
     })
   },
 
-  // 显示设置（保留清除缓存；退出登录与个人中心入口复用 performServerLogout）
+  // 显示设置
   showSettings() {
     wx.showActionSheet({
-      itemList: ['清除缓存', '退出登录'],
+      itemList: ['清理缓存', '安全登出'],
       success: (res) => {
         if (res.tapIndex === 0) {
           wx.showModal({

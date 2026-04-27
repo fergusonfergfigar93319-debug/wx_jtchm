@@ -1,0 +1,11 @@
+<view class="cnb-root">
+  <view
+    class="cnb-fixed nav-container {{isScrolled ? 'nav-scrolled' : ''}}"
+    style="padding-top: {{statusBarHeight}}px;"
+  >
+    <view class="nav-content" style="height: {{navContentHeight}}px;">
+      <text class="nav-title {{isScrolled ? 'text-show' : 'text-hide'}}">{{title}}</text>
+    </view>
+  </view>
+  <view class="cnb-spacer" style="height: {{totalNavHeight}}px;"></view>
+</view>

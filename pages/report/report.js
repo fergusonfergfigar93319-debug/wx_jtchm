@@ -3,6 +3,7 @@ const api = require('../../utils/api.js')
 const util = require('../../utils/util.js')
 const { isDevChannelToken } = require('../../utils/config.js')
 const { getWindowMetricsSafe } = require('../../utils/platform.js')
+const { getCustomNavBarMetrics } = require('../../utils/custom-nav.js')
 
 Page({
   data: {
@@ -93,13 +94,48 @@ Page({
     canvasNutrientHeight: 200,
     // AI 营养师
     aiSummary: null,
-    healthWarnings: []
+    healthWarnings: [],
+    // 周报/月报 Bento + CSS 柱状图
+    reportDateRangeLabel: '',
+    barChartDays: [],
+    reportTargetLineBottom: 70,
+    reportAvgDailyKcal: 0,
+    reportTrendTagClass: 'neutral',
+    reportTrendTagText: '',
+    bentoPerfectDays: 0,
+    bentoSecondaryValue: 0,
+    bentoSecondaryUnit: '条',
+    bentoSecondaryLabel: '饮食记录',
+    macroWeekModel: {
+      proteinAvg: 0,
+      carbAvg: 0,
+      fatAvg: 0,
+      proteinPct: 0,
+      carbPct: 0,
+      fatPct: 0
+    },
+    weekInsightSpans: [],
+    reportDailyTarget: 2000,
+    /** 后端 LLM 返回的洞察动作（buttonText / aiPrompt），无则走默认文案 */
+    reportInsightAction: null,
+    reportInsightButtonLabel: '定制下周食谱 ›',
+    navScrolled: false,
+    navTopPx: 0
+  },
+
+  onPageScroll(e) {
+    const top = (e && e.scrollTop) || 0
+    const next = top > 20
+    if (next !== this.data.navScrolled) {
+      this.setData({ navScrolled: next })
+    }
   },
 
   onLoad() {
+    const m = getCustomNavBarMetrics()
     const today = new Date()
     const selectedDate = util.formatDate(today)
-    this.setData({ selectedDate, waterDateToday: selectedDate })
+    this.setData({ selectedDate, waterDateToday: selectedDate, navTopPx: m.total })
     // 避免 onLoad 与紧随其后的 onShow 各拉一次报表导致 showLoading 不配对
     this._skipReportShowOnce = true
     this.initCalendar()
@@ -245,8 +281,455 @@ Page({
       this.initCalendar()
       this.loadMonthlyReport()
     }
-    
-    util.showToast(`切换到${mode === 'day' ? '日' : mode === 'week' ? '周' : '月'}视图`)
+  },
+
+  /** 携带后端/默认 aiPrompt 跳转 AI 对话并自动发送 */
+  openReportInsightPlan() {
+    const a = this.data.reportInsightAction
+    const q =
+      (a && a.aiPrompt && String(a.aiPrompt).trim()) ||
+      '帮我根据当前健康报告（周报/月报）制定下一阶段的饮食计划，并给出可执行清单。'
+    wx.navigateTo({
+      url: `/packageAI/ai-chat/ai-chat?from=report&prompt=${encodeURIComponent(q)}`
+    })
+  },
+
+  _pad2(n) {
+    return String(n).padStart(2, '0')
+  },
+
+  _macrosFromKcal(dailyKcal, goalType) {
+    const kcal = Number(dailyKcal) || 2000
+    let carbP = 0.5
+    let proteinP = 0.25
+    let fatP = 0.25
+    if (goalType === 'lose') {
+      carbP = 0.4
+      proteinP = 0.35
+      fatP = 0.25
+    } else if (goalType === 'gain') {
+      carbP = 0.5
+      proteinP = 0.3
+      fatP = 0.2
+    }
+    return {
+      carb: Math.round((kcal * carbP) / 4),
+      protein: Math.round((kcal * proteinP) / 4),
+      fat: Math.round((kcal * fatP) / 9)
+    }
+  },
+
+  _formatCnRange(startStr, endStr) {
+    try {
+      const a = new Date(startStr)
+      const b = new Date(endStr)
+      return `${a.getMonth() + 1}月${a.getDate()}日 - ${b.getMonth() + 1}月${b.getDate()}日`
+    } catch (e) {
+      return ''
+    }
+  },
+
+  /**
+   * 由时间轴聚合柱状图数据；mode=week 为每日 7 根；mode=month 为约 4 段
+   */
+  _buildBarChartDays(mode, rangeStart, rangeEnd, timeline, dailyTarget) {
+    const target = Math.max(1, Number(dailyTarget) || 2000)
+    const todayStr = util.formatDate(new Date())
+    const kcalByDate = {}
+    ;(timeline || []).forEach((r) => {
+      const d = r.date || r.log_date || ''
+      if (!d) return
+      const k = Number(r.calories != null ? r.calories : r.kcal) || 0
+      kcalByDate[d] = (kcalByDate[d] || 0) + k
+    })
+
+    const labelsWeek = ['一', '二', '三', '四', '五', '六', '日']
+    const result = []
+
+    if (mode === 'week') {
+      const start = new Date(rangeStart)
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start)
+        d.setDate(start.getDate() + i)
+        const ds = util.formatDate(d)
+        const kcal = kcalByDate[ds] || 0
+        result.push({
+          day: labelsWeek[i],
+          date: ds,
+          kcal,
+          rawPct: 0,
+          percent: 0,
+          isOver: kcal > target * 1.05,
+          isToday: ds === todayStr
+        })
+      }
+    } else {
+      const start = new Date(rangeStart)
+      const end = new Date(rangeEnd)
+      const totalDays =
+        Math.max(1, Math.round((end - start) / (86400000)) + 1)
+      const bucketCount = Math.min(4, Math.max(1, Math.ceil(totalDays / 7)))
+      const daysPer = Math.ceil(totalDays / bucketCount)
+      for (let b = 0; b < bucketCount; b++) {
+        let sum = 0
+        for (let j = 0; j < daysPer; j++) {
+          const idx = b * daysPer + j
+          if (idx >= totalDays) break
+          const d = new Date(start)
+          d.setDate(start.getDate() + idx)
+          const ds = util.formatDate(d)
+          sum += kcalByDate[ds] || 0
+        }
+        const label = bucketCount === 4 ? `${b + 1} 段` : `${b + 1}`
+        result.push({
+          day: label,
+          date: '',
+          kcal: sum,
+          rawPct: 0,
+          percent: 0,
+          isOver: sum > target * daysPer * 1.05,
+          isToday: false
+        })
+      }
+    }
+
+    const maxKcal = Math.max(target, ...result.map((x) => x.kcal), 1)
+    result.forEach((row) => {
+      row.rawPct = Math.round((row.kcal / maxKcal) * 100)
+      row.percent = Math.min(118, Math.max(4, row.rawPct))
+    })
+    const linePct = Math.round((target / maxKcal) * 100)
+    return { rows: result, targetLineBottom: Math.min(92, Math.max(18, linePct)) }
+  },
+
+  _macroModelFromTimeline(timeline, daysInPeriod, macroTargets) {
+    let carb = 0
+    let protein = 0
+    let fat = 0
+    ;(timeline || []).forEach((r) => {
+      carb += parseFloat(r.carbs != null ? r.carbs : r.carb) || 0
+      protein += parseFloat(r.protein) || 0
+      fat += parseFloat(r.fat) || 0
+    })
+    const div = Math.max(1, Number(daysInPeriod) || 7)
+    const carbAvg = Math.round((carb / div) * 10) / 10
+    const proteinAvg = Math.round((protein / div) * 10) / 10
+    const fatAvg = Math.round((fat / div) * 10) / 10
+    const mt = macroTargets || { carb: 1, protein: 1, fat: 1 }
+    const pct = (avg, g) => (g > 0 ? Math.min(100, Math.round((avg / g) * 100)) : 0)
+    return {
+      proteinAvg,
+      carbAvg,
+      fatAvg,
+      proteinPct: pct(proteinAvg, mt.protein),
+      carbPct: pct(carbAvg, mt.carb),
+      fatPct: pct(fatAvg, mt.fat)
+    }
+  },
+
+  _buildWeekInsightSpans(mode, barRows, macroModel, avgKcal, target, recordCount) {
+    const spans = []
+    const H = 'highlight-report'
+    const W = 'warning-report'
+    const t = Math.round(target) || 2000
+    const a = Math.round(avgKcal) || 0
+    if (mode === 'week') {
+      spans.push({ t: '本周日均摄入约 ', spanClass: '' })
+      spans.push({ t: `${a}`, spanClass: H })
+      spans.push({ t: ` kcal，目标约 ${t} kcal。`, spanClass: '' })
+    } else {
+      spans.push({ t: '本月统计周期内，日均摄入约 ', spanClass: '' })
+      spans.push({ t: `${a}`, spanClass: H })
+      spans.push({ t: ` kcal。`, spanClass: '' })
+    }
+
+    const overDays = (barRows || []).filter((x) => x.isOver)
+    if (overDays.length > 0) {
+      spans.push({
+        t: ` 其中 ${overDays.map((d) => d.day).join('、')} 热量偏高，可适当控制晚餐与加餐。`,
+        spanClass: W
+      })
+    }
+
+    const { proteinPct, carbPct, fatPct } = macroModel || {}
+    let best = '蛋白质'
+    let bestV = proteinPct || 0
+    if ((carbPct || 0) >= bestV) {
+      best = '碳水'
+      bestV = carbPct
+    }
+    if ((fatPct || 0) >= bestV) {
+      best = '脂肪'
+      bestV = fatPct
+    }
+    if (bestV >= 75) {
+      spans.push({ t: `${best}摄入相对充足`, spanClass: H })
+      spans.push({ t: '，结构整体可接受。', spanClass: '' })
+    } else if (bestV <= 50) {
+      spans.push({ t: `建议关注${best}是否偏低，`, spanClass: '' })
+      spans.push({ t: '优先天然食材补齐。', spanClass: H })
+    } else {
+      spans.push({ t: '营养素达标率尚可，', spanClass: '' })
+      spans.push({ t: '建议保持多样化搭配。', spanClass: H })
+    }
+
+    if (recordCount > 0) {
+      spans.push({ t: ` 已记录 ${recordCount} 条饮食，数据越全洞察越准。`, spanClass: '' })
+    }
+    return spans
+  },
+
+  /**
+   * 解析 POST /diet/ai-nutritionist/analyze/ 在周/月模式下可能返回的 LLM 结构化洞察
+   * 约定：insightSpans[].text | type: normal|highlight|warning；action.buttonText | aiPrompt
+   */
+  _normalizeAnalyzeInsight(raw) {
+    if (!raw || typeof raw !== 'object') return null
+    const payload = raw.data && typeof raw.data === 'object' ? raw.data : raw
+    let list = payload.insightSpans
+    if (!Array.isArray(list)) return null
+    const spans = list
+      .map((s) => {
+        const text = s.text != null ? String(s.text) : s.t != null ? String(s.t) : ''
+        const typ = String(s.type || 'normal').toLowerCase()
+        let spanClass = ''
+        if (typ === 'highlight') spanClass = 'highlight-report'
+        else if (typ === 'warning') spanClass = 'warning-report'
+        return { t: text, spanClass }
+      })
+      .filter((x) => x.t)
+    if (!spans.length) return null
+    const action = payload.action || null
+    return {
+      spans,
+      action:
+        action && (action.buttonText || action.aiPrompt)
+          ? {
+              buttonText: action.buttonText || '定制食谱',
+              aiPrompt: action.aiPrompt || ''
+            }
+          : null
+    }
+  },
+
+  async _syncReportBento(mode, monthTimelineArg) {
+    const app = getApp()
+    if (isDevChannelToken(app.globalData.accessToken)) {
+      const weekRange = this.getWeekRange(this.data.selectedDate || util.formatDate(new Date()))
+      const today = new Date()
+      const y = today.getFullYear()
+      const m = today.getMonth() + 1
+      const monthStart = `${y}-${this._pad2(m)}-01`
+      const monthEnd = util.formatDate(new Date(y, m, 0))
+      const mockBars =
+        mode === 'week'
+          ? [
+              { day: '一', percent: 60, isOver: false, isToday: false, kcal: 0 },
+              { day: '二', percent: 85, isOver: false, isToday: false, kcal: 0 },
+              { day: '三', percent: 100, isOver: true, isToday: false, kcal: 0 },
+              { day: '四', percent: 75, isOver: false, isToday: false, kcal: 0 },
+              { day: '五', percent: 105, isOver: true, isToday: false, kcal: 0 },
+              { day: '六', percent: 90, isOver: false, isToday: false, kcal: 0 },
+              { day: '日', percent: 45, isOver: false, isToday: true, kcal: 0 }
+            ]
+          : [
+              { day: '1 段', percent: 72, isOver: false, isToday: false, kcal: 0 },
+              { day: '2 段', percent: 88, isOver: false, isToday: false, kcal: 0 },
+              { day: '3 段', percent: 95, isOver: true, isToday: false, kcal: 0 },
+              { day: '4 段', percent: 68, isOver: false, isToday: false, kcal: 0 }
+            ]
+      this.setData({
+        reportDateRangeLabel:
+          mode === 'week'
+            ? this._formatCnRange(weekRange.start, weekRange.end)
+            : this._formatCnRange(monthStart, monthEnd),
+        barChartDays: mockBars,
+        reportTargetLineBottom: 70,
+        reportAvgDailyKcal: 1850,
+        reportTrendTagClass: 'positive',
+        reportTrendTagText: '↓ 12% 较上周',
+        bentoPerfectDays: 5,
+        bentoSecondaryValue: 12,
+        bentoSecondaryUnit: '条',
+        bentoSecondaryLabel: '饮食记录',
+        macroWeekModel: {
+          proteinAvg: 85,
+          carbAvg: 150,
+          fatAvg: 45,
+          proteinPct: 85,
+          carbPct: 60,
+          fatPct: 40
+        },
+        weekInsightSpans: [
+          { t: '本周你的饮食结构整体健康，', spanClass: '' },
+          { t: '蛋白质摄入充足', spanClass: 'highlight-report' },
+          {
+            t: '。注意热量偏高的日期，建议晚餐减少精制碳水。点击底部可继续向 AI 营养师提问。',
+            spanClass: ''
+          }
+        ],
+        reportInsightAction: null,
+        reportInsightButtonLabel: '定制下周食谱 ›'
+      })
+      return
+    }
+
+    let profile = {}
+    try {
+      profile = await api.getUserProfile()
+    } catch (e) {
+      profile = {}
+    }
+    const dailyTarget = profile.daily_kcal_limit || 2000
+    const goalType = profile.goal_type || 'maintain'
+    const macroTargets = this._macrosFromKcal(dailyTarget, goalType)
+
+    let rangeStart = this.data.weekStartDate
+    let rangeEnd = this.data.weekEndDate
+    let timeline = this.data.timeline || []
+    let daysForAvg = 7
+
+    if (mode === 'month') {
+      const today = new Date()
+      const y = today.getFullYear()
+      const m = today.getMonth() + 1
+      rangeStart = `${y}-${this._pad2(m)}-01`
+      const last = new Date(y, m, 0)
+      rangeEnd = util.formatDate(last)
+      daysForAvg = last.getDate()
+      if (Array.isArray(monthTimelineArg)) {
+        timeline = monthTimelineArg
+      } else {
+        try {
+          const res = await api.getReportData(rangeStart, rangeEnd)
+          timeline = (res && res.timeline) ? res.timeline : []
+        } catch (e) {
+          timeline = []
+        }
+      }
+    }
+
+    const { rows, targetLineBottom } = this._buildBarChartDays(
+      mode === 'month' ? 'month' : 'week',
+      rangeStart,
+      rangeEnd,
+      timeline,
+      dailyTarget
+    )
+
+    const totalKcal = rows.reduce((s, x) => s + (x.kcal || 0), 0)
+    const denom = mode === 'month' ? Math.max(1, daysForAvg) : 7
+    const avgKcal = Math.round(totalKcal / denom)
+
+    let prevAvg = null
+    try {
+      const hist = await api.getHistoryTrend()
+      const trend = hist.trend || hist || []
+      if (Array.isArray(trend) && trend.length >= 14) {
+        const prevSlice = trend.slice(-14, -7)
+        const sum = prevSlice.reduce(
+          (s, x) => s + (Number(x.consumed || x.value) || 0),
+          0
+        )
+        if (prevSlice.length) prevAvg = sum / prevSlice.length
+      }
+    } catch (e) {
+      prevAvg = null
+    }
+
+    let reportTrendTagClass = 'neutral'
+    let reportTrendTagText = '与上期基本持平'
+    if (prevAvg != null && prevAvg > 0) {
+      const diff = Math.round(((avgKcal - prevAvg) / prevAvg) * 100)
+      if (diff <= -3) {
+        reportTrendTagClass = 'positive'
+        reportTrendTagText = `↓ ${Math.abs(diff)}% 较上期`
+      } else if (diff >= 3) {
+        reportTrendTagClass = 'warn'
+        reportTrendTagText = `↑ ${diff}% 较上期`
+      }
+    } else {
+      reportTrendTagText = '热量趋势'
+    }
+
+    const kcalByDate = {}
+    ;(timeline || []).forEach((r) => {
+      const d = r.date || r.log_date || ''
+      if (!d) return
+      const k = Number(r.calories != null ? r.calories : r.kcal) || 0
+      kcalByDate[d] = (kcalByDate[d] || 0) + k
+    })
+    let perfect = 0
+    const lo = dailyTarget * 0.88
+    const hi = dailyTarget * 1.08
+    const scan = new Date(rangeStart)
+    const endScan = new Date(rangeEnd)
+    while (scan.getTime() <= endScan.getTime()) {
+      const ds = util.formatDate(scan)
+      const k = kcalByDate[ds] || 0
+      if (k >= lo && k <= hi && k > 0) perfect++
+      scan.setDate(scan.getDate() + 1)
+    }
+
+    const macroWeekModel = this._macroModelFromTimeline(
+      timeline,
+      mode === 'month' ? daysForAvg : 7,
+      macroTargets
+    )
+
+    const localSpans = this._buildWeekInsightSpans(
+      mode,
+      rows,
+      macroWeekModel,
+      avgKcal,
+      dailyTarget,
+      (timeline || []).length
+    )
+
+    let weekInsightSpans = localSpans
+    let reportInsightAction = null
+    try {
+      const analyzeRes = await api.getNutritionAnalysis({
+        period: mode,
+        range_start: rangeStart,
+        range_end: rangeEnd,
+        summary: {
+          avg_kcal: avgKcal,
+          target_kcal: dailyTarget,
+          perfect_days: perfect,
+          record_count: (timeline || []).length,
+          macro: macroWeekModel,
+          over_day_labels: rows.filter((r) => r.isOver).map((r) => r.day)
+        }
+      })
+      const remote = this._normalizeAnalyzeInsight(analyzeRes)
+      if (remote && remote.spans.length) {
+        weekInsightSpans = remote.spans
+        reportInsightAction = remote.action
+      }
+    } catch (e) {
+      console.log('报告洞察：接口未返回结构化 insightSpans，已使用本地规则', e)
+    }
+
+    this.setData({
+      reportDateRangeLabel: this._formatCnRange(rangeStart, rangeEnd),
+      barChartDays: rows,
+      reportTargetLineBottom: targetLineBottom,
+      reportAvgDailyKcal: avgKcal,
+      reportTrendTagClass,
+      reportTrendTagText,
+      bentoPerfectDays: perfect,
+      bentoSecondaryValue: (timeline || []).length,
+      bentoSecondaryUnit: '条',
+      bentoSecondaryLabel: mode === 'week' ? '本周记录' : '本月记录',
+      macroWeekModel,
+      weekInsightSpans,
+      reportDailyTarget: dailyTarget,
+      reportInsightAction,
+      reportInsightButtonLabel:
+        (reportInsightAction && reportInsightAction.buttonText) ||
+        '定制下周食谱 ›'
+    })
   },
 
   // 跳转首页记录饮水（与今日饮水联动）
@@ -1218,9 +1701,7 @@ Page({
         groupedTimeline: [],
         chartData: null
       })
-      setTimeout(() => {
-        if (typeof this.drawTrendChart === 'function') this.drawTrendChart()
-      }, 300)
+      await this._syncReportBento('week')
       return
     }
 
@@ -1275,11 +1756,8 @@ Page({
         groupedTimeline: groupedWeeklyTimeline,
         chartData: weeklyChartData || null  // ⚠️ 保存周报图表数据
       })
-      
-      // 绘制历史趋势图表
-      setTimeout(() => {
-        this.drawTrendChart()
-      }, 300)
+
+      await this._syncReportBento('week')
       
     } catch (error) {
       console.error('加载周报失败', error)
@@ -1293,10 +1771,8 @@ Page({
   async loadMonthlyReport() {
     const app = getApp()
     if (isDevChannelToken(app.globalData.accessToken)) {
-      this.setData({ historyData: [] })
-      setTimeout(() => {
-        if (typeof this.drawTrendChart === 'function') this.drawTrendChart()
-      }, 300)
+      this.setData({ historyData: [], timeline: [], groupedTimeline: [] })
+      await this._syncReportBento('month', [])
       return
     }
 
@@ -1306,9 +1782,17 @@ Page({
       const today = new Date()
       const year = today.getFullYear()
       const month = today.getMonth() + 1
+      const rangeStart = `${year}-${this._pad2(month)}-01`
+      const rangeEnd = util.formatDate(new Date(year, month, 0))
+
+      let monthTimeline = []
+      try {
+        const rd = await api.getReportData(rangeStart, rangeEnd)
+        monthTimeline = (rd && rd.timeline) ? rd.timeline : []
+      } catch (e) {
+        console.log('获取月报时间轴失败', e)
+      }
       
-      // 获取月报日历（已在initCalendar中调用）
-      // 获取历史趋势数据用于图表展示
       let historyData = []
       try {
         const trendResult = await api.getHistoryTrend()
@@ -1318,13 +1802,14 @@ Page({
       }
       
       this.setData({
-        historyData: historyData
+        historyData,
+        timeline: monthTimeline,
+        groupedTimeline: this.groupTimelineByMeal(monthTimeline),
+        weekStartDate: rangeStart,
+        weekEndDate: rangeEnd
       })
-      
-      // 绘制历史趋势图表
-      setTimeout(() => {
-        this.drawTrendChart()
-      }, 300)
+
+      await this._syncReportBento('month', monthTimeline)
       
     } catch (error) {
       console.error('加载月报失败', error)

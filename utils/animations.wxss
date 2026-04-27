@@ -25,6 +25,18 @@
   }
 }
 
+/* 全站 Bento/卡片通用入场（与 profile/report 等页 slideUpFade 一致） */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes fade-in-down {
   from {
     opacity: 0;

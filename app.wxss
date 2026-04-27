@@ -646,9 +646,17 @@ page::before {
   transition: transform 0.15s ease-out, opacity 0.15s ease-out;
 }
 
+/* 0.97 轻按压：全站 Bento/按钮与白皮书「机械按压感」一致 */
 .press-hover {
-  transform: scale(0.95);
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+/* 与 remedy 等页统一的 hover 类名别名 */
+.card-hover {
+  transform: scale(0.97);
   opacity: 0.9;
+  transition: transform 0.15s ease-out, opacity 0.15s ease-out;
 }
 
 .flex {
@@ -1029,4 +1037,22 @@ input:focus, textarea:focus {
   margin-top: var(--space-8);
   padding-top: var(--space-5);
   border-top: 1rpx solid var(--color-border-light);
+}
+
+/* ========== 全局设计系统：Bento / 毛玻璃 / 入场动效（答辩：Design Token 工程化）========== */
+.anim-slide-up {
+  animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.bento-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-bento, 36rpx);
+  box-shadow: var(--shadow-bento, 0 4rpx 20rpx -6rpx rgba(0, 0, 0, 0.03));
+  border: 1rpx solid var(--color-border-light);
+  box-sizing: border-box;
+}
+.glass-effect {
+  background: var(--color-glass, rgba(255, 255, 255, 0.7));
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1rpx solid rgba(255, 255, 255, 0.88);
 }

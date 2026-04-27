@@ -122,7 +122,8 @@ Page({
     seasonalPreviewText: '', // 折叠时展示的食材预览（前几项名称）
     userRegionName: '默认地区', // 用户所在地区名称（用于文案展示）
     locationStatus: 'unknown', // unknown / granted / denied / failed
-    seasonalDislikedNames: [] // 用户本月不感兴趣的应季食材（按名称）
+    seasonalDislikedNames: [], // 用户本月不感兴趣的应季食材（按名称）
+    navScrolled: false
   },
   
   onLoad(options) {
@@ -171,6 +172,14 @@ Page({
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer)
       this.searchDebounceTimer = null
+    }
+  },
+
+  onFridgeListScroll(e) {
+    const top = (e.detail && e.detail.scrollTop) || 0
+    const next = top > 20
+    if (next !== this.data.navScrolled) {
+      this.setData({ navScrolled: next })
     }
   },
 

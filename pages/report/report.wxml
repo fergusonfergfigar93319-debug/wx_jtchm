@@ -1,7 +1,8 @@
 <!--pages/report/report.wxml-->
-<view class="container page-container">
-  <!-- 顶部统计卡片 -->
-  <view class="summary-cards">
+<view class="container page-container {{viewMode !== 'day' ? 'container--report-bento' : ''}}">
+  <custom-nav-bar title="健康管理" isScrolled="{{navScrolled}}" />
+  <!-- 顶部统计卡片（仅日报） -->
+  <view class="summary-cards" wx:if="{{viewMode === 'day'}}">
     <view class="summary-card consumed-card">
       <view class="summary-icon">🔥</view>
       <view class="summary-content">
@@ -25,17 +26,19 @@
     </view>
   </view>
 
-  <!-- 日历条 -->
-  <view class="calendar-wrapper">
+  <!-- 日历条 + 分段控制 -->
+  <view class="calendar-wrapper report-sticky-header" style="top: {{navTopPx}}px;">
     <view class="calendar-header">
-      <text class="calendar-title">📅 选择日期</text>
-      <view class="view-switch">
-        <text class="switch-item pressable {{viewMode === 'day' ? 'active' : ''}}" bindtap="switchView" data-mode="day" hover-class="press-hover" hover-stay-time="80">日</text>
-        <text class="switch-item pressable {{viewMode === 'week' ? 'active' : ''}}" bindtap="switchView" data-mode="week" hover-class="press-hover" hover-stay-time="80">周</text>
-        <text class="switch-item pressable {{viewMode === 'month' ? 'active' : ''}}" bindtap="switchView" data-mode="month" hover-class="press-hover" hover-stay-time="80">月</text>
+      <text class="calendar-title" wx:if="{{viewMode === 'day'}}">📅 选择日期</text>
+      <text class="calendar-title" wx:else>📊 健康报告</text>
+      <view class="segment-control">
+        <view class="segment-item pressable {{viewMode === 'day' ? 'active' : ''}}" bindtap="switchView" data-mode="day" hover-class="press-hover" hover-stay-time="80">日报</view>
+        <view class="segment-item pressable {{viewMode === 'week' ? 'active' : ''}}" bindtap="switchView" data-mode="week" hover-class="press-hover" hover-stay-time="80">周报</view>
+        <view class="segment-item pressable {{viewMode === 'month' ? 'active' : ''}}" bindtap="switchView" data-mode="month" hover-class="press-hover" hover-stay-time="80">月报</view>
       </view>
     </view>
-    <scroll-view class="calendar-bar" scroll-x="true" scroll-left="{{scrollLeft}}">
+    <view class="report-date-range" wx:if="{{viewMode === 'week' || viewMode === 'month'}}">{{reportDateRangeLabel}}</view>
+    <scroll-view wx:if="{{viewMode === 'day'}}" class="calendar-bar" scroll-x="true" scroll-left="{{scrollLeft}}">
       <view class="calendar-list">
         <view 
           class="calendar-item pressable {{selectedDate === item.date ? 'active' : ''}} {{item.isToday ? 'today' : ''}} {{item.status}} {{item.weekend ? 'weekend' : ''}}"
@@ -353,77 +356,117 @@
     </view>
   </view>
 
-  <!-- 周报视图 -->
-  <view wx:if="{{viewMode === 'week'}}" class="weekly-section">
-    <!-- 周报统计卡片 -->
-    <view class="weekly-stats">
-      <view class="weekly-header">
-        <text class="weekly-title">📊 本周统计</text>
-        <text class="weekly-date">{{weekStartDate}} 至 {{weekEndDate}}</text>
-      </view>
-      
-      <view class="weekly-summary">
-        <view class="weekly-stat-item">
-          <text class="stat-label">总摄入</text>
-          <text class="stat-value">{{weeklyData.total_consumed || 0}}</text>
-          <text class="stat-unit">kcal</text>
+  <!-- 周报 / 月报：Bento + 原生 CSS 柱状图 + AI 洞察 -->
+  <view wx:if="{{viewMode === 'week' || viewMode === 'month'}}" class="report-bento-wrap">
+    <view class="bento-item-report hero-chart-report">
+      <view class="bento-header-report">
+        <view class="header-left-report">
+          <text class="bento-title-report">{{viewMode === 'week' ? '热量摄入趋势' : '本月热量分段'}}</text>
+          <text class="bento-subtitle-report">日均摄入 {{reportAvgDailyKcal}} kcal · 目标 {{reportDailyTarget}} kcal</text>
         </view>
-        <view class="weekly-stat-item">
-          <text class="stat-label">日均摄入</text>
-          <text class="stat-value">{{weeklyData.avg_daily_consumed || 0}}</text>
-          <text class="stat-unit">kcal</text>
+        <view class="header-right-report">
+          <text class="trend-tag-report {{reportTrendTagClass}}">{{reportTrendTagText}}</text>
         </view>
       </view>
 
-      <!-- 极值榜单 -->
-      <view class="extreme-list">
-        <view class="extreme-item max-item" wx:if="{{weeklyData.max_calorie_item}}">
-          <view class="extreme-icon">🔥</view>
-          <view class="extreme-content">
-            <text class="extreme-label">热量最高</text>
-            <text class="extreme-name">{{weeklyData.max_calorie_item.food_name}}</text>
-            <text class="extreme-value">{{weeklyData.max_calorie_item.calories}} kcal</text>
+      <view class="css-bar-chart-report">
+        <view
+          class="chart-bar-group-report"
+          wx:for="{{barChartDays}}"
+          wx:for-index="barIdx"
+          wx:key="barIdx"
+        >
+          <view class="bar-bg-report">
+            <view class="bar-fill-report {{item.isOver ? 'over-target' : ''}}" style="height: {{item.percent}}%;"></view>
           </view>
+          <text class="bar-label-report {{item.isToday ? 'today' : ''}}">{{item.day}}</text>
         </view>
-        
-        <view class="extreme-item min-item" wx:if="{{weeklyData.min_calorie_item}}">
-          <view class="extreme-icon">🥗</view>
-          <view class="extreme-content">
-            <text class="extreme-label">热量最低</text>
-            <text class="extreme-name">{{weeklyData.min_calorie_item.food_name}}</text>
-            <text class="extreme-value">{{weeklyData.min_calorie_item.calories}} kcal</text>
-          </view>
+        <view class="target-line-report" style="bottom: {{reportTargetLineBottom}}%;"></view>
+      </view>
+    </view>
+
+    <view class="report-bento-grid">
+      <view class="bento-item-report bento-square-report">
+        <view class="bento-icon-report">📅</view>
+        <view class="bento-value-report">
+          {{bentoPerfectDays}}<text class="small-unit-report">天</text>
+        </view>
+        <view class="bento-label-report">{{viewMode === 'week' ? '热量接近目标' : '达标日数'}}</view>
+      </view>
+      <view class="bento-item-report bento-square-report">
+        <view class="bento-icon-report">📝</view>
+        <view class="bento-value-report">
+          {{bentoSecondaryValue}}<text class="small-unit-report">{{bentoSecondaryUnit}}</text>
+        </view>
+        <view class="bento-label-report">{{bentoSecondaryLabel}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{viewMode === 'week'}}" class="weekly-mini-extreme">
+      <view class="weekly-mini-row" wx:if="{{weeklyData.max_calorie_item}}">
+        <text class="weekly-mini-label">本周最高热量</text>
+        <text class="weekly-mini-val">{{weeklyData.max_calorie_item.food_name}} · {{weeklyData.max_calorie_item.calories}} kcal</text>
+      </view>
+    </view>
+
+    <view class="bento-item-report macro-analysis-report">
+      <text class="bento-title-report macro-title-block">营养素结构 · 日均 vs 目标</text>
+      <view class="macro-row-report">
+        <view class="macro-info-report">
+          <text class="macro-name-report">🥚 蛋白质</text>
+          <text class="macro-data-report">日均 {{macroWeekModel.proteinAvg}}g · 目标达成 {{macroWeekModel.proteinPct}}%</text>
+        </view>
+        <view class="macro-progress-bg-report">
+          <view class="macro-progress-fill-report protein-m" style="width: {{macroWeekModel.proteinPct}}%;"></view>
+        </view>
+      </view>
+      <view class="macro-row-report">
+        <view class="macro-info-report">
+          <text class="macro-name-report">🌾 碳水化合物</text>
+          <text class="macro-data-report">日均 {{macroWeekModel.carbAvg}}g · 目标达成 {{macroWeekModel.carbPct}}%</text>
+        </view>
+        <view class="macro-progress-bg-report">
+          <view class="macro-progress-fill-report carbs-m" style="width: {{macroWeekModel.carbPct}}%;"></view>
+        </view>
+      </view>
+      <view class="macro-row-report">
+        <view class="macro-info-report">
+          <text class="macro-name-report">🥑 脂肪</text>
+          <text class="macro-data-report">日均 {{macroWeekModel.fatAvg}}g · 目标达成 {{macroWeekModel.fatPct}}%</text>
+        </view>
+        <view class="macro-progress-bg-report">
+          <view class="macro-progress-fill-report fat-m" style="width: {{macroWeekModel.fatPct}}%;"></view>
         </view>
       </view>
     </view>
 
-    <!-- 历史趋势图表 -->
-    <view class="chart-card">
-      <view class="chart-header">
-        <view class="chart-title-wrapper">
-          <text class="chart-icon">📈</text>
-          <text class="chart-title">最近7天趋势</text>
-        </view>
+    <view class="bento-item-report ai-insight-report">
+      <view class="insight-header-report">
+        <text class="insight-icon-report">✨</text>
+        <text class="insight-title-report">{{viewMode === 'week' ? 'AI 营养师 · 本周洞察' : 'AI 营养师 · 本月洞察'}}</text>
       </view>
-      <view class="chart-container trend-chart-container">
-        <canvas 
-          canvas-id="trendChart" 
-          class="chart-canvas"
-        ></canvas>
+      <view class="insight-content-report">
+        <block wx:for="{{weekInsightSpans}}" wx:key="spanIdx" wx:for-index="spanIdx">
+          <text class="{{item.spanClass}}">{{item.t}}</text>
+        </block>
+      </view>
+      <view class="insight-actions-report">
+        <text class="insight-action-report pressable" bindtap="openReportInsightPlan" hover-class="press-hover" hover-stay-time="80">{{reportInsightButtonLabel}}</text>
+        <text class="insight-action-report insight-action-secondary pressable" bindtap="goToAIChat" hover-class="press-hover" hover-stay-time="80">继续提问 ›</text>
       </view>
     </view>
 
-    <!-- 本周时间轴 -->
-    <view class="timeline-section">
+    <!-- 记录时间轴 -->
+    <view class="timeline-section report-bento-timeline">
       <view class="section-header">
         <view class="section-title-wrapper">
           <text class="section-icon">⏰</text>
-          <text class="section-title">本周记录</text>
+          <text class="section-title">{{viewMode === 'week' ? '本周记录' : '本月记录'}}</text>
         </view>
-        <text class="section-count">共 {{timeline.length}} 条记录</text>
+        <text class="section-count">共 {{timeline.length}} 条</text>
       </view>
       <view class="timeline">
-        <view 
+        <view
           class="timeline-item pressable"
           wx:for="{{timeline}}"
           wx:key="id"
@@ -455,35 +498,14 @@
       </view>
       <view wx:if="{{timeline.length === 0}}" class="empty-timeline">
         <view class="empty-icon">📝</view>
-        <text class="empty-text">本周还没有记录</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 月报视图 -->
-  <view wx:if="{{viewMode === 'month'}}" class="monthly-section">
-    <!-- 历史趋势图表 -->
-    <view class="chart-card">
-      <view class="chart-header">
-        <view class="chart-title-wrapper">
-          <text class="chart-icon">📈</text>
-          <text class="chart-title">最近7天趋势</text>
-        </view>
-      </view>
-      <view class="chart-container trend-chart-container">
-        <canvas 
-          canvas-id="trendChart" 
-          class="chart-canvas"
-        ></canvas>
+        <text class="empty-text">{{viewMode === 'week' ? '本周还没有记录' : '本月还没有记录'}}</text>
       </view>
     </view>
 
-    <!-- 月报日历 -->
-    <view class="monthly-calendar">
-      <view class="calendar-header">
-        <text class="calendar-title">📅 本月概览</text>
-      </view>
-      <view class="calendar-legend">
+    <!-- 月报：底部日历图例（与上方列表呼应） -->
+    <view wx:if="{{viewMode === 'month'}}" class="monthly-legend-bento">
+      <text class="monthly-legend-title">📅 日历图例</text>
+      <view class="calendar-legend calendar-legend--compact">
         <view class="legend-item">
           <view class="legend-dot perfect"></view>
           <text>达标</text>
